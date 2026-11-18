@@ -31,7 +31,7 @@ for key in "$HOME/.ssh/id_rsa_jans_mac" "$HOME/.ssh/id_ed25519" "$HOME/.ssh/id_e
 done
 
 if [ -n "$KNOWN_KEY" ]; then
-    OUTPUT=$("$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@localhost/tmp" "$KNOWN_KEY" 2>&1)
+    OUTPUT=$(PRAGMA_SSH_KEY="$KNOWN_KEY" "$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@localhost/tmp" 2>&1)
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ] && echo "$OUTPUT" | grep -q "STATUS:OK"; then
         assert_pass "1.2: Explicit key login using $KNOWN_KEY"
@@ -45,7 +45,7 @@ fi
 # Test 3: Unauthorized key rejection (against 127.0.0.1)
 TEMP_UNAUTH_KEY="/tmp/pragma_test_unauth_key_$$"
 ssh-keygen -t ed25519 -N "" -f "$TEMP_UNAUTH_KEY" >/dev/null 2>&1
-OUTPUT=$("$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@127.0.0.1/tmp" "$TEMP_UNAUTH_KEY" 2>&1)
+OUTPUT=$(PRAGMA_SSH_KEY="$TEMP_UNAUTH_KEY" "$TEST_LOGIN_BIN" "ssh://${CURRENT_USER}@127.0.0.1/tmp" 2>&1)
 rm -f "$TEMP_UNAUTH_KEY" "${TEMP_UNAUTH_KEY}.pub"
 
 if echo "$OUTPUT" | grep -q "STATUS:KEY_NEEDED"; then

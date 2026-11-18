@@ -14,6 +14,7 @@
 var gui = require("nw.gui"); 
 var os = require('os');
 var fs = require('fs');
+const path = require('path');
 const isBinaryFileSync = require("isbinaryfile").isBinaryFileSync;
 var mime = require('mime-types'); // Mime
 const util = require('./util_module.js'); // Pragma-git common functions
@@ -45,31 +46,63 @@ var SAVED = false; // Flag to show that save has been performed.
 var CLOSED = false;// Flag to show that it was closed by code (and not by clicking to close window)
 var EDIT = false;  // Flag if pragma-merge is used as editor instead of diff tool (called with args: file --edit)
 
+//
+// PARAMETER PASSING MODES:
+// 1) File-based mode (Standard Git diff/merge):
+//    Invoked by the 'pragma-merge' shell script via git difftool / mergetool.
+//    Parameters are written to ~/.Pragma-git/.tmp/ files: 'first', 'second', 'third', 'fourth'.
+//    A lockfile 'pragma-merge-running' is monitored by the script until the window closes.
+//
+// 2) Direct URL mode (Multi-window editor / viewer):
+//    Invoked directly from NW.js (e.g. from SSH File Browser or Modified Files list) via:
+//    pragma-merge.html?first=<path>&second=--edit&third=--rw&root=<repo>
+//    Parameters are read directly from URL query parameters without touching .tmp files or
+//    the 'pragma-merge-running' lockfile. This allows opening unlimited simultaneous editor
+//    windows without locking or colliding with Git diff/merge operations.
+//
+
+// Check if parameters are passed directly via URL query string (direct editor/viewer mode)
+const urlParams = (typeof window !== 'undefined' && window.location && window.location.search)
+    ? new URLSearchParams(window.location.search)
+    : null;
+const DIRECT_MODE = Boolean(urlParams && urlParams.has('first'));
+const SESSION_ID = (urlParams && urlParams.has('sessionId')) ? urlParams.get('sessionId') : null;
+const SESSION_DIR = (urlParams && urlParams.has('sessionDir')) ? urlParams.get('sessionDir') : null;
+
 // Read paths
 
-// These three files are also defined in app.js
-const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+// Base signal directory in user profile / home directory
+const DEFAULT_SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
+const SIGNALDIR = (SESSION_DIR && fs.existsSync(SESSION_DIR)) ? SESSION_DIR : DEFAULT_SIGNALDIR;
 const SIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';
 const EXITSIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
+const LEGACY_SIGNALFILE = DEFAULT_SIGNALDIR + pathsep + 'pragma-merge-running';
+const LEGACY_EXITSIGNALFILE = DEFAULT_SIGNALDIR + pathsep + 'exit-pragma-merge';
 
 //const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';   // Same path defined in lib/ssh-functions
 
-process.chdir( SIGNALDIR);
+// Read file names from URL parameters if present (direct mode), otherwise from .tmp / session files
+const ROOT = (DIRECT_MODE && urlParams.get('root')) 
+    ? urlParams.get('root') 
+    : global.state.repos[global.state.repoNumber].localFolder;
 
-// Read file names stored in different files (file names are stored in files :  'first', 'second', 'third', 'fourth' )
+const BASE = (DIRECT_MODE && urlParams.has('first'))
+    ? urlParams.get('first')
+    : loadFile(path.join(SIGNALDIR, 'first')).replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge
 
-const ROOT = global.state.repos[global.state.repoNumber].localFolder;
-//const ROOT = loadFile('repo_path').replace(/(\r\n|\n|\r)/gm, "");    // TODO: Does not work for SSH -- will use pragma-git folder as repo_path 
-
-const BASE = loadFile('first').replace(/(\r\n|\n|\r)/gm, "");    // name of a temporary file containing the common base for the merge  ( Remove EOLs in these four rows)
-
-const SECOND = loadFile('second').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
+const SECOND = (DIRECT_MODE && urlParams.has('second'))
+    ? urlParams.get('second')
+    : loadFile(path.join(SIGNALDIR, 'second')).replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file on the current branch
 const LOCAL = SECOND;
 
-const THIRD = loadFile('third').replace(/(\r\n|\n|\r)/gm, "");  // name of a temporary file containing the contents of the file to be merged
+const THIRD = (DIRECT_MODE && urlParams.has('third'))
+    ? urlParams.get('third').trim()
+    : loadFile(path.join(SIGNALDIR, 'third')).replace(/(\r\n|\n|\r)/gm, "").trim();  // name of a temporary file containing the contents of the file to be merged
 const REMOTE = THIRD;
 
-var MERGED = loadFile('fourth').replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
+var MERGED = (DIRECT_MODE && urlParams.has('fourth'))
+    ? urlParams.get('fourth')
+    : loadFile(path.join(SIGNALDIR, 'fourth')).replace(/(\r\n|\n|\r)/gm, ""); // name of the file to which the merge tool should write the result
 
 var IS_BINARY_HISTORICAL = false;  // Assume non-binary historical file in view or edit mode
 
@@ -90,12 +123,14 @@ if (SECOND == '--edit'){
 
 // Set working folder (only for non-ssh, since ssh works with absolute paths)
 if (! ROOT.startsWith('ssh:')){
-    process.chdir( ROOT);  // Now all relative paths works
+    try { process.chdir( ROOT); } catch (e) {}  // Now all relative paths work
+} else if (parent && parent.opener && parent.opener.CWD_INIT) {
+    try { process.chdir( parent.opener.CWD_INIT); } catch (e) {}
 }
 
 
-// HTML Title
-var HTML_TITLE = 'File    =   ' + MERGED;
+// HTML Title (use only the basename of the file in the title)
+var HTML_TITLE = 'Pragma-merge (' + path.basename(MERGED) + ')';
         
 // Define help icon
 const helpIcon =     `  <!-- Help icon --> 
@@ -108,6 +143,7 @@ const helpIcon =     `  <!-- Help icon -->
 // Modified from GUI
 var connect = null; // null or "align"
 var collapse = false; 
+var ignoreWhitespace = false;
 
 // Options for MergeView
 const optionsTemplate = {
@@ -115,6 +151,7 @@ const optionsTemplate = {
     mode: "text/html",
     highlightDifferences: true,
     connect: connect,
+    ignoreWhitespace: false,
     readOnly: false
   };
 var options = optionsTemplate;
@@ -128,6 +165,27 @@ dv.panes = panes; // Initial value
 // FUNCTIONS
 //-----------
 
+function safeIsBinaryFile(filePathOrBuffer) {
+    if (!filePathOrBuffer) {
+        return false;
+    }
+    if (Buffer.isBuffer(filePathOrBuffer)) {
+        try {
+            return isBinaryFileSync(filePathOrBuffer);
+        } catch (err) {
+            return false;
+        }
+    }
+    try {
+        if (typeof filePathOrBuffer === 'string' && fs.existsSync(filePathOrBuffer) && fs.statSync(filePathOrBuffer).isFile()) {
+            return isBinaryFileSync(filePathOrBuffer);
+        }
+    } catch (err) {
+        return false;
+    }
+    return false;
+}
+
 async function setupAsBinary(){
         
     // Set Read-Only for Editor-mode 
@@ -137,7 +195,8 @@ async function setupAsBinary(){
           
             // Override file with one from git
             let hash = global.localState.historyHash;
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
+            let folder = ROOT || global.state.repos[global.state.repoNumber].localFolder;
+            await simpleGit( folder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
                 cachedFile.BASE.FileContent = res;
             }
@@ -157,7 +216,7 @@ async function setupAsBinary(){
 function isBinaryFile(){
 
     try{
-        if ( isBinaryFileSync(MERGED)  ){
+        if ( safeIsBinaryFile(MERGED)  ){
             pragmaLog('Pragma-merge open file = "' + MERGED + '" (binary)');
             return true
         }        
@@ -179,8 +238,14 @@ async function injectIntoJs(document) {
     win = gui.Window.get();
     
     // Read the file content
-    cachedFile.BASE.FileContent = loadFile(BASE);
-    cachedFile.BASE.FilePath = BASE;
+    if (SECOND == '--edit' && THIRD == '--show') {
+        // In historical view mode, the file is retrieved from git, not from disk
+        cachedFile.BASE.FileContent = "";
+        cachedFile.BASE.FilePath = BASE;
+    } else {
+        cachedFile.BASE.FileContent = loadFile(BASE);
+        cachedFile.BASE.FilePath = BASE;
+    }
     
     cachedFile.LOCAL.FileContent = loadFile(LOCAL);
     cachedFile.LOCAL.FilePath = LOCAL;
@@ -196,7 +261,7 @@ async function injectIntoJs(document) {
         if (Object.prototype.hasOwnProperty.call(cachedFile, key) && typeof cachedFile[key].FileContent === 'string') {
             // ignore binary files ( and don't test non-files where we have arguments  --edit, --show, --ro, --rw  )
             if (  !cachedFile[key].FilePath.startsWith( '--')  ) {
-				if ( !isBinaryFileSync(cachedFile[key].FilePath) ) {
+				if ( !safeIsBinaryFile(cachedFile[key].FilePath) ) {
 					cachedFile[key].FileContent = cachedFile[key].FileContent.replace(/\r/g, '');
 					cachedFile[key].hasCRLF = cachedFile[key].FileContent.includes('\r');
 				}
@@ -213,6 +278,7 @@ async function injectIntoJs(document) {
         await setupAsBinary();
         EDIT = true; 
         MERGED = BASE;  // MERGED is OUTPUT file for diff, and therefore I use it also in editor mode
+        HTML_TITLE = 'Pragma-merge (' + path.basename(MERGED) + ')';
     }
     
     
@@ -225,6 +291,7 @@ async function injectIntoJs(document) {
 
     // Set saved gui mode settings
     collapse = global.state.pragmaMerge.hide_unchanged;
+    ignoreWhitespace = Boolean(global.state.pragmaMerge.ignoreWhitespace);
 
     if ( global.state.pragmaMerge.align ) {
         connect = 'align';
@@ -240,11 +307,7 @@ async function injectIntoJs(document) {
     document.getElementById('theme-select').selectedIndex = 
         util.findObjectIndex( document.getElementById('theme-select').options, 'text', global.state.pragmaMerge.codeTheme );
     
-    initUI();
-    
-        
-    
-    // Set Read-Only for Editor-mode 
+    // Set Read-Only for Editor-mode (load historical content before initUI)
     if ( (SECOND == '--edit') ){
         if  (THIRD == '--ro'){
             readOnlyOption( true); // Hides and changes some HTML
@@ -255,7 +318,8 @@ async function injectIntoJs(document) {
           
             // Override file with one from git
             let hash = global.localState.historyHash;
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder ).show( [ hash + ':' + BASE ], onCatFile)
+            let folder = ROOT || global.state.repos[global.state.repoNumber].localFolder;
+            await simpleGit( folder ).show( [ hash + ':' + BASE ], onCatFile)
             function  onCatFile(err, res){
                 cachedFile.BASE.FileContent = res;
             }
@@ -269,13 +333,17 @@ async function injectIntoJs(document) {
         }       
 
     }
+
+    await initUI();
     
     // Force show binary scroll bar
-    if (isBinaryFile()){
+    if (isBinaryFile() && dv && dv.edit){
         dv.edit.refresh();  // Force redraw -- makes binary show scroll bars
     }
     
-    document.getElementById('down').click()
+    if (dv) {
+        document.getElementById('down').click();
+    }
 
 };
 
@@ -291,7 +359,7 @@ function loadFile(filePath)  {
         }
         
         // Normalize line endings to LF for the diff engine (skip binary files)
-        if ( !isBinaryFileSync(filePath) ) {
+        if ( !safeIsBinaryFile(filePath) ) {
             content = content.replace(/\r/g, '');
         }
         
@@ -595,6 +663,7 @@ async function initUI( keep) {
     // Set state as set with clicky-buttons
     options.collapseIdentical = collapse; // Updated from GUI button
     options.connect = connect; // null or 'align'
+    options.ignoreWhitespace = ignoreWhitespace;
     
     // Set display of clicky-buttons
     document.getElementById("two-way").classList.add('enabled');
@@ -604,9 +673,10 @@ async function initUI( keep) {
     // Get executable bits 
     let showExecutableBitDiffersState = 'collapse'; // May be changed to 'visible' if relevant bits differ
     
-    let execBits
+    let execBits = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous: undefined };
     try{
-        execBits = await getExecutableFlags(BASE);
+        let flags = await getExecutableFlags(BASE);
+        if (flags) execBits = flags;
     }catch (err){
         
     }
@@ -630,7 +700,7 @@ async function initUI( keep) {
       if ( panes == 3){  // This section is type MERGE if 3-panes (because above section forces others to 2-pane)
     
         // content
-        options.origLeft = cachedFile.LOCAL.File;
+        options.origLeft = cachedFile.LOCAL.FileContent;
 
         if (keep){
             options.value = dv.editor().getValue();
@@ -729,7 +799,11 @@ async function initUI( keep) {
             editorLabel = 'this'; 
             rightViewerLabel = 'empty'; 
             
-            if ( dv.panes == panes ){ // Not changed number of panes
+            if (THIRD == '--ro' || THIRD == '--show') {
+                readOnlyOption(true);
+            }
+
+            if ( dv && dv.panes == panes ){ // Not changed number of panes
                 // 1) dv.editor().getValue() if not changed from 3-pane
                 try{
                     options.value = dv.editor().getValue();  // Use content, in case it has been edited
@@ -791,6 +865,12 @@ async function initUI( keep) {
     }else{
         disable('hide-unchanged'); 
     }
+
+    if (ignoreWhitespace){
+        enable('ignore-whitespace'); 
+    }else{
+        disable('ignore-whitespace'); 
+    }
     
     //
     // Set size, theme, and show search icons
@@ -851,6 +931,8 @@ function changeToEditor(){
     document.getElementById('align-text').style.display = 'none';
     document.getElementById('hide-unchanged').style.display = 'none';
     document.getElementById('hide-unchanged-text').style.display = 'none';
+    document.getElementById('ignore-whitespace').style.display = 'none';
+    document.getElementById('ignore-whitespace-text').style.display = 'none';
  
     document.getElementById('up').style.display = 'none';
     document.getElementById('down').style.display = 'none';
@@ -897,7 +979,7 @@ function getMode( ){
         console.log('--edit');
         return 'EDITOR';
     }
-    if ( REMOTE == MERGED){
+    if ( REMOTE !== '' && REMOTE == MERGED){
         return 'UNCOMMITTED_DIFF';
     }    
     if ( BASE == MERGED){
@@ -1047,35 +1129,84 @@ async function closeWindowNicely(exitCode){
     
     pragmaLog(`Pragma-merge  -- closeWindowNicely( ${exitCode}) called`);
     
-    // Write exit code to file for script to pick up
-    try{
-        fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
-        pragmaLog('Pragma-merge exit code = ' + exitCode );
-    }catch(err){
-        console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
-        console.log(err);
-        fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+    // Write exit code and remove lock file only if not in direct URL mode
+    if (!DIRECT_MODE) {
+        try{
+            fs.writeFileSync(EXITSIGNALFILE,exitCode+'','utf8'); // Exit code as string
+            if (EXITSIGNALFILE !== LEGACY_EXITSIGNALFILE) {
+                try { fs.writeFileSync(LEGACY_EXITSIGNALFILE, exitCode+'', 'utf8'); } catch (e) {}
+            }
+            pragmaLog('Pragma-merge exit code = ' + exitCode );
+        }catch(err){
+            console.log('FAILED SAVING EXIT CODE TO FILE = ' + EXITSIGNALFILE);
+            console.log(err);
+            fs.writeFileSync(EXITSIGNALFILE,2,'utf8');// Special exit code if failed
+        }
     }
 
     
     // Store gui mode settings
     global.state.pragmaMerge.hide_unchanged = document.getElementById('hide-unchanged').checked;
     global.state.pragmaMerge.align = document.getElementById('align').checked;
+    let ignoreWsEl = document.getElementById('ignore-whitespace');
+    if (ignoreWsEl) {
+        global.state.pragmaMerge.ignoreWhitespace = ignoreWsEl.checked;
+    }
     global.state.pragmaMerge.mergePanes = panes;
+    try {
+        if (win && (win.width || win.window)) {
+            let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
+            let h = typeof win.height === 'number' ? win.height : (win.window && win.window.outerHeight);
+            if (typeof w === 'number' && typeof h === 'number' && w > 200 && h > 200) {
+                let isSinglePane = (getMode() === 'EDITOR');
+                if (isSinglePane) {
+                    if (!global.state.pragmaMerge.windowSinglePane) {
+                        global.state.pragmaMerge.windowSinglePane = {};
+                    }
+                    global.state.pragmaMerge.windowSinglePane.width = w;
+                    global.state.pragmaMerge.windowSinglePane.height = h;
+                } else {
+                    if (!global.state.pragmaMerge.windowMultiPane) {
+                        global.state.pragmaMerge.windowMultiPane = {};
+                    }
+                    global.state.pragmaMerge.windowMultiPane.width = w;
+                    global.state.pragmaMerge.windowMultiPane.height = h;
+                    if (!global.state.pragmaMerge.window) {
+                        global.state.pragmaMerge.window = {};
+                    }
+                    global.state.pragmaMerge.window.width = w;
+                    global.state.pragmaMerge.window.height = h;
+                }
+            }
+        }
+        if (parent && parent.opener && typeof parent.opener.saveSettings === 'function') {
+            parent.opener.saveSettings();
+        }
+    } catch (e) {}
     
     
     // Remove from menu
     parent.opener.updateWindowMenu('Pragma-merge');
         
         
-    // Remove file, to let script know it has stopped
-    try {
-        fs.unlinkSync(SIGNALFILE)
-    
-    } catch(err) {
-        console.error(err)
-        pragmaLog('ERROR in closeWindowNicely : ');
-        pragmaLog(err);
+    // Remove signal file to let bash script know it has stopped (only if not in direct mode)
+    if (!DIRECT_MODE) {
+        try {
+            if (fs.existsSync(SIGNALFILE)) {
+                fs.unlinkSync(SIGNALFILE);
+            }
+            let sshSignal = SIGNALDIR + pathsep + 'pragma-merge-running-ssh';
+            if (fs.existsSync(sshSignal)) {
+                try { fs.unlinkSync(sshSignal); } catch (e) {}
+            }
+            if (SIGNALFILE !== LEGACY_SIGNALFILE && fs.existsSync(LEGACY_SIGNALFILE)) {
+                try { fs.unlinkSync(LEGACY_SIGNALFILE); } catch (e) {}
+            }
+        } catch(err) {
+            console.error(err)
+            pragmaLog('ERROR in closeWindowNicely : ');
+            pragmaLog(err);
+        }
     }
     
     CLOSED = true;

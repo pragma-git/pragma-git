@@ -143,6 +143,12 @@
                 cursor: pointer;
                 vertical-align: middle;
             }
+
+            /* Highlight the currently selected repository row using the same hover highlight */
+            #settingsTableBody tr:has(.localFolderRadioButton:checked),
+            #settingsTableBody tr.selectedRepoRow {
+                background-color: var(--hoverBackGroundColor);
+            }
         
             .localFolder {
                 width: 28%;
@@ -216,7 +222,8 @@
                 box-sizing: border-box;
                 width: 100%;
                 height: 24px;
-                resize: none;
+                min-height: 24px;
+                resize: vertical;
                 vertical-align: middle;
                 font-family: inherit;
                 font-size: 10pt;
@@ -683,20 +690,21 @@
                     Window scaling (default = 1.0) : <br>   
                     <!--  Zoom -->
                     <input id="zoomMain" type="text" style="margin-top: 3px" size="4" 
-                        onchange="
-                            global.state.zoomMain = this.value;
-                            opener.saveSettings();
-                            opener.win.reload()"
-                        />&nbsp;
-                    <label for="zoomMain"> Main window</label>
+                        onchange="_callback('zoomMainChanged', this)"/>&nbsp;
+                    <label for="zoomMain"> Main window (0.5 - 3.0)</label>
                     
                     <br> 
                     
                     <input id="zoom" type="text" style="margin-top: 3px"  size="4" 
-                        onchange=" _callback('zoomChanged',this)"/>&nbsp;
-                    <label for="zoom"> Other windows</label>
+                        onchange="_callback('zoomChanged', this)"/>&nbsp;
+                    <label for="zoom"> Other windows (0.5 - 3.0)</label>
     
                     <br>
+                    <br>
+
+                    <!--  Number of recent repos in menu -->
+                    <label for="maxRecentRepos"> Recent repos in menu: </label>
+                    <input type="number" id="maxRecentRepos" min="1" max="25" style="width: 45px; text-align: center;" onchange="_callback('maxRecentReposChanged', this)"><br>
                     <br>
     
                     
@@ -749,6 +757,8 @@
                     <!--  --first-parent (search current branch only, if not ff is done, then things get messy) -->
                     <input type="checkbox" id="FirstParent" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
                     <label for="FirstParent"> Search and history follow current branch </label><br>
+
+
                     
                     <!--  -- remove stash when pressing  () -->
                     <input type="checkbox" id="StashPop" name="name" value="true" onchange="_callback('checkboxChanged',this)" checked>
@@ -786,6 +796,14 @@
                              <td>                
                                 <label for="gitMergeTool"> Merge tool (often same as diff tool):</label><br>
                                 <input id="gitMergeTool" type="text"  style="width: 100%;" placeholder="Name of merge tool" onChange="_callback('gitMergeTool', this)" />
+                            </td>
+                        </tr>
+                        
+
+                        <tr class="tools">                          
+                             <td>                
+                                <label for="editorTool"> Editor ("pragma-merge", "system", or path to editor) :</label><br>
+                                <input id="editorTool" type="text"  style="width: 100%;" placeholder="pragma-merge (if empty), system, or editor" onChange="_callback('editorTool', this)" />
                             </td>
                         </tr>
                         
@@ -998,17 +1016,19 @@
                                                         </div>
                                                         <input type="hidden" id="sshKeyInput_clone" />
                                                         <input type="file" id="sshKeyFileInput_clone" style="display: none;" onchange="onSshKeyFileSelected('clone', this)" />
-                                                        <div id="sshKeyNotice_clone" style="display: none;"></div>
+                                                        <div id="sshKeyNotice_clone" style="display: none; font-size: 11px; margin-top: 6px; line-height: 1.35; white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;"></div>
                                                         <input type="checkbox" id="setupRemoteKeyLogin_clone" style="display: none;" />
                                                     </td>
                                                 </tr>
                     
                                                     
+<!--
                                                 <tr class="tool">
                                                     <td>
                                                         <button id="cloneServerRepoButton" disabled onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus_server"></span>
                                                     </td>                          
                                                 </tr>
+-->
                                                 
                                             </table> 
                                             
@@ -1019,7 +1039,11 @@
  
                                 </tr>
                                 
-                                
+                                                 <tr class="tool">
+                                                    <td>
+                                                        <button id="cloneServerRepoButton" disabled onclick="document.getElementById('cloneFolder').value = parseServerFields_clone(); _callback('cloneButtonPressed',this)">Clone</button> &nbsp; <span id="cloneStatus_server"></span>
+                                                    </td>                          
+                                                </tr>
                                 <tr class="tool">
                                     <td>
                                      <!--  Allow push to remote (This input is saved indirectly when pressing cloneButton ) -->
@@ -1103,7 +1127,7 @@
                                                         </div>
                                                         <input type="hidden" id="sshKeyInput_add" />
                                                         <input type="file" id="sshKeyFileInput_add" style="display: none;" onchange="onSshKeyFileSelected('add', this)" />
-                                                        <div id="sshKeyNotice_add" style="display: none;"></div>
+                                                        <div id="sshKeyNotice_add" style="display: none; font-size: 11px; margin-top: 6px; line-height: 1.35; white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;"></div>
                                                         <input type="checkbox" id="setupRemoteKeyLogin" style="display: none;" />
                                                     </td>
                                                 </tr>
@@ -1254,7 +1278,8 @@
                                  return
                              }
                              
-                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false},
+                             let gitignoreSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(1000, 1150) : {width: 1000, height: 1150};
+                             nw.Window.open( 'edit_ignore.html',  {id: 'gitignoreWindowId', show: false, width: gitignoreSize.width, height: gitignoreSize.height},
                             win=>win.on('loaded', () => {
                             
                                 opener.showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
@@ -1469,7 +1494,7 @@
     <!-- Dialogs  -->   
     <dialog id="alertDialog"  class="error">               <!--  General alert dialog  --> 
         <p> 
-            <b><div id='alertTitle'></div></b><br>  
+            <div id='alertTitle' style="font-weight: bold;"></div><br>  
             <div id='alertMessage'></div>  
         </p>  
         <button id="no"
@@ -1548,7 +1573,7 @@
     </dialog>     
 
     <!-- Unified SSH Configuration Dialog -->
-    <dialog id="sshConfigDialog" style="position: relative; border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); min-width: 500px; max-width: 620px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+    <dialog id="sshConfigDialog" style="position: relative; border: 2px solid var(--header-color); border-radius: 8px; background-color: var(--body-background); color: var(--body-text); width: 560px; min-width: 480px; max-width: 90vw; box-sizing: border-box; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
         
         <!-- Help icon -->
         <img id="sshConfigHelpIcon" style='vertical-align: middle; position: absolute; right: 20px; top: 18px; cursor: pointer;' height="17" width="17"  
@@ -1559,11 +1584,11 @@
 
         <h3 id="sshConfigTitle" style="margin-top: 0; margin-bottom: 14px; color: var(--header-color); padding-right: 30px;">SSH Connection Configuration</h3>
         
-        <table class="keyValueTable" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+        <table class="keyValueTable" style="width: 100%; table-layout: fixed !important; border-collapse: separate; border-spacing: 0 8px;">
             <tr>
-                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Target:</b></td>
-                <td style="width: 100%;">
-                    <div id="sshConfigTargetDisplay" style="font-weight: bold; font-family: monospace; font-size: 11pt; padding: 3px 0;"></div>
+                <td style="width: 80px; white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Target:</b></td>
+                <td style="width: calc(100% - 80px); white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;">
+                    <div id="sshConfigTargetDisplay" style="font-weight: bold; font-family: monospace; font-size: 11pt; padding: 3px 0; word-break: break-all; white-space: normal !important;"></div>
                     <div id="sshConfigTargetInputs" style="display: none; align-items: center; gap: 6px; width: 100%;">
                         <input type="text" id="sshConfigUsername" placeholder="username" class="serverInput" style="flex: 1 1 120px;" />
                         <span style="font-weight: bold;">@</span>
@@ -1572,38 +1597,38 @@
                 </td>
             </tr>
             <tr>
-                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>SSH key:</b></td>
-                <td>
+                <td style="width: 80px; white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>SSH key:</b></td>
+                <td style="width: calc(100% - 80px); white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;">
                     <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" readonly />
+                        <input type="text" id="sshConfigKeyInput" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Default (~/.ssh/id_ed25519)" oninput="updateSshConfigKeyDisplay(this.value)" />
                         <button type="button" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigSelectKey()">Select key...</button>
                         <button type="button" id="sshConfigGenerateKeyBtn" class="toolButton" style="font-size: 11px; padding: 2px 8px; height: 26px; white-space: nowrap;" onclick="sshConfigToggleGeneratePanel()">Generate key...</button>
                         <button type="button" id="sshConfigResetKeyButton" class="toolButton" style="display: none; font-size: 11px; padding: 2px 6px; height: 26px;" title="Reset to default key" onclick="sshConfigResetKey()">&#x2715;</button>
                     </div>
                     <input type="file" id="sshConfigKeyFileInput" style="display: none;" onchange="onSshConfigFilePicked(this)" />
-                    <div id="sshConfigKeyNotice" style="font-size: 11px; margin-top: 6px; display: none; line-height: 1.35;"></div>
+                    <div id="sshConfigKeyNotice" style="font-size: 11px; margin-top: 6px; display: none; line-height: 1.35; white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word; word-break: normal;"></div>
 
                     <!-- Inline Generate Key Panel -->
-                    <div id="sshConfigGeneratePanel" style="display: none; margin-top: 8px; padding: 8px 10px; border: 1px solid var(--header-color); border-radius: 4px; background-color: var(--input-background);">
+                    <div id="sshConfigGeneratePanel" style="display: none; margin-top: 8px; padding: 8px 10px; border: 1px solid var(--header-color); border-radius: 4px; background-color: var(--input-background); box-sizing: border-box;">
                         <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--header-color);">Generate New ED25519 Key Pair</div>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <input type="text" id="sshConfigNewKeyPath" class="serverInput" style="flex: 1 1 auto; font-size: 11px;" placeholder="Path for new key" />
                             <button type="button" class="smallButton" style="padding: 2px 8px; font-size: 11px; font-weight: bold;" onclick="sshConfigDoGenerateKey()">Create</button>
                             <button type="button" class="smallButton" style="padding: 2px 6px; font-size: 11px;" onclick="sshConfigToggleGeneratePanel(false)">Cancel</button>
                         </div>
-                        <div id="sshConfigGenerateStatus" style="font-size: 11px; margin-top: 4px; display: none;"></div>
+                        <div id="sshConfigGenerateStatus" style="font-size: 11px; margin-top: 4px; display: none; white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;"></div>
                     </div>
                 </td>
             </tr>
             <tr>
-                <td style="white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Status:</b></td>
-                <td>
+                <td style="width: 80px; white-space: nowrap; padding-right: 12px; vertical-align: middle;"><b>Status:</b></td>
+                <td style="width: calc(100% - 80px); white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;">
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <button type="button" id="sshConfigTestBtn" class="smallButton" style="padding: 2px 10px; vertical-align: middle;" onclick="sshConfigTestLogin()">Test login</button>
                         <button type="button" id="sshConfigDeployBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigDeployKey()">Deploy public key</button>
                         <button type="button" id="sshConfigGenPromptBtn" class="smallButton" style="display: none; padding: 2px 10px; vertical-align: middle;" onclick="sshConfigToggleGeneratePanel(true)">Generate new key</button>
-                        <span id="sshConfigStatusText" style="font-size: 11px; vertical-align: middle;"></span>
                     </div>
+                    <div id="sshConfigStatusText" style="font-size: 11px; margin-top: 8px; line-height: 1.4; white-space: normal !important; word-wrap: break-word; overflow-wrap: break-word;"></div>
                 </td>
             </tr>
         </table>
@@ -1740,8 +1765,11 @@
         const server   = document.querySelector('input[name="server"]').value.trim();
         let folder   = document.querySelector('input[name="folder"]').value.trim();
     
-        if (folder && !folder.startsWith('/')) {
-            folder = '/' + folder;
+        if (folder) {
+            folder = folder.replace(/\\/g, '/');
+            if (!folder.startsWith('/')) {
+                folder = '/' + folder;
+            }
         }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);
@@ -1778,8 +1806,11 @@
         const server   = document.querySelector('input[name="server_clone"]').value.trim();
         let folder   = document.querySelector('input[name="folder_clone"]').value.trim();
     
-        if (folder && !folder.startsWith('/')) {
-            folder = '/' + folder;
+        if (folder) {
+            folder = folder.replace(/\\/g, '/');
+            if (!folder.startsWith('/')) {
+                folder = '/' + folder;
+            }
         }
         const combined = `ssh://${username}@${server}${folder}`; 
         console.log(combined);

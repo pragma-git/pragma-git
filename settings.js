@@ -64,6 +64,16 @@ async function _callback( name, event){
     }
         
     switch(name) {  
+        case 'maxRecentReposChanged': {
+            let val = parseInt(event.value, 10);
+            if (isNaN(val) || val < 1) val = 1;
+            if (val > 50) val = 50;
+            event.value = val;
+            global.state.maxRecentRepos = val;
+            opener.state.maxRecentRepos = val;
+            opener.saveSettings();
+            break;
+        }
         case 'checkboxChanged': {
             console.log('checkboxChanged');
             console.log(event);
@@ -90,14 +100,24 @@ async function _callback( name, event){
             
             break;
         } 
+        case 'zoomMainChanged': {
+            let val = parseFloat(event.value);
+            if (isNaN(val) || val < 0.5) val = 0.5;
+            if (val > 3.0) val = 3.0;
+            event.value = String(val);
+            global.state.zoomMain = String(val);
+            opener.state.zoomMain = String(val);
+            opener.saveSettings();
+            opener.win.reload();
+            break;
+        }
         case 'zoomChanged': {
-            value = document.getElementById(id).value;
-            
-            console.log('zoomChanged');
-            console.log(event);
-            opener.pragmaLog('   settings ' + id + ' = ' + value);
-            
-            global.state.zoom = value;
+            let val = parseFloat(event.value);
+            if (isNaN(val) || val < 0.5) val = 0.5;
+            if (val > 3.0) val = 3.0;
+            event.value = String(val);
+            global.state.zoom = String(val);
+            opener.state.zoom = String(val);
             
             // Reload zoom change
             opener.updateWithNewSettings();
@@ -323,6 +343,16 @@ async function _callback( name, event){
 
             // If SSH server folder
             if ( folder.startsWith('ssh:') ){
+                // Windows check: verify WSL is available before proceeding with remote SSH repo
+                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        setCloneStatus('');
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
+                        return;
+                    }
+                }
+
                 // Setup password-less login
                 let setupKeyCheckbox = document.getElementById('setupRemoteKeyLogin_clone');
                 if ( setupKeyCheckbox && setupKeyCheckbox.checked ){
@@ -330,10 +360,12 @@ async function _callback( name, event){
                         let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
                         let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
                         if (username && server) {
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }
                     }catch (err){
                         console.error('Error in password-less login');
@@ -432,9 +464,18 @@ async function _callback( name, event){
 			// Make folder for ssh-folder or local repo (if folder missing)
 			// 
             if ( folder.startsWith('ssh:') ){
+                // Windows check: verify WSL is available before proceeding with remote SSH repo
+                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
+                        return;
+                    }
+                }
 
                 // mkdir 
-				await opener.mkdir(folder);  // Create local folder if it does not exist
+                let selectedKeyForAdd = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
+				await opener.mkdir(folder, selectedKeyForAdd);  // Create local folder if it does not exist
                 
                 try{
                     // Setup password-less login
@@ -442,10 +483,12 @@ async function _callback( name, event){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
                             let server = document.querySelector('input[name="server"]').value.trim();
+                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+                                await syncSshKeysToWsl();
+                            }
                             let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
-                            let keyArg = (selectedKey && selectedKey.trim().length > 0) ? ` "${selectedKey.trim()}"` : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}${keyArg}`;
-                            await opener.multiPlatformExecSync( folder, command, forcelocal = false, 'timeout', 60000);  // Timeout 60 s
+                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
+                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
                         }catch (err){
                             console.error('Error in password-less login');
                             opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
@@ -592,15 +635,27 @@ async function _callback( name, event){
             console.log(event);
                 
             try{                    
-                
+                let targetFolder = global.state.repos[ Number(id)]?.localFolder || '';
+                // On Windows, warn user if WSL is missing when selecting an SSH server repo
+                if (process.platform === 'win32' && targetFolder.startsWith('ssh:') && typeof isWslAvailable === 'function') {
+                    let wslOk = await isWslAvailable();
+                    if (!wslOk) {
+                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.');
+                        id = origRepoNumber;
+                        document.getElementById(state.repoNumber).click();
+                        return;
+                    }
+                }
+
                 // Check that repo (both normal and ssh-folder)
                 let repoKey = (global.state.repos[ Number(id)] && global.state.repos[ Number(id)].sshKey) ? global.state.repos[ Number(id)].sshKey : '';
                 isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD`, repoKey ); 
                 if ( isRepo == false ){
-                        // Set to previous    
-                        id = origRepoNumber;  
-                        document.getElementById(state.repoNumber).click()    
-                        return                    
+                    // Silently revert to previous repository without showing blocking alert dialogs
+                    // (the visual red text, reason tag, and Fix button in Settings provide clear non-modal feedback)
+                    id = origRepoNumber;  
+                    document.getElementById(state.repoNumber).click();    
+                    return;                    
                 }
                 
                 
@@ -646,7 +701,22 @@ async function _callback( name, event){
                 opener.pragmaLog(' ');
 
                 // Set Radiobutton (can be user-clicked from settings-window, or not set because callback initiated from main-window)
-                document.getElementById(id).checked=true
+                let activeRadio = document.getElementById(id);
+                if (activeRadio) {
+                    activeRadio.checked = true;
+                }
+                // Update row highlight
+                let tbody = document.getElementById("settingsTableBody");
+                if (tbody) {
+                    let rows = tbody.getElementsByTagName('tr');
+                    for (let r of rows) {
+                        r.classList.remove('selectedRepoRow');
+                    }
+                    if (activeRadio) {
+                        let parentRow = activeRadio.closest('tr');
+                        if (parentRow) parentRow.classList.add('selectedRepoRow');
+                    }
+                }
 
 
                                 
@@ -672,12 +742,17 @@ async function _callback( name, event){
                 // Update displayed .gitignore     
                 document.getElementById('gitignoreText').innerText = ''
                 
-                let ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'; 
-                if (fs_existsSync(ignoreFileName) ){
+                // Use '/' for SSH URLs (even on Windows) and await async fs_existsSync before downloading .gitignore
+                let repoFolder = global.state.repos[global.state.repoNumber].localFolder;
+                if (repoFolder.startsWith('ssh:') && opener && typeof opener.setupSshServer === 'function') {
+                    await opener.setupSshServer();
+                }
+                let sep = repoFolder.startsWith('ssh:') ? '/' : pathsep;
+                let ignoreFileName = repoFolder + sep + '.gitignore'; 
+                if ( await fs_existsSync(ignoreFileName, repoKey) ){
                     
-                    if (global.state.repos[global.state.repoNumber].localFolder.startsWith('ssh:') ){
-                        let sshUrl = global.state.repos[global.state.repoNumber].localFolder;
-                        ignoreFileName = await sshGet( sshUrl, '.gitignore')
+                    if (repoFolder.startsWith('ssh:') ){
+                        ignoreFileName = await sshGet( repoFolder, '.gitignore')
                     }
                     document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
                     
@@ -767,6 +842,12 @@ async function _callback( name, event){
                     await simpleGitLog( localFolder3).raw(  commands, onSetRemoteUrl);
                     function onSetRemoteUrl(err, result ){
                     };
+
+                    // For any non-origin remote (such as upstream), always set push URL to NO-PUSH
+                    if (alias !== 'origin'){
+                        await simpleGitLog( localFolder3).raw( ['remote', 'set-url', '--push', alias, 'NO-PUSH'], (err, res) => {});
+                        remoteRepos.push.URLs[index] = 'NO-PUSH';
+                    }
                 }else{
                     newUrl = '';    
                         
@@ -852,7 +933,8 @@ async function _callback( name, event){
             console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
             
             // Make window
-            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false},
+            let createSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(500, 700) : {width: 500, height: 700};
+            nw.Window.open('create_remote_repository.html', {id: 'createRemoteRepoWindowId', show: false, width: createSize.width, height: createSize.height},
             win => win.on('loaded', function () {
                 
                 console.log(`localState.gitCreateRemoteRepoWindow.data.name = ${localState.gitCreateRemoteRepoWindow.data.name}`);
@@ -1168,6 +1250,12 @@ async function _callback( name, event){
         }        
         case 'gitMergeTool': {
             state.tools.mergetool = event.value;
+            break;
+        }        
+        case 'editorTool': {
+            state.tools.editor = event.value.trim() === '' ? 'pragma-merge' : event.value.trim();
+            event.value = state.tools.editor;
+            opener.saveSettings();
             break;
         }        
         case 'fileBrowser': {
@@ -1506,6 +1594,10 @@ async function closeWindow(){
     }
     state.tools.difftool = document.getElementById('gitDiffTool').value;
     state.tools.mergetool = document.getElementById('gitMergeTool').value;
+    if (document.getElementById('editorTool')) {
+        let edVal = document.getElementById('editorTool').value.trim();
+        state.tools.editor = edVal === '' ? 'pragma-merge' : edVal;
+    }
     state.tools.terminal = document.getElementById('terminal').value;
     state.tools.fileBrowser = document.getElementById('fileBrowser').value;
     state.tools.addedPath = document.getElementById('pathAddition').value;
@@ -1588,20 +1680,25 @@ async function gitClone( folderName, repoURL){
     let cleanFolderName = folderName.replace(/[\\\/]+$/, '');
     let topFolder = cleanFolderName + sep + repoName;
 
+    let selectedKey = isSsh && (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
+    let origPragmaSshKey = process.env.PRAGMA_SSH_KEY;
+
     // Clone
     try{
+        if (selectedKey) {
+            process.env.PRAGMA_SSH_KEY = selectedKey;
+        }
+
         // 1) mkdir parent folder if missing
         let options = [];
         opener.pragmaLog(`Create folder : ${cleanFolderName}`);
         await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
         
         // 2) Clone
-        let topFolderValidOnServer = topFolder;
-        if (isSsh){
-            // Clean to make it local on the server
-            let url = new URL(topFolder);
-            topFolderValidOnServer = decodeURIComponent(url.pathname);
-        }
+        // For SSH repositories, simpleGit runs via ssh-git-client which is already placed in cleanFolderName (-C SERVER_BASE_PATH).
+        // Passing topFolderValidOnServer as repoName ensures it clones into a relative subfolder on the remote server
+        // without attempting to create an invalid absolute path with URL/server prefixes.
+        let topFolderValidOnServer = isSsh ? repoName : topFolder;
         
         opener.pragmaLog(`Clone : "${repoURL}"  to "${cleanFolderName}"`);
         await simpleGitLog(cleanFolderName).clone(  repoURL, topFolderValidOnServer, options, onClone);  // Only here that topFolderValidOnServer is required (since it runs on server, the ssh-part should be removed)
@@ -1618,10 +1715,16 @@ async function gitClone( folderName, repoURL){
         };
         
     }catch(err){ 
-        console.log(err);
+        console.error('gitClone error:', err);
         opener.pragmaLog(err);
         displayAlert('Clone failed', err);
         return false;
+    }finally{
+        if (origPragmaSshKey !== undefined) {
+            process.env.PRAGMA_SSH_KEY = origPragmaSshKey;
+        } else {
+            delete process.env.PRAGMA_SSH_KEY;
+        }
     }
         
     // Add this repo to state
@@ -2126,10 +2229,14 @@ async function drawSoftwareTab(document){
     //document.getElementById('NoFF_merge').checked = state.NoFF_merge;
     document.getElementById('FirstParent').checked = state.FirstParent;
     document.getElementById('StashPop').checked = state.StashPop;
+    document.getElementById('maxRecentRepos').value = (state.maxRecentRepos !== undefined) ? state.maxRecentRepos : 5;
     
     
     document.getElementById('gitDiffTool').value = state.tools.difftool;
     document.getElementById('gitMergeTool').value = state.tools.mergetool;
+    if (document.getElementById('editorTool')) {
+        document.getElementById('editorTool').value = (state.tools.editor && state.tools.editor.trim() !== '') ? state.tools.editor : 'pragma-merge';
+    }
     document.getElementById('terminal').value = state.tools.terminal;
     document.getElementById('fileBrowser').value = state.tools.fileBrowser;
     document.getElementById('pathAddition').innerText = state.tools.addedPath;
@@ -2219,6 +2326,9 @@ async function generateRepoTable(document, table, data) {
     
             let cell, text, button, textarea, radiobutton
             let row = table.insertRow();
+            if (index === state.repoNumber) {
+                row.classList.add('selectedRepoRow');
+            }
             
     
              //  Into table cell : Column Repo-path with radiobuttons
@@ -2313,8 +2423,33 @@ async function generateRepoTable(document, table, data) {
                 // Local repo status warning (also for ssh folder)
                 console.log(`Coloring Local Folder -- exists:${existsStatus} isRepo:${isRepoStatus} reason:${reason} -- ${element.localFolder}`);   
                 if ( reason ){
+                    let isSsh = element.localFolder && element.localFolder.startsWith('ssh:');
+                    let displayReason = reason;
+                    let tooltip = '';
+
+                    if (isSsh) {
+                        let diag = (typeof formatSshErrorDetails === 'function')
+                            ? formatSshErrorDetails(reason, element.localFolder)
+                            : { summary: reason, suggestion: '' };
+                        tooltip = `${diag.summary}${diag.suggestion ? ' — ' + diag.suggestion : ''}`;
+                        if (reason === 'no network') {
+                            displayReason = 'SSH: host offline / timeout';
+                        } else if (reason === 'key rejected') {
+                            displayReason = 'SSH: key rejected';
+                        } else if (reason === 'wsl missing') {
+                            displayReason = 'SSH: WSL required';
+                        } else if (reason === 'not a folder') {
+                            displayReason = 'SSH: folder missing';
+                        } else if (reason === 'not a repo') {
+                            displayReason = 'SSH: not a repo';
+                        }
+                    }
+
                     label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
-                    label.innerHTML = '<b><i>(' + reason + ')</i></b> : ' + element.localFolder;
+                    label.innerHTML = element.localFolder + ' &nbsp;<b><i>(' + displayReason + ')</i></b>';
+                    if (tooltip) {
+                        label.title = tooltip;
+                    }
                     radiobox.style.visibility = "hidden";
 
                     if ( element.localFolder && element.localFolder.startsWith('ssh:') ) {
@@ -2468,8 +2603,11 @@ async function generateRepoTable(document, table, data) {
             // Remote URL active / inactive
             if ( opener.cachedRemoteOrigins?.isActiveRemote?.[index] ){
                 document.getElementById(textareaId).classList.add('green');  // Connection has been tested to work
+                document.getElementById(textareaId).title = '';
             }else{
                 document.getElementById(textareaId).classList.add('red');  // Connection has been tested to work
+                let remoteReason = (opener.cachedRemoteOrigins?.reason && opener.cachedRemoteOrigins.reason[index]) ? opener.cachedRemoteOrigins.reason[index] : 'remote error';
+                document.getElementById(textareaId).title = remoteReason;
             }
                         
             //
@@ -2505,6 +2643,27 @@ async function generateRepoTable(document, table, data) {
     } // if any repos
  
   
+}
+
+function updateRemoteStatusColors() {
+    if (!state || !state.repos) return;
+
+    for (let i = 0; i < state.repos.length; i++) {
+        let textareaId = i + 10000;
+        let area = document.getElementById(textareaId);
+        if (area) {
+            let isActive = opener?.cachedRemoteOrigins?.isActiveRemote?.[i];
+            area.classList.remove('green', 'grey', 'red');
+            if (isActive) {
+                area.classList.add('green');
+                area.title = '';
+            } else {
+                area.classList.add('red');
+                let remoteReason = (opener?.cachedRemoteOrigins?.reason && opener.cachedRemoteOrigins.reason[i]) ? opener.cachedRemoteOrigins.reason[i] : 'remote error';
+                area.title = remoteReason;
+            }
+        }
+    }
 }
 
 function updateAllGroupDropdowns() {
@@ -3157,6 +3316,24 @@ async function updateRemoteInfo( ){
         let iconPath =  await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let iconLongPath =  opener.CWD_INIT + pathsep + await provider.getValue('icon', localState.dark ? 'darkmode' : 'lightmode' );
         let providerApiStatus = await provider.getValue('api-status');
+        if (providerApiStatus !== 'ok' && provider && provider.repoInfoStruct) {
+            let info = provider.repoInfoStruct;
+            let reason = '';
+            if (info.status === 401) {
+                reason = '401 Unauthorized - invalid or missing credentials';
+            } else if (info.status === 403) {
+                reason = '403 Forbidden - access restricted or rate limit reached';
+            } else if (info.status === 404) {
+                reason = '404 Not Found - repository private or does not exist';
+            } else if (info.status) {
+                reason = `${info.status}${info.statusText ? ' ' + info.statusText : ''}`;
+            } else if (info.errorMessage) {
+                reason = info.errorMessage;
+            }
+            if (reason) {
+                providerApiStatus += ` &nbsp;<b><i>(${reason})</i></b>`;
+            }
+        }
         let providerApiUrl = await provider.getValue('api-url');
         console.log(providerApiUrl);
         let providerWebPageUrl = await provider.getValue('web-url');
@@ -3175,7 +3352,13 @@ async function updateRemoteInfo( ){
         }
         let forkParentUrl = await provider.getValue('fork-parent');
         if (forkParentUrl == undefined){
-            forkParentUrl = '(this is not a known fork)';
+            // Fallback to locally stored forkedFromURL if API query didn't return parent (e.g. login failed or unauthenticated)
+            let storedFork = state.repos && state.repos[state.repoNumber] && state.repos[state.repoNumber].forkedFromURL;
+            if (storedFork) {
+                forkParentUrl = `${storedFork} &nbsp;<b><i>(from settings)</i></b>`;
+            } else {
+                forkParentUrl = '(this is not a known fork)';
+            }
         }
 
         html += '<code> <table class="keyValueTable">';
@@ -3216,14 +3399,16 @@ function showJsonInPopup(jsonData, title, subtitle) {
     
     let showJsonInPopupWindow;
     // Create a new window   
+    let jsonViewerSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(1200, 1150) : {width: 1200, height: 1150};
+    // Create a new window   
     gui.Window.open( 
         'jsonViewer.html', 
         {
             title: 'JSON Viewer',
             id: 'jsonViewerID', 
             show: true,
-            width: 800,
-            height: 600
+            width: jsonViewerSize.width,
+            height: jsonViewerSize.height
         },
         win => win.on('loaded', function () {
 

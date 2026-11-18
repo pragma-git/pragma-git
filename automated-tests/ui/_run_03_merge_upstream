@@ -1,0 +1,32 @@
+#!/bin/bash
+# _run_03_merge_upstream - UI test for merging updates from an upstream remote
+#
+# Usage:
+#   _run_03_merge_upstream [OPTIONS]
+#
+# Description:
+#   Runs the '03_merge_upstream' UI test scenario via Chrome DevTools Protocol (CDP).
+#   Tests against an actual upstream remote repository setup:
+#     1. Configures upstream parent repo on a local fork clone.
+#     2. Makes an upstream commit and fetches updates.
+#     3. Verifies star indicator (★) and tooltip on Merge icon.
+#     4. Triggers upstream merge confirmation dialog and confirms merge.
+#     5. Validates clean merge, tree match, and indicator reset.
+#
+# Options:
+#   -h, --help        Show this help text and exit
+#   --step, -i        Interactive step-by-step mode (pause before each action)
+#   --port=<num>      CDP remote debugging port (default: 9333)
+#   --clean-up        Clean up temporary test artifacts upon completion (stores artifacts if omitted)
+#
+# Examples:
+#   ./_run_03_merge_upstream            Run test_03_merge_upstream scenario (stores artifacts)
+#   ./_run_03_merge_upstream --clean-up Run test_03_merge_upstream and clean up artifacts
+#   ./_run_03_merge_upstream --step     Run test_03_merge_upstream scenario with interactive step prompts
+#
+## Help -- prints header above (stops at '##')  (see https://github.com/JanAxelsson/cliHelpLine)
+if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ "$1" = "/?" ]; then sed -e '1{/^#!/d;}' -e '/^##/q' -e '/^[[:space:]]*$/d' -e 's/^#//g' -e 's/^ //g' "$0" | sed '$d'; exit 0; fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+exec node "$SCRIPT_DIR/scenarios/test_03_merge_upstream.js" "$@"

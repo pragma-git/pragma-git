@@ -56,7 +56,23 @@ const messageElement = {
     value: '',
     placeholder: '',
     readOnly: false,
+    offsetWidth: 500,
+    clientWidth: 500,
+    scrollHeight: 100,
+    clientHeight: 100,
     style: {}
+};
+
+const editCommitTextElement = {
+    innerHTML: '',
+    style: { visibility: 'hidden', right: '5px' },
+    attributes: {},
+    setAttribute: function(name, val) { this.attributes[name] = val; },
+    removeAttribute: function(name) { delete this.attributes[name]; }
+};
+
+const amendCommitElement = {
+    style: { visibility: 'hidden', right: '5px' }
 };
 
 const sandbox = {
@@ -79,9 +95,17 @@ const sandbox = {
     document: {
         getElementById: (id) => {
             if (id === 'message') return messageElement;
+            if (id === 'edit_commit_text_div') return editCommitTextElement;
+            if (id === 'amend_commit_div') return amendCommitElement;
             return { value: '', style: {} };
         }
     },
+    window: {
+        _msgAllowAction: true,
+        _messageHadFocus: false
+    },
+    _draftInactivityTimer: null,
+    _draftInactivityExpired: false,
     getMode: () => currentMode,
     _setMode: (mode) => { currentMode = mode; sandbox.localState.mode = mode; },
     saveSettings: () => { savedSettingsCallCount++; },
@@ -93,11 +117,13 @@ const sandbox = {
 };
 
 const fnNames = [
+    'adjustMessageOverlayOffset',
     'readMessage',
     'writeTextOutput',
     'getRepoDraftMessage',
     'saveCurrentRepoDraftMessage',
-    'restoreRepoDraftMessage'
+    'restoreRepoDraftMessage',
+    'updateEditCommitTextDiv'
 ];
 
 let compiledCode = '';
@@ -195,7 +221,7 @@ async function runTests() {
         'Committing clears draftMessage and resets scratch textarea'
     );
 
-    // Test 8: restoreRepoDraftMessage on empty draft sets ongoing placeholder and editable state when returning to HEAD
+    // Test 8: restoreRepoDraftMessage on empty draft restores editable state and placeholder when returning to HEAD
     sandbox.localState.historyNumber = -1;
     currentMode = 'HISTORY';
     messageElement.value = 'Historical commit from history';
@@ -205,8 +231,95 @@ async function runTests() {
     assert(
         messageElement.value === '' &&
         messageElement.readOnly === false &&
-        messageElement.placeholder.includes('You may write what is ongoing here'),
-        'restoreRepoDraftMessage immediately clears historical text and displays ongoing placeholder'
+        messageElement.placeholder === 'No previous commits',
+        'restoreRepoDraftMessage immediately clears historical text and sets default fallback placeholder when unset'
+    );
+
+    // Test 9: saveCurrentRepoDraftMessage does NOT overwrite draft when editing previous commit message via double-click (_msgAllowAction === false in NO_FILES_TO_COMMIT)
+    currentMode = 'NO_FILES_TO_COMMIT';
+    sandbox.window._msgAllowAction = false;
+    sandbox.state.repos[0].draftMessage = '';
+    messageElement.value = 'Amended commit message from double-click';
+    sandbox.saveCurrentRepoDraftMessage(true, 0);
+    assert(
+        sandbox.state.repos[0].draftMessage === '',
+        'saveCurrentRepoDraftMessage ignores updates while amending previous commit message via double-click in NO_FILES_TO_COMMIT mode'
+    );
+    sandbox.window._msgAllowAction = true;
+
+    // Test 10: updateEditCommitTextDiv shows (draft) badge on blur or idle, and (double-click to change) when empty at HEAD
+    currentMode = 'CHANGED_FILES';
+    messageElement.value = 'WIP notes for refactoring';
+    sandbox.window._messageHadFocus = false;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(draft)' &&
+        editCommitTextElement.style.visibility === 'visible' &&
+        editCommitTextElement.attributes['data-tooltip'] === 'Draft note for this repository (edit when ready to commit)',
+        'updateEditCommitTextDiv displays (draft) when text is entered and textarea is not focused'
+    );
+
+    // When focused and active typing (not idle), (draft) is hidden
+    sandbox.window._messageHadFocus = true;
+    sandbox._draftInactivityExpired = false;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.style.visibility === 'hidden',
+        'updateEditCommitTextDiv hides (draft) while actively typing in focus'
+    );
+
+    // When idle for 6s while focused, (draft) becomes visible
+    sandbox._draftInactivityExpired = true;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(draft)' &&
+        editCommitTextElement.style.visibility === 'visible',
+        'updateEditCommitTextDiv reveals (draft) when idle for 6s even if focused'
+    );
+
+    // In NO_FILES_TO_COMMIT with no draft: shows (double-click to change)
+    currentMode = 'NO_FILES_TO_COMMIT';
+    messageElement.value = '';
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.innerHTML === '(double-click to change)' &&
+        editCommitTextElement.style.visibility === 'visible' &&
+        !editCommitTextElement.attributes['data-tooltip'],
+        'updateEditCommitTextDiv restores (double-click to change) when message area is empty at HEAD'
+    );
+
+    // In HISTORY mode: hidden
+    currentMode = 'HISTORY';
+    sandbox.localState.historyNumber = 2;
+    sandbox.updateEditCommitTextDiv();
+    assert(
+        editCommitTextElement.style.visibility === 'hidden',
+        'updateEditCommitTextDiv is hidden in HISTORY mode'
+    );
+    sandbox.localState.historyNumber = -1;
+
+    // Test 11: adjustMessageOverlayOffset dynamically moves overlay badges left when vertical scrollbar is present
+    messageElement.offsetWidth = 500;
+    messageElement.clientWidth = 485; // 15px scrollbar width
+    messageElement.scrollHeight = 300;
+    messageElement.clientHeight = 100; // scrollHeight > clientHeight (hasVerticalScroll)
+    sandbox.adjustMessageOverlayOffset();
+    assert(
+        editCommitTextElement.style.right === '20px' &&
+        amendCommitElement.style.right === '20px',
+        'adjustMessageOverlayOffset offsets right position by scrollbarWidth + 5px (20px) when scrollbar is present'
+    );
+
+    // When there is no vertical scrollbar, offset returns to 5px
+    messageElement.offsetWidth = 500;
+    messageElement.clientWidth = 500;
+    messageElement.scrollHeight = 100;
+    messageElement.clientHeight = 100;
+    sandbox.adjustMessageOverlayOffset();
+    assert(
+        editCommitTextElement.style.right === '5px' &&
+        amendCommitElement.style.right === '5px',
+        'adjustMessageOverlayOffset resets right position to 5px when no vertical scrollbar is present'
     );
 
     printSuiteResult();

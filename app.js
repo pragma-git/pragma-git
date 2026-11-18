@@ -74,7 +74,7 @@ document.getElementsByClassName('te-mode-switch-section')[0].appendChild(d);
  * For instance, textarea can have text, placeholder and read-only text, depending on mode. 
  * 
  * 
- * Mode Strings :
+ * Mode Strings : 
  * --------------
  * 
  * UNKNOWN                    lets _setMode determine correct mode
@@ -197,20 +197,31 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
             // Git binary linux, MacOS, Windows
             let binary = [`${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client` ];
             if (process.platform === 'win32') {  
-                let WSL_STARTDIR =  STARTDIR.replaceAll('\\','/').replace('C:','/mnt/c'); // 'C:\\Users\\axels\\Documents\\Projects\\Pragma-git\\pragma-git' => '/mnt/c/Users/axels/Documents/Projects/Pragma-git/pragma-git'
+                let WSL_STARTDIR = STARTDIR.replaceAll('\\','/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`); // Support any drive letter (e.g. C:\ or D:\ -> /mnt/c or /mnt/d)
                 binary = ['wsl', `${WSL_STARTDIR}/ssh_folder/ssh-git-client` ]; // WSL abs path to ssh-git-client
             }
             
             let sshUrl = pwd;
            
+            // Forward SSH key for this repo via process environment (PRAGMA_SSH_KEY)
+            let gitSpawnEnv = Object.assign({}, process.env);
+            if (typeof sshKeyEnv === 'function') {
+                let keyEnvs = sshKeyEnv(sshUrl);
+                if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+                    Object.assign(gitSpawnEnv, keyEnvs);
+                }
+            }
+
             // The second config-row below is used to sneak the SSHURL into the ssh-git-client
             //
             // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
             //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
             
             
-            return simpleGitDefault( 
+            let gitInst = simpleGitDefault( 
                 {   
+                    baseDir: STARTDIR,
+                    spawnOptions: { env: gitSpawnEnv },
                     config: [   
                                 `include.path=${configFile}`, 
                                 `SSHURL=${sshUrl}` 
@@ -221,6 +232,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                     binary: binary  
                 }
             ); 
+            if (gitInst && typeof gitInst.env === 'function' && gitSpawnEnv && Object.keys(gitSpawnEnv).length > 0) {
+                gitInst.env(gitSpawnEnv);
+            }
+            return gitInst;
 			// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
             // My ssh-git-client handles path by itself (by SSHURL being sneaked in via config parameters).
         }
@@ -246,6 +261,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var graph_win;
         var about_win;
         var merge_win;
+        var ssh_file_browser_win;
+        var sshFileBrowserWindows = {};
         
         // Windows opened from Settings
         var gitignore_win;
@@ -266,6 +283,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
            'Commit': 'graph_win',      
            'About': 'about_win',      
            'File': 'merge_win',
+           'Pragma-merge': 'merge_win',
+           'SSH': 'ssh_file_browser_win',
            'Git-ignore': 'gitignore_win' ,
            'Create': 'createRemote_win' ,
            'Help': 'help_win',
@@ -277,19 +296,19 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const STARTDIR = process.cwd(); // Folder where this file was started
         const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
-        let settingsDir = os.homedir() + pathsep + '.Pragma-git'; 
-        mkdir( settingsDir);
+        let settingsDir = process.env.PRAGMA_SETTINGS_DIR || (os.homedir() + pathsep + '.Pragma-git'); 
+        if (!fs.existsSync(settingsDir)) fs.mkdirSync(settingsDir, { recursive: true });
         
         var settingsFile = settingsDir + pathsep + 'settings.json';    
         var ciCacheFile = settingsDir + pathsep + 'ci_cache.json';    
          
         let notesDir = settingsDir + pathsep + 'Notes'; 
-        mkdir(notesDir);
+        if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
     
         
         // Pragma-git : Signaling files and folders 
-        const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
-        mkdir(SIGNALDIR); 
+        const SIGNALDIR = process.env.PRAGMA_SIGNAL_DIR || (settingsDir + pathsep + '.tmp');
+        if (!fs.existsSync(SIGNALDIR)) fs.mkdirSync(SIGNALDIR, { recursive: true }); 
         
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt'; 
@@ -301,6 +320,10 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         // Pragma-merge : Signaling files and folders 
         const MERGESIGNALFILE = SIGNALDIR + pathsep + 'pragma-merge-running';  
         const EXITMERGESIGNALFILE = SIGNALDIR + pathsep + 'exit-pragma-merge';
+        const MERGESESSIONSDIR = SIGNALDIR + pathsep + 'sessions';
+        if (!fs.existsSync(MERGESESSIONSDIR)) {
+            try { fs.mkdirSync(MERGESESSIONSDIR, { recursive: true }); } catch (e) {}
+        }
         
         // Pragma-askpass : Signaling files and folders 
         const ASKPASSIGNALFILE = SIGNALDIR + pathsep + 'pragma-askpass-running'; 
@@ -387,19 +410,47 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
     // Inititate listening to Pragma-merge start signal
        
        rmLocalFile(MERGESIGNALFILE);
-       const merge_watcher = chokidar.watch(MERGESIGNALFILE, {
+       // Clean up any stale sessions on startup
+       if (fs.existsSync(MERGESESSIONSDIR)) {
+           try {
+               let staleDirs = fs.readdirSync(MERGESESSIONSDIR);
+               for (let s of staleDirs) {
+                   let fullPath = path.join(MERGESESSIONSDIR, s);
+                   try { fs.rmSync(fullPath, { recursive: true, force: true }); } catch (e) {}
+               }
+           } catch (e) {}
+       }
+       const merge_watcher = chokidar.watch([MERGESIGNALFILE, MERGESESSIONSDIR], {
             usePolling: true,
-            interval: 100, // Detta täcker alla ändringar på signalfilen
-            persistent: true
+            interval: 100, // Covers signal file changes and session directory creations
+            persistent: true,
+            depth: 2
        });
+
+       const activeMergeSessions = new Set();
        
        merge_watcher.on('add', 
-           path => { 
-               pragmaLog(`Pragma-git : File ${path} has been added`); 
-               pragmaLog(`Pragma-git : startPragmaMerge()`); 
-               startPragmaMerge();
+           filePath => { 
+               let base = path.basename(filePath);
+               if (base === 'pragma-merge-running') {
+                   let sessionDir = path.dirname(filePath);
+                   let sessionId = path.basename(sessionDir);
+                   if (sessionId && sessionId !== '.tmp' && !activeMergeSessions.has(sessionId)) {
+                       activeMergeSessions.add(sessionId);
+                       pragmaLog(`Pragma-git : Session detected (${sessionId}) at ${filePath}`);
+                       startPragmaMerge(sessionId, sessionDir);
+                   } else if (filePath === MERGESIGNALFILE) {
+                       // Only fallback to legacy handler if no session directories are found
+                       let hasSessions = fs.existsSync(MERGESESSIONSDIR) && fs.readdirSync(MERGESESSIONSDIR).length > 0;
+                       if (!hasSessions && activeMergeSessions.size === 0) {
+                           pragmaLog(`Pragma-git : Legacy signal file ${filePath} added`); 
+                           pragmaLog(`Pragma-git : startPragmaMerge()`); 
+                           startPragmaMerge();
+                       }
+                   }
+               }
            } 
-       )
+       );
 
 
     // Inititate listening to askpass start signal
@@ -455,7 +506,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
 
 // Main functions
-var _debounceState = {};  // State variable for _callback debounce
+var _debounceState = _debounceState || {};  // State variable for _callback debounce
 async function _callback( name, event){ 
     
     // Debounce code (prevent double-click)
@@ -466,6 +517,7 @@ async function _callback( name, event){
     
     // Only consider the list in "debounceableCallbacks"
     if (debounceableCallbacks.includes(key)) {
+        if (!_debounceState) _debounceState = {};
         const now = Date.now();
         const lastCall = _debounceState[key]?.lastCall || 0;  // "_debounceState[key]?lastCall" avoids fail (returns undefined), if key not in array.  If so, fall back to value 0
         
@@ -554,51 +606,64 @@ async function _callback( name, event){
         let noDialog = true;
         
         var isRepo;
-        // Check if repo
-        if (  fs_existsSync(state.repos[state.repoNumber].localFolder )) {
-            // If folder exists, I am allowed to set up ssh-server, and can then check if repo exists
-            
-	        // Setup and copy git config to ssh server
-	        await setupSshServer(); 
-            
-            // Check if repository 
-            try{
-
-                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD`);
-                if (!isRepo) {
-                    displayLongAlert('Repository Error', 'Repository missing', 'error'); 
-                    noDialog = false;
+        let currentFolder = state.repos[state.repoNumber].localFolder;
+        if ( currentFolder.startsWith('ssh:') ){  
+            // On Windows, if WSL is missing, silently revert without blocking modal dialog
+            if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+                let wslOk = await isWslAvailable();
+                if (!wslOk) {
+                    state.repoNumber = origRepoNumber;
+                    return;
                 }
-            }catch (err){
-                isRepo = false;
-                displayLongAlert('Repository Error', 'Missing repository : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
-                noDialog = false;
-                state.repoNumber = origRepoNumber;  
+                // Ensure WSL ~/.ssh mirror is in sync with Windows keys when switching to an ssh repo
+                if (typeof syncSshKeysToWsl === 'function') {
+                    await syncSshKeysToWsl();
+                }
             }
-        }else{    
-            // Show dialog except if over ssh
-            if ( !state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){           
-                // localFolder missing -- dialog, and reset repo
-                displayLongAlert('Folder Error', 'Missing repository folder : \n' +state.repos[state.repoNumber].localFolder, 'error'); 
-                noDialog = false;
-                state.repoNumber = origRepoNumber;  
-            }
- 
-        }
-        
-        if ( state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){  
             try{
-                isRepo = await fs_existsSync( `${state.repos[state.repoNumber].localFolder}/.git/HEAD` );
+                // Single SSH check on .git/HEAD verifies both folder existence and valid git repo at once
+                let repoKey = state.repos[state.repoNumber].sshKey || '';
+                isRepo = await fs_existsSync( `${currentFolder}/.git/HEAD`, repoKey );
+                if (!isRepo) {
+                    // Silently revert to previous repository without blocking modal dialog;
+                    // the greyed-out repo menu and footer indicator provide non-intrusive feedback
+                    state.repoNumber = origRepoNumber;
+                    return;
+                }
+                // Update cached status so the 1s _update2() loop does not need to re-probe over SSH
+                if (cachedLocalStatus && cachedLocalStatus.exists) {
+                    cachedLocalStatus.exists[state.repoNumber] = true;
+                    cachedLocalStatus.isRepo[state.repoNumber] = true;
+                    cachedLocalStatus.ping[state.repoNumber] = true;
+                    cachedLocalStatus.localFolder[state.repoNumber] = currentFolder;
+                    if (cachedLocalStatus.reason) cachedLocalStatus.reason[state.repoNumber] = '';
+                }
+                await setupSshServer();
             }catch (err){
-                displayLongAlert('SSH Folder Error -- repo check failed', 
-                    `${err} (for repo: ${global.state.repos[state.repoNumber].localFolder}) \n \n Please verify ssh connection manually using a terminal`, 
-                    'error'); 
-                    noDialog = false;
-                    
                 state.repoNumber = origRepoNumber;
+                return;
             }
-            
-            
+        } else {
+            // Local folder check (await required because fs_existsSync is async)
+            if ( await fs_existsSync(currentFolder) ) {
+                try{
+                    isRepo = await fs_existsSync( `${currentFolder}/.git/HEAD` );
+                    if (!isRepo) {
+                        displayLongAlert('Repository Error', 'Repository missing', 'error'); 
+                        noDialog = false;
+                    }
+                }catch (err){
+                    isRepo = false;
+                    displayLongAlert('Repository Error', 'Missing repository : \n' + currentFolder, 'error'); 
+                    noDialog = false;
+                    state.repoNumber = origRepoNumber;  
+                }
+            } else {
+                // localFolder missing -- dialog, and reset repo
+                displayLongAlert('Folder Error', 'Missing repository folder : \n' + currentFolder, 'error'); 
+                noDialog = false;
+                state.repoNumber = origRepoNumber;  
+            }
         }
     
         
@@ -613,13 +678,6 @@ async function _callback( name, event){
         localState.pinnedCommit = ''; // Remove pinned commit (Future: store in state.repos[i].pinnedCommit ?)
         //_setMode('UNKNOWN');
 
-        
-        // Update repo in settings_win 
-        try{
-            await settings_win.window._callback('repoRadiobuttonChanged', {id: state.repoNumber });
-        }catch(err){ 
-        }
-        
         await cacheBranchList();
         
         await gitStashMap(state.repos[state.repoNumber].localFolder);
@@ -664,12 +722,54 @@ async function _callback( name, event){
         
         break;
       }
+      case 'clicked-upstream-badge': {
+        // Find first upstream branch that is ahead and prompt to merge directly
+        let targetBranch = null;
+        let count = 0;
+        let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+        if (cachedBranchList && cachedBranchList.branches) {
+            for (let b in cachedBranchList.branches) {
+                if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                    targetBranch = b;
+                    count = cachedBranchList.branches[b].behindCount || 1;
+                    break;
+                }
+            }
+        }
+        if (targetBranch) {
+            showConfirmMergeUpstreamDialog(targetBranch, current, count);
+        } else {
+            await branchClicked(true, 'menu');
+        }
+        break;
+      }
+      case 'confirmMergeUpstreamOK': {
+        if (pendingUpstreamMerge) {
+            let mergeInfo = pendingUpstreamMerge;
+            pendingUpstreamMerge = null;
+            await _callback('clickedMergeContextualMenu', {
+                selectedBranch: mergeInfo.selectedBranch,
+                currentBranch: mergeInfo.currentBranch
+            });
+        }
+        break;
+      }
       case 'clickedBranchContextualMenu': { 
         console.log('Selected branch = ' + event.selectedBranch);
         let branchName = event.selectedBranch;
         pragmaLog('   branchname = ' + branchName);
         
         saveCurrentRepoDraftMessage(true);
+
+        // If user selected an upstream branch from branch menu, offer to merge it into current branch
+        if (branchName.startsWith('remotes/upstream') || branchName.startsWith('upstream/')) {
+            let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+            let count = (cachedBranchList && cachedBranchList.branches && cachedBranchList.branches[branchName]) 
+                ? (cachedBranchList.branches[branchName].behindCount || 1) 
+                : 1;
+            showConfirmMergeUpstreamDialog(branchName, current, count);
+            break;
+        }
 
         // Checkout local branch
         try{
@@ -710,13 +810,14 @@ async function _callback( name, event){
         let filePath = notesDir + pathsep + fileName + '.md';
         global.arguments = [ filePath ];  // send through global.arguments
         let title = 'Notes';
+        let notesSize = getSensibleWindowSize(1100, 1200);
         gui.Window.open('notes.html',
             {   
                 id: 'notesWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 600,
+                width: notesSize.width,
+                height: notesSize.height,
                 title: title
             },  
             win=>win.on('loaded', async () => {
@@ -813,18 +914,27 @@ async function _callback( name, event){
       }
 
       // Middle field
+      case 'message_focus': {
+        if (typeof onMessageFocus === 'function') {
+            onMessageFocus();
+        }
+        break;
+      }
       case 'message_key_up': {
         messageKeyUpEvent();
         break;
       }
       case 'message_blur': {
         saveCurrentRepoDraftMessage(true);
+        if (typeof onMessageBlur === 'function') {
+            onMessageBlur();
+        }
         break;
       }
       case 'message_dblclick': {
 
             // If we already have a cursor in the textarea (already editing):
-            if (window._messageHadFocus) {
+            if (window._messageHadFocus && readMessage().trim().length > 0) {
                 break; // normal dblclick (select word)
             }
 
@@ -849,6 +959,7 @@ async function _callback( name, event){
 
                 writeTextOutput({ value: commitMessage });
                 document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
+                document.getElementById('store-button').disabled = false;
                 
                 messageKeyUpEvent();  // Will act as if I have typed -- shows some messages
             }
@@ -1174,13 +1285,14 @@ async function _callback( name, event){
         let title = "Graph";
 
         // Open new window (will open above old)
+        let graphSize = getSensibleWindowSize(1400, 1100);
         gui.Window.open('graph.html',
             {
                 id: 'graphWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 600,
+                width: graphSize.width,
+                height: graphSize.height,
                 title: title
             }
             ,
@@ -1939,7 +2051,12 @@ async function _callback( name, event){
         }
         
         if (event == 'ForcePush'){
-            gitPush( forcePush = true); 
+            await gitPush( forcePush = true); 
+            await _update2();
+        }
+
+        if (event == 'Cancel'){
+            await _update2();
         }
         
         break;
@@ -1979,13 +2096,14 @@ async function _callback( name, event){
 
         // Open new window -- and create closed-callback
         if ( localState.helpWindow == false ){
+            let helpSize = getSensibleWindowSize(1100, 1200);
             gui.Window.open(
                 'HELP' + pathsep + 'TEMPLATE_help.html',
                 {   id: 'helpId',
                     show: false,
                     position: 'center',
-                    width: 600,
-                    height: 700   
+                    width: helpSize.width,
+                    height: helpSize.height   
                 },
                 function(cWindows){ 
                     cWindows.on('closed', 
@@ -2061,7 +2179,7 @@ async function _callback( name, event){
     }
 
     // Utility to get indices of recently opened repos, sorted newest first, without duplicates
-    function getRecentRepoIndices(maxCount = 5) {
+    function getRecentRepoIndices(maxCount = (state.maxRecentRepos !== undefined ? Number(state.maxRecentRepos) : 5)) {
         ensureLastOpenedInitialized();
         let recent = [];
         for (let i = 0; i < state.repos.length; i++) {
@@ -2175,13 +2293,22 @@ async function _callback( name, event){
                     let isCurrentInCurrentView = !hasAnyGroup ? isCurrentRepo : (isCurrentRepo && (currentGroupView === groupContext));
                     let warningSign = (!isRepoValid || remoteHasError) ? ' ! ' : '';
                     let reason = !isRepoValid ? localReason : remoteReason;
+                    if (localFolder.startsWith('ssh:') && !isRepoValid) {
+                        if (reason === 'no network') {
+                            reason = 'SSH offline';
+                        } else if (reason === 'key rejected') {
+                            reason = 'SSH key rejected';
+                        } else if (reason === 'wsl missing') {
+                            reason = 'WSL needed';
+                        }
+                    }
                     let reasonSuffix = reason ? ` (${reason})` : '';
 
                     let menuItemConfig = { 
                         label: warningSign + myEvent.selectedRepo + reasonSuffix, 
                         type: 'checkbox',
                         checked: isCurrentRepo,
-                        enabled: !isCurrentInCurrentView && isRepoValid,
+                        enabled: isRepoValid,
                         click: () => { _callback('clickedRepoContextualMenu', myEvent); } 
                     };
 
@@ -2209,96 +2336,92 @@ async function _callback( name, event){
                         cachedRepoMenu.append(new gui.MenuItem({ label: 'No accessible repositories found', enabled: false }));
                     }
                 } else {
-                    // Grouped menu:
-                    let currentRepoGroup = (currentRepoObj && currentRepoObj.group) ? currentRepoObj.group.trim() : '';
-                    if (currentGroupView === undefined) {
-                        currentGroupView = currentRepoGroup;
-                    } else if (currentGroupView !== 'ALL' && currentGroupView !== 'RECENT') {
-                        if (!groupMap[currentGroupView] && currentGroupView !== '') {
-                            currentGroupView = currentRepoGroup;
-                            localState.activeGroupView = currentGroupView;
-                        }
-                    }
+                    // Concept A:
+                    // 1. Top Section: Recent Repos (always directly in root menu)
+                    let recentIndices = getRecentRepoIndices();
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Recent repos : ', enabled: false }));
 
-                    // 1. All groups folded as submenus at top
-                    let allGroups = Object.keys(groupMap).filter(g => g.length > 0).sort();
-                    if (groupMap[''] && groupMap[''].length > 0) {
-                        allGroups.push('');
-                    }
-
-                    let recentIndices = getRecentRepoIndices(5);
-                    allGroups.push('RECENT');
-                    allGroups.push('ALL');
-
-                    let addedSubmenus = false;
-
-                    if (allGroups.length > 0) {
-                        // Leading grey text above groups
-                        cachedRepoMenu.append(new gui.MenuItem({ label: 'Repo groups : ', enabled: false }));
-
-                        for (let g of allGroups) {
-                            let subMenu = new gui.Menu();
-                            let countInSub = 0;
-                            let repoIndices = (g === 'ALL') ? Array.from({ length: state.repos.length }, (_, k) => k) : ((g === 'RECENT') ? recentIndices : (groupMap[g] || []));
-                            for (let idx of repoIndices) {
-                                let item = await buildRepoMenuItem(idx, g);
-                                if (item) {
-                                    subMenu.append(item);
-                                    countInSub++;
-                                }
-                            }
-                            if (countInSub > 0) {
-                                let labelText = (g === 'ALL') ? 'All' : ((g === 'RECENT') ? 'Recent' : ((g.length === 0) ? 'Ungrouped' : g));
-                                cachedRepoMenu.append(new gui.MenuItem({
-                                    label: labelText,
-                                    submenu: subMenu
-                                }));
-                                addedSubmenus = true;
-                            }
-                        }
-                    }
-
-                    if (addedSubmenus) {
-                        cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
-                    }
-
-                    // 2. Current group repos shown directly in menu
-                    let headerText = '';
-                    let currentRepos = [];
-                    if (currentGroupView === 'ALL') {
-                        headerText = 'All repos : ';
-                        currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
-                    } else if (currentGroupView === 'RECENT') {
-                        headerText = 'Recent repos : ';
-                        currentRepos = recentIndices;
-                    } else if (currentGroupView.length > 0) {
-                        headerText = `Repos in '${currentGroupView}' : `;
-                        currentRepos = groupMap[currentGroupView] || [];
-                    } else {
-                        headerText = 'Ungrouped repos : ';
-                        currentRepos = groupMap[''] || [];
-                    }
-
-                    if (currentRepos.length === 0 && currentGroupView !== 'ALL') {
-                        currentGroupView = 'ALL';
-                        localState.activeGroupView = 'ALL';
-                        state.repoGroupFilter = 'ALL';
-                        headerText = 'All repos : ';
-                        currentRepos = Array.from({ length: state.repos.length }, (_, k) => k);
-                    }
-
-                    cachedRepoMenu.append(new gui.MenuItem({ label: headerText, enabled: false }));
-
-                    let addedCurrentCount = 0;
-                    for (let idx of currentRepos) {
-                        let item = await buildRepoMenuItem(idx, currentGroupView);
+                    let addedRecentCount = 0;
+                    for (let idx of recentIndices) {
+                        let item = await buildRepoMenuItem(idx);
                         if (item) {
                             cachedRepoMenu.append(item);
-                            addedCurrentCount++;
+                            addedRecentCount++;
                         }
                     }
-                    if (addedCurrentCount === 0) {
-                        cachedRepoMenu.append(new gui.MenuItem({ label: 'No accessible repositories found', enabled: false }));
+
+                    if (addedRecentCount === 0) {
+                        cachedRepoMenu.append(new gui.MenuItem({ label: '(No recent repos)', enabled: false }));
+                    }
+
+                    cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
+
+                    // 2. Middle Section: Groups in clean submenus
+                    cachedRepoMenu.append(new gui.MenuItem({ label: 'Repo groups : ', enabled: false }));
+
+                    let namedGroups = Object.keys(groupMap).filter(g => g.length > 0).sort();
+                    for (let g of namedGroups) {
+                        let subMenu = new gui.Menu();
+                        let countInSub = 0;
+                        for (let idx of groupMap[g]) {
+                            let item = await buildRepoMenuItem(idx);
+                            if (item) {
+                                subMenu.append(item);
+                                countInSub++;
+                            }
+                        }
+                        if (countInSub > 0) {
+                            cachedRepoMenu.append(new gui.MenuItem({
+                                label: g,
+                                submenu: subMenu
+                            }));
+                        }
+                    }
+
+                    // Ungrouped repos submenu if any exist
+                    if (groupMap[''] && groupMap[''].length > 0) {
+                        let subMenu = new gui.Menu();
+                        let countInSub = 0;
+                        for (let idx of groupMap['']) {
+                            let item = await buildRepoMenuItem(idx);
+                            if (item) {
+                                subMenu.append(item);
+                                countInSub++;
+                            }
+                        }
+                        if (countInSub > 0) {
+                            cachedRepoMenu.append(new gui.MenuItem({
+                                label: 'Ungrouped',
+                                submenu: subMenu
+                            }));
+                        }
+                    }
+
+                    cachedRepoMenu.append(new gui.MenuItem({ type: 'separator' }));
+
+                    // 3. Bottom Section: All Repos (Alphabetical) in submenu
+                    let allSubMenu = new gui.Menu();
+                    let allIndicesSorted = Array.from({ length: state.repos.length }, (_, k) => k);
+                    allIndicesSorted.sort((a, b) => {
+                        let nameA = (path.basename(state.repos[a]?.localFolder || '')).toLowerCase();
+                        let nameB = (path.basename(state.repos[b]?.localFolder || '')).toLowerCase();
+                        return nameA.localeCompare(nameB);
+                    });
+
+                    let countInAll = 0;
+                    for (let idx of allIndicesSorted) {
+                        let item = await buildRepoMenuItem(idx);
+                        if (item) {
+                            allSubMenu.append(item);
+                            countInAll++;
+                        }
+                    }
+
+                    if (countInAll > 0) {
+                        cachedRepoMenu.append(new gui.MenuItem({
+                            label: 'All Repos (Alphabetical)',
+                            submenu: allSubMenu
+                        }));
                     }
                 }
 
@@ -2325,7 +2448,7 @@ async function _callback( name, event){
                                 label: name,
                                 type: 'checkbox',
                                 checked: isCurrent,
-                                enabled: !isCurrent,
+                                enabled: true,
                                 click: () => {
                                     _callback('clickedRepoContextualMenu', {
                                         selectedRepo: name,
@@ -2544,12 +2667,13 @@ async function _callback( name, event){
 
         
         // Open new window -- and create closed-callback
+        let aboutSize = getSensibleWindowSize(1100, 1400);
         gui.Window.open('about.html#/new_page', 
             {   id: 'aboutWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: aboutSize.width,
+                height: aboutSize.height,
                 title: title   
             },
             function(cWindows){ 
@@ -2795,6 +2919,17 @@ async function _callback( name, event){
             
         }else{
             // Store
+            // Immediately hide draft badge and cancel inactivity timer
+            let editDiv = document.getElementById('edit_commit_text_div');
+            if (editDiv) {
+                editDiv.style.visibility = 'hidden';
+            }
+            if (typeof _draftInactivityTimer !== 'undefined' && _draftInactivityTimer) {
+                clearTimeout(_draftInactivityTimer);
+                _draftInactivityTimer = null;
+            }
+            _draftInactivityExpired = false;
+
             gitAddCommitAndPush( readMessage());
         }
         
@@ -2954,17 +3089,17 @@ async function _callback( name, event){
             return;
         }
         
+        resetDraftInactivityTimer();
         textOutput.value = readMessage();
         saveCurrentRepoDraftMessage(false);
 
         if (getMode() === 'NO_FILES_TO_COMMIT') {
             let hasDraft = (readMessage().trim().length > 0);
-            if (hasDraft) {
-                document.getElementById('edit_commit_text_div').style.visibility = 'hidden';
-            } else if (window._msgAllowAction) {
-                document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
-                document.getElementById('edit_commit_text_div').style.visibility = 'visible';
+            if (!hasDraft) {
+                window._msgAllowAction = true;
+                document.getElementById('store-button').disabled = true;
             }
+            updateEditCommitTextDiv();
             return;
         }
         
@@ -2974,6 +3109,7 @@ async function _callback( name, event){
         }else{
             _setMode( 'CHANGED_FILES');
         }
+        updateEditCommitTextDiv();
         
     }
     async function dropFile(e) {
@@ -3044,6 +3180,12 @@ async function _callback( name, event){
         console.log('Folder clicked');
         
         let folder = state.repos[state.repoNumber].localFolder;
+        
+        // Remote SSH repository -> open SSH File Browser
+        if (folder && folder.startsWith('ssh:')) {
+            showSshFileBrowser(folder);
+            return;
+        }
          
         // Override terminal command from settings
         if ( state.tools.fileBrowser.trim() !== '' ){
@@ -3074,13 +3216,14 @@ async function _callback( name, event){
         _setMode('SETTINGS');
         
         let title = "Settings";
+        let settingsSize = getSensibleWindowSize(1400, 1100);
         settings_win = gui.Window.open('settings.html' ,
             {
                 id: 'settingsWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: settingsSize.width,
+                height: settingsSize.height,
                 title: title
             },
             win=>win.on('loaded', () => {
@@ -3113,13 +3256,14 @@ async function _callback( name, event){
             return
         }
         
+        let resolveSize = getSensibleWindowSize(1200, 1050);
         gui.Window.open('resolveConflicts.html#/new_page' ,
             {
                 id: 'resolveConflictsWindowId',
                 position: 'center',
                 show: false,
-                width: 600,
-                height: 700,
+                width: resolveSize.width,
+                height: resolveSize.height,
                 title: title
             },
                 win=>win.on('loaded', () => {
@@ -3144,13 +3288,14 @@ async function _callback( name, event){
             
         }catch(err){        
             // Make new window
+            let changedSize = getSensibleWindowSize(900, 500);
             gui.Window.open('listChanged.html#/new_page' ,
                 {
                     id: 'listChangedId',
                     position: 'center',
                     show: false,
-                    width: 600,
-                    height: 700,
+                    width: changedSize.width,
+                    height: changedSize.height,
                     title: title
                 },
                     win=>win.on('loaded', 
@@ -3267,12 +3412,25 @@ async function _update2(){
         fullFolderPath = state.repos[ state.repoNumber].localFolder; 
     }
     
-    let folderExists= false;
+    let folderExists = false;
+    let isSshRepo = (typeof fullFolderPath === 'string' && fullFolderPath.startsWith('ssh:'));
     
-    try{
-        folderExists = await fs_existsSync( fullFolderPath );
-    }catch (err){
-        console.error(err);
+    if (isSshRepo) {
+        // Use cached status in 1s loop to avoid two sequential SSH round-trips before gitStatus
+        if (cachedLocalStatus && cachedLocalStatus.localFolder && cachedLocalStatus.localFolder[state.repoNumber] === fullFolderPath) {
+            folderExists = Boolean(cachedLocalStatus.exists[state.repoNumber]);
+            isRepo = Boolean(cachedLocalStatus.isRepo[state.repoNumber]);
+        } else {
+            folderExists = true;
+            isRepo = true;
+        }
+    } else {
+        try{
+            folderExists = await fs_existsSync( fullFolderPath );
+            isRepo = folderExists ? await fs_existsSync( `${fullFolderPath}/.git/HEAD` ) : false;
+        }catch (err){
+            console.error(err);
+        }
     }
   
     var startTime = performance.now();      
@@ -3284,9 +3442,6 @@ async function _update2(){
     
     let promises = [];
 
-    // Promise 1
-    promises.push( isRepo = await fs_existsSync( `${fullFolderPath}/.git/HEAD` ));
-    
     // Promise 2
     let statusCheck = gitStatus().then(  function(value) { status_data = value; }  );
     promises.push( statusCheck );
@@ -3309,6 +3464,16 @@ async function _update2(){
 
     // Run 
     await Promise.allSettled( promises )
+
+    if (isSshRepo) {
+        if (status_data && status_data.current !== undefined) {
+            folderExists = true;
+            isRepo = true;
+            folder = path.basename(state.repos[state.repoNumber].localFolder);
+        } else if (!folderExists) {
+            folder = '';
+        }
+    }
     
     
     //isRepo = await fs_existsSync( fullFolderPath );
@@ -3398,10 +3563,19 @@ async function _update2(){
         
     // Merge button (hide if uncomitted files)
         try{
+            let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
             if (status_data.changedFiles){
-                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden'
+                if (mergeIconWrapper) {
+                    mergeIconWrapper.style.visibility = 'hidden';
+                } else {
+                    document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+                }
             }else{
-                document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+                if (mergeIconWrapper) {
+                    mergeIconWrapper.style.visibility = 'visible';
+                } else {
+                    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible';
+                }
             }
         }catch(err){  
             console.log(err);
@@ -3502,19 +3676,40 @@ async function _update2(){
                 queueVisibility.bottom_titlebar_revert_icon = 'hidden';
                 document.getElementById('bottom-titlebar-cherry-pick-icon').style.visibility = 'hidden' 
                 
-                // Show remote error indicator if remote is defined and not accessible
+                // Show error indicator in footer: prioritize local SSH folder status over remote push URL
                 if (remoteTextEl) {
+                    let curFolder = (state.repos[state.repoNumber] && state.repos[state.repoNumber].localFolder) || '';
+                    let isSsh = curFolder.startsWith('ssh:');
                     let rUrl = (state.repos[state.repoNumber] && state.repos[state.repoNumber].remoteURL) || '';
-                    let isActive = (cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[state.repoNumber]);
-                    if (rUrl && rUrl.trim().length > 0 && isActive === false) {
-                        let reason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[state.repoNumber]) ? cachedRemoteOrigins.reason[state.repoNumber] : 'remote error';
-                        let displayText = `Remote : ${reason}`;
+                    let isLocalDown = isSsh && (cachedLocalStatus && cachedLocalStatus.exists && cachedLocalStatus.exists[state.repoNumber] === false);
+                    let localReason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[state.repoNumber]) ? cachedLocalStatus.reason[state.repoNumber] : '';
+
+                    if (isLocalDown) {
+                        let sshLabel = 'SSH folder offline';
+                        if (localReason === 'key rejected') {
+                            sshLabel = 'SSH key rejected';
+                        } else if (localReason === 'wsl missing') {
+                            sshLabel = 'WSL required';
+                        } else if (localReason === 'no network') {
+                            sshLabel = 'SSH connection timed out';
+                        }
+                        let displayText = `Local SSH : ${sshLabel}`;
                         if (remoteTextEl.innerText !== displayText) {
                             remoteTextEl.innerText = displayText;
                         }
                         remoteTextEl.style.display = 'inline-block';
                     } else {
-                        remoteTextEl.style.display = 'none';
+                        let isActive = (cachedRemoteOrigins.isActiveRemote && cachedRemoteOrigins.isActiveRemote[state.repoNumber]);
+                        if (rUrl && rUrl.trim().length > 0 && isActive === false) {
+                            let reason = (cachedRemoteOrigins.reason && cachedRemoteOrigins.reason[state.repoNumber]) ? cachedRemoteOrigins.reason[state.repoNumber] : 'remote error';
+                            let displayText = `Remote : ${reason}`;
+                            if (remoteTextEl.innerText !== displayText) {
+                                remoteTextEl.innerText = displayText;
+                            }
+                            remoteTextEl.style.display = 'inline-block';
+                        } else {
+                            remoteTextEl.style.display = 'none';
+                        }
                     }
                 }
                 
@@ -3564,7 +3759,12 @@ async function _update2(){
             // Hide icons
             document.getElementById('top-titlebar-push-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-pull-icon').style.visibility = 'hidden';
-            document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+            let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
+            if (mergeIconWrapper) {
+                mergeIconWrapper.style.visibility = 'hidden';
+            } else {
+                document.getElementById('top-titlebar-merge-icon').style.visibility = 'hidden';
+            }
             document.getElementById('top-titlebar-branch-icon').style.visibility = 'hidden';
             document.getElementById('top-titlebar-tag-icon').style.visibility = 'hidden';        
             document.getElementById('bottom-titlebar-stash-icon').style.visibility = 'hidden';   
@@ -3577,11 +3777,15 @@ async function _update2(){
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'hidden';  
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'hidden';  
             updateCiBadge({ status: 'none', url: null });
+            if (typeof updateUpstreamBadge === 'function') updateUpstreamBadge();
+            if (typeof updateMergeTooltip === 'function') updateMergeTooltip();
         }else{
             // Notes and folder icon shown if repo
             document.getElementById('top-titlebar-notes-icon').style.visibility = 'visible'; // Notes icon
             document.getElementById('bottom-titlebar-folder-icon').style.visibility = 'visible'; // Folder icon
             queryCommitCiStatus(false);
+            if (typeof updateUpstreamBadge === 'function') updateUpstreamBadge();
+            if (typeof updateMergeTooltip === 'function') updateMergeTooltip();
         }
                
                         
@@ -3791,9 +3995,11 @@ async function _setMode( inputModeName){
                 if (currentMode == 'HISTORY'){
                     let draft = getRepoDraftMessage();
                     textOutput.value = draft;
-                    textOutput.placeholder = 
-                        "You may write what is ongoing here," + os.EOL + os.EOL + 
-                        "Change text to commit message (or stash name) when done";
+                    if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                        textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+                    } else {
+                        textOutput.placeholder = "No previous commits";
+                    }
                     textOutput.readOnly = false;
                     writeTextOutput(textOutput);
                     localState.historyString = "";
@@ -3880,20 +4086,19 @@ async function _setMode( inputModeName){
             // set by _mainLoop
             
             newModeName = 'NO_FILES_TO_COMMIT';
-            textOutput.placeholder = 
-                "You may write what is ongoing here," + os.EOL + os.EOL + 
-                "Change text to commit message (or stash name) when done"; 
-            textOutput.readOnly = false;
-            if (HEAD_title == undefined){
-                textOutput.placeholder = "No modified files" ;
-                
-                // Hide amend checkbox
-                document.getElementById('amend_commit_div').style.visibility='hidden';    
+            if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+            } else {
+                textOutput.placeholder = "No previous commits";
+                document.getElementById('amend_commit_div').style.visibility = 'hidden';
             }
+            textOutput.readOnly = false;
 
-            let draft = getRepoDraftMessage();
-            textOutput.value = draft;
-            writeTextOutput(textOutput);
+            if (window._msgAllowAction) {
+                let draft = getRepoDraftMessage();
+                textOutput.value = draft;
+                writeTextOutput(textOutput);
+            }
 
             // Store button should be disabled if no modified files to commit (unless amending)
             let isAmending = (document.getElementById('amend_commit_checkbox') && document.getElementById('amend_commit_checkbox').checked) || !window._msgAllowAction;
@@ -3922,18 +4127,11 @@ async function _setMode( inputModeName){
             if (newModeName ==  'NO_FILES_TO_COMMIT') { 
                 // Hide amend  checkbox
                 document.getElementById('amend_commit_div').style.visibility='hidden';    
-                setButtonText()
+                setButtonText();
                 
                 // Modify edit message text
-                if (!window._msgAllowAction) {
-                    document.getElementById('edit_commit_text_div').innerHTML='(esc-key to cancel)';
-                    document.getElementById('edit_commit_text_div').style.visibility = 'visible';
-                }else{
-                    document.getElementById('edit_commit_text_div').innerHTML='(double-click to change)';
-                    let hasDraft = (readMessage().trim().length > 0);
-                    document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
-                }
-                return
+                updateEditCommitTextDiv();
+                return;
             };
             
             
@@ -3945,13 +4143,15 @@ async function _setMode( inputModeName){
             break;
         }
             
-        case 'CHANGED_FILES': {
+        case 'CHANGED_FILES': { 
             // set by _mainLoop
             newModeName = 'CHANGED_FILES';
 
-            textOutput.placeholder = 
-                "You may write what is ongoing here," + os.EOL + os.EOL + 
-                "Change text to commit message (or stash name) when done";  
+            if (HEAD_title !== undefined && HEAD_title.trim().length > 0) {
+                textOutput.placeholder = 'Last commit : "' + HEAD_title + '"';
+            } else {
+                textOutput.placeholder = "No previous commits";
+            }  
                 
             // Detached HEAD
             if (HEAD_refs ==  'HEAD' ){
@@ -3962,6 +4162,7 @@ async function _setMode( inputModeName){
                     "- 2) type description here, and press Store (solve problems later)";                 
             }else{
                 // Show git amend checkbox in message-area
+                adjustMessageOverlayOffset();
                 document.getElementById('amend_commit_div').style.visibility='visible';    
                 
                 // Enable Store button if clicked to amend
@@ -3973,9 +4174,7 @@ async function _setMode( inputModeName){
 
             // Alternative message if no previous commit
             if (HEAD_title == undefined){
-                textOutput.placeholder = 
-                    "You may write what is ongoing here," + os.EOL + os.EOL + 
-                    "Change text to commit message (or stash name) when done";
+                textOutput.placeholder = "No previous commits";
             }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
@@ -3997,12 +4196,16 @@ async function _setMode( inputModeName){
             // set by messageKeyUpEvent
             console.log( readMessage() );
             newModeName = 'CHANGED_FILES_TEXT_ENTERED';
-            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { return};
+            if (currentMode ==  'CHANGED_FILES_TEXT_ENTERED') { 
+                updateEditCommitTextDiv();
+                return;
+            };
             setButtonText();// Set button
             document.getElementById('store-button').disabled = false;  
             textOutput.value = readMessage();    
             textOutput.readOnly = false;
             // NOTE: Do not call writeTextOutput(textOutput); Reason : Characters may be lost -- better let browser window handle display self.
+            updateEditCommitTextDiv();
             break;
         }
             
@@ -4079,36 +4282,240 @@ async function _setMode( inputModeName){
         pragmaLog('_setMode = ' + await getMode() + ' ( from current mode = ' + currentMode + ')' );
     }
     
+    updateEditCommitTextDiv();
 
     return newModeName;  // In case I want to use it with return variable
 }
 
-function startPragmaMerge(){
+var pragmaMergeOpenWindows = new Map(); // Map filePath -> nw.Window for direct editor instances
+
+function getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes = 2) {
+    let idealWidth = defaultWidth;
+    let idealHeight = defaultHeight;
+    let winSettings = null;
+    if (state.pragmaMerge) {
+        if (panes === 1 && state.pragmaMerge.windowSinglePane) {
+            winSettings = state.pragmaMerge.windowSinglePane;
+        } else if (panes > 1 && state.pragmaMerge.windowMultiPane) {
+            winSettings = state.pragmaMerge.windowMultiPane;
+        } else if (state.pragmaMerge.window) {
+            winSettings = state.pragmaMerge.window;
+        }
+    }
+    if (winSettings) {
+        if (typeof winSettings.width === 'number' && winSettings.width > 200) {
+            idealWidth = winSettings.width;
+        }
+        if (typeof winSettings.height === 'number' && winSettings.height > 200) {
+            idealHeight = winSettings.height;
+        }
+    }
+    return getSensibleWindowSize(idealWidth, idealHeight);
+}
+
+function updatePragmaMergeWindowSize(win, panes = 2) {
+    if (!win) return;
+    try {
+        let w = typeof win.width === 'number' ? win.width : (win.window && win.window.outerWidth);
+        let h = typeof win.height === 'number' ? win.height : (win.window && win.window.outerHeight);
+        if (typeof w === 'number' && typeof h === 'number' && w > 200 && h > 200) {
+            if (!state.pragmaMerge) {
+                state.pragmaMerge = {};
+            }
+            if (panes === 1) {
+                if (!state.pragmaMerge.windowSinglePane) {
+                    state.pragmaMerge.windowSinglePane = {};
+                }
+                state.pragmaMerge.windowSinglePane.width = w;
+                state.pragmaMerge.windowSinglePane.height = h;
+            } else {
+                if (!state.pragmaMerge.windowMultiPane) {
+                    state.pragmaMerge.windowMultiPane = {};
+                }
+                state.pragmaMerge.windowMultiPane.width = w;
+                state.pragmaMerge.windowMultiPane.height = h;
+                // Keep backward-compatible state.pragmaMerge.window updated
+                if (!state.pragmaMerge.window) {
+                    state.pragmaMerge.window = {};
+                }
+                state.pragmaMerge.window.width = w;
+                state.pragmaMerge.window.height = h;
+            }
+            saveSettings();
+        }
+    } catch (e) {
+        console.warn('Failed to update pragmaMerge window size', e);
+    }
+}
+global.updatePragmaMergeWindowSize = updatePragmaMergeWindowSize;
+
+function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
+    // Check if window already open for this exact filePath
+    if (pragmaMergeOpenWindows.has(filePath)) {
+        let existingWin = pragmaMergeOpenWindows.get(filePath);
+        try {
+            existingWin.focus();
+            return existingWin;
+        } catch (e) {
+            pragmaMergeOpenWindows.delete(filePath);
+        }
+    }
+
+    let fileName = path.basename(filePath);
+    let title = `File = ${fileName}`;
+    let mergeSize = getSensibleMergeWindowSize(1200, 850, 1);
+    let rootFolder = options.root || (state.repos && state.repos[state.repoNumber] ? state.repos[state.repoNumber].localFolder : '');
+
+    let query = `?first=${encodeURIComponent(filePath)}&second=--edit&third=${encodeURIComponent(mode)}&root=${encodeURIComponent(rootFolder)}`;
+    let url = `merge/pragma-merge.html${query}`;
+
+    // Cascade offset if multiple merge/editor windows are open
+    let openCount = pragmaMergeOpenWindows.size;
+    let windowOptions = {
+        show: false,
+        width: mergeSize.width,
+        height: mergeSize.height,
+        title: title
+    };
+
+    if (openCount > 0) {
+        let offset = (openCount * 25) % 200;
+        let screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+        let screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+        windowOptions.x = Math.min(100 + offset, screenW - mergeSize.width - 20);
+        windowOptions.y = Math.min(100 + offset, screenH - mergeSize.height - 20);
+    } else {
+        windowOptions.position = 'center';
+    }
+
+    gui.Window.open(url, windowOptions, (win) => {
+        win.on('loaded', () => {
+            pragmaMergeOpenWindows.set(filePath, win);
+            if (!merge_win) {
+                merge_win = win;
+            }
+            updateWindowMenu();
+            showWindow(win);
+
+            win.on('resize', function() {
+                updatePragmaMergeWindowSize(win, 1);
+            });
+
+            win.on('close', function() {
+                updatePragmaMergeWindowSize(win, 1);
+                pragmaMergeOpenWindows.delete(filePath);
+                if (merge_win === win) {
+                    let remaining = Array.from(pragmaMergeOpenWindows.values());
+                    merge_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+                }
+                fixNwjsBug7973(win);
+                updateWindowMenu();
+            });
+        });
+    });
+}
+global.openPragmaMergeDirect = openPragmaMergeDirect;
+
+function startPragmaMerge(sessionId, sessionDir){
     
     let title = "Pragma-merge";
-    gui.Window.open('merge/pragma-merge.html', { 
-            id: 'mergeWindowId',
-            position: 'center',
-            show: false,
-            width: 600,
-            height: 700,
-            title: title
-        },
+    let panes = 2;
+    if (sessionDir && fs.existsSync(sessionDir)) {
+        try {
+            let secondParam = fs.readFileSync(path.join(sessionDir, 'second'), 'utf8').trim();
+            if (secondParam === '--edit') {
+                panes = 1;
+            }
+        } catch (e) {}
+    }
+    let defaultWidth = panes === 1 ? 1200 : 2000;
+    let defaultHeight = panes === 1 ? 850 : 1150;
+    let mergeSize = getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes);
+    let url = 'merge/pragma-merge.html';
+    if (sessionId && sessionDir) {
+        url += `?sessionId=${encodeURIComponent(sessionId)}&sessionDir=${encodeURIComponent(sessionDir)}`;
+    }
+    
+    let windowOptions = {
+        position: 'center',
+        show: false,
+        width: mergeSize.width,
+        height: mergeSize.height,
+        title: title
+    };
+
+    // If a session ID is provided, allow distinct window cascading and tracking
+    if (sessionId) {
+        windowOptions.id = `mergeWindow_${sessionId}`;
+        let count = pragmaMergeOpenWindows.size;
+        let offset = (count * 25) % 200;
+        let screenW = (window.screen && window.screen.availWidth) || 1440;
+        let screenH = (window.screen && window.screen.availHeight) || 900;
+        windowOptions.x = Math.min(80 + offset, screenW - mergeSize.width - 20);
+        windowOptions.y = Math.min(80 + offset, screenH - mergeSize.height - 20);
+    } else {
+        windowOptions.id = 'mergeWindowId';
+    }
+
+    gui.Window.open(url, windowOptions,
             win=>win.on('loaded', () => {
                 
-                merge_win =win;
+                if (sessionId) {
+                    pragmaMergeOpenWindows.set(sessionId, win);
+                }
+                if (!merge_win) {
+                    merge_win = win;
+                }
       			updateWindowMenu(title, 'merge_win');
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
+                win.on('resize', function() {
+                    let activePanes = panes;
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && typeof iframeWin.getMode === 'function') {
+                            activePanes = iframeWin.getMode() === 'EDITOR' ? 1 : 2;
+                        }
+                    } catch (e) {}
+                    updatePragmaMergeWindowSize(win, activePanes);
+                });
+
                 win.on('close', async function() { 
+                    let activePanes = panes;
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && typeof iframeWin.getMode === 'function') {
+                            activePanes = iframeWin.getMode() === 'EDITOR' ? 1 : 2;
+                        }
+                    } catch (e) {}
+                    updatePragmaMergeWindowSize(win, activePanes);
+                    try {
+                        let iframeEl = win.window && win.window.document && win.window.document.getElementById('iframe');
+                        let iframeWin = iframeEl && iframeEl.contentWindow;
+                        if (iframeWin && !iframeWin.CLOSED && typeof iframeWin.closeWindowNicely === 'function') {
+                            await iframeWin.closeWindowNicely(iframeWin.SAVED ? 0 : 1);
+                        }
+                    } catch (e) {}
+                    if (sessionDir) {
+                        rmLocalFile(path.join(sessionDir, 'pragma-merge-running'));
+                    }
+                    if (sessionId) {
+                        pragmaMergeOpenWindows.delete(sessionId);
+                        activeMergeSessions.delete(sessionId);
+                    }
+                    if (merge_win === win) {
+                        let remaining = Array.from(pragmaMergeOpenWindows.values());
+                        merge_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+                    }
                     fixNwjsBug7973( win);
                     updateWindowMenu();
-                    merge_win = undefined; 
                     
                     let folder = global.state.repos[global.state.repoNumber].localFolder;
                     if ( folder.startsWith('ssh:') ){
-						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
-                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}"` );
+						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
+                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
                     }
                     
                 } );
@@ -4309,22 +4716,19 @@ function configFilePath( folder = ''){
         const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
         let sshHome;
         
-        // Get remote platform if cached
+        // Get remote platform from URL path or session cache (avoids guessing Linux when Mac is already known)
         try{
-            platform = cachedLocalStatus.platform[repoNumber];
-            if (platform == 'Mac'){
+            const serverHost = urlParts.host || urlParts.hostname;
+            const serverKey = `${urlParts.username}@${serverHost}`;
+            let platform = (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[repoNumber]) || (typeof typeOfRepoServer !== 'undefined' && typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]);
+            if (platform == 'Mac' || urlParts.pathname.startsWith('/Users/')){
                 sshHome = `/Users/${urlParts.username}`
+            } else {
+                sshHome = `/home/${urlParts.username}`
             }
-            if (platform == 'Linux'){
-                sshHome = `/home/${urlParts.username}`
-            }  
-            if (platform == undefined){
-                // Falback -- guess linux system
-                sshHome = `/home/${urlParts.username}`
-            }  
         }catch (err){
-            // Falback -- guess linux system
-            sshHome = `/home/${urlParts.username}`
+            // Fallback -- guess linux system unless URL path starts with /Users/
+            sshHome = urlParts.pathname.startsWith('/Users/') ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
         }
         
         // Use sshHome in config file path     
@@ -4417,6 +4821,14 @@ function configFilePath( folder = ''){
         configText += '[mergetool "pragma-git"]' + EOL;
         let mergePathNormalized = `${STARTDIR}/pragma-merge`.replaceAll('\\','/');
         configText += `    cmd = "${mergePathNormalized}" $BASE $LOCAL $REMOTE $MERGED` + EOL;
+        configText += '' + EOL;
+        
+        configText += '[difftool]' + EOL;
+        configText += '    prompt = false' + EOL;
+        configText += '' + EOL;
+        
+        configText += '[difftool "pragma-git"]' + EOL;
+        configText += `    cmd = "${mergePathNormalized}" "$BASE" "$LOCAL" "$REMOTE" "$MERGED"` + EOL;
         
         fs.writeFileSync( devConfigFilePath, configText);
         
@@ -4535,7 +4947,7 @@ async function gitStatus(){
             return out;
         };
         function createEmptyGitStatus(){
-            status_data = [];
+            status_data = {};
             status_data.conflicted = [];
             status_data.modified = []; // zero length
             status_data.renamed = []; // zero length
@@ -4941,12 +5353,6 @@ async function gitAddCommitAndPush( message){
     var status_data; 
     let forcePush = false;  // Default, if not git amend    
     
-    // Fix for ssh
-    if (  state.repos[state.repoNumber].localFolder.startsWith('ssh:') ){
-        message = `"${message}"`;
-    }
-
-    
     //
     // PREPARE
     //
@@ -5066,6 +5472,18 @@ async function gitAddCommitAndPush( message){
             state.repos[state.repoNumber].draftMessage = '';
             saveSettings();
         }
+        if (_draftInactivityTimer) {
+            clearTimeout(_draftInactivityTimer);
+            _draftInactivityTimer = null;
+        }
+        _draftInactivityExpired = false;
+        let editDiv = document.getElementById('edit_commit_text_div');
+        if (editDiv) {
+            editDiv.style.visibility = 'hidden';
+        }
+        if (typeof onMessageBlur === 'function') {
+            onMessageBlur();
+        }
         _setMode('UNKNOWN');  
         await _update()
         _setMode('UNKNOWN');  
@@ -5149,6 +5567,232 @@ async function gitRememberBranch( hash, name){
     }  
 }
 
+let _draftInactivityTimer = null;
+let _draftInactivityExpired = false;
+
+function resetDraftInactivityTimer() {
+    if (_draftInactivityTimer) {
+        clearTimeout(_draftInactivityTimer);
+        _draftInactivityTimer = null;
+    }
+    _draftInactivityExpired = false;
+    _draftInactivityTimer = setTimeout(() => {
+        _draftInactivityTimer = null;
+        _draftInactivityExpired = true;
+        updateEditCommitTextDiv();
+    }, 6000); // 6 seconds idle
+}
+
+function onMessageFocus() {
+    resetDraftInactivityTimer();
+    updateEditCommitTextDiv();
+}
+
+function onMessageBlur() {
+    if (_draftInactivityTimer) {
+        clearTimeout(_draftInactivityTimer);
+        _draftInactivityTimer = null;
+    }
+    _draftInactivityExpired = false;
+    updateEditCommitTextDiv();
+}
+
+function adjustMessageOverlayOffset() {
+    let msgEl = document.getElementById('message');
+    if (!msgEl) return;
+
+    let scrollbarWidth = (msgEl.offsetWidth && msgEl.clientWidth) ? (msgEl.offsetWidth - msgEl.clientWidth) : 0;
+    let hasVerticalScroll = (msgEl.scrollHeight && msgEl.clientHeight) ? (msgEl.scrollHeight > msgEl.clientHeight) : false;
+    let offset = (hasVerticalScroll && scrollbarWidth > 0) ? (scrollbarWidth + 5) : (hasVerticalScroll ? 20 : 5);
+
+    let editDiv = document.getElementById('edit_commit_text_div');
+    if (editDiv) {
+        editDiv.style.right = offset + 'px';
+    }
+
+    let amendDiv = document.getElementById('amend_commit_div');
+    if (amendDiv) {
+        amendDiv.style.right = offset + 'px';
+    }
+}
+
+function updateEditCommitTextDiv() {
+    let div = document.getElementById('edit_commit_text_div');
+    if (!div) return;
+
+    adjustMessageOverlayOffset();
+
+    let mode = (typeof getMode === 'function') ? getMode() : '';
+    let isHistory = (mode === 'HISTORY' || (typeof localState !== 'undefined' && localState.historyNumber >= 0));
+    if (isHistory) {
+        div.style.visibility = 'hidden';
+        return;
+    }
+
+    let isAtHead = (mode === 'NO_FILES_TO_COMMIT' || mode === 'CHANGED_FILES' || mode === 'CHANGED_FILES_TEXT_ENTERED');
+    if (!isAtHead) {
+        div.style.visibility = 'hidden';
+        return;
+    }
+
+    let msg = (typeof readMessage === 'function') ? readMessage().trim() : '';
+    let msgEl = document.getElementById('message');
+    let msgHasFocus = (msgEl && document.activeElement === msgEl) || (typeof window !== 'undefined' && window._messageHadFocus);
+    if (typeof window !== 'undefined' && msgEl) {
+        window._messageHadFocus = Boolean(document.activeElement === msgEl || window._messageHadFocus);
+    }
+
+    // If text is written at HEAD, check whether it is considered a draft
+    if (msg.length > 0) {
+        // Shown when unfocused (on blur / left textarea) or if 20 seconds have passed without typing
+        let isDraftActive = (!msgHasFocus || _draftInactivityExpired);
+        if (isDraftActive) {
+            div.innerHTML = '(draft)';
+            div.setAttribute('data-tooltip', 'Draft note for this repository (edit when ready to commit)');
+            div.style.visibility = 'visible';
+            return;
+        } else {
+            div.style.visibility = 'hidden';
+            return;
+        }
+    }
+
+    // No text entered:
+    if (mode === 'NO_FILES_TO_COMMIT') {
+        if (typeof window !== 'undefined' && !window._msgAllowAction) {
+            div.innerHTML = '(esc-key to cancel)';
+            div.removeAttribute('data-tooltip');
+            div.style.visibility = 'visible';
+        } else {
+            div.innerHTML = '(double-click to change)';
+            div.removeAttribute('data-tooltip');
+            div.style.visibility = 'visible';
+        }
+        return;
+    }
+
+    // In CHANGED_FILES with empty text: nothing to show in this position
+    div.style.visibility = 'hidden';
+}
+
+function updateStashTooltip() {
+    let wrapper = document.getElementById("bottom-titlebar-stash-icon-wrapper");
+    if (!wrapper) return;
+    let mode = (typeof getMode === "function") ? getMode() : "";
+    let isChanged = (mode === "CHANGED_FILES" || mode === "CHANGED_FILES_TEXT_ENTERED");
+    if (!isChanged) {
+        wrapper.setAttribute("data-tooltip", "Stash uncommitted");
+        return;
+    }
+    let msg = (typeof readMessage === "function") ? readMessage().trim() : "";
+    if (msg.length > 0) {
+        let shortMsg = msg.replace(/\r?\n.*/s, ""); // take first line
+        if (shortMsg.length > 30) shortMsg = shortMsg.substring(0, 30) + "...";
+        wrapper.setAttribute("data-tooltip", `Stash with name: "${shortMsg}"`);
+    } else {
+        wrapper.setAttribute("data-tooltip", "Stash uncommitted files (type in above textarea to name stash)");
+    }
+}
+
+function hasUpstreamRemote() {
+    if (cachedBranchList && cachedBranchList.remoteRepos && cachedBranchList.remoteRepos.fetch && cachedBranchList.remoteRepos.fetch.names) {
+        return cachedBranchList.remoteRepos.fetch.names.includes('upstream');
+    }
+    return false;
+}
+
+function getUpstreamDefaultBranch(folder, remoteName = 'upstream') {
+    if (!folder) return 'main';
+    const { execSync } = require('child_process');
+    try {
+        let symRef = execSync(`git symbolic-ref --short refs/remotes/${remoteName}/HEAD`, { cwd: folder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+        return symRef.replace(`${remoteName}/`, '');
+    } catch (e) {}
+    try {
+        let branches = execSync(`git branch -r`, { cwd: folder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+        if (branches.includes(`${remoteName}/main`)) return 'main';
+        if (branches.includes(`${remoteName}/master`)) return 'master';
+    } catch (e) {}
+    return 'main';
+}
+
+function isRelevantUpstreamBranch(branchRef, currentBranch, upstreamDefault = 'main') {
+    if (!branchRef || typeof branchRef !== 'string') return false;
+    let clean = branchRef.replace(/^remotes\/[^\/]+\//, '').replace(/^[^\/]+\//, '');
+    return (clean === upstreamDefault || clean === 'main' || clean === 'master' || (currentBranch && clean === currentBranch));
+}
+
+function updateMergeTooltip() {
+    let wrapper = document.getElementById("top-titlebar-merge-icon-wrapper");
+    if (!wrapper) return;
+    if (!hasUpstreamRemote()) {
+        wrapper.setAttribute("data-tooltip", "Merge");
+        return;
+    }
+    let totalBehind = 0;
+    let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+    let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+    let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+    if (cachedBranchList && cachedBranchList.branches) {
+        for (let b in cachedBranchList.branches) {
+            if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                if (isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                    totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                }
+            }
+        }
+    }
+    if (totalBehind > 0) {
+        wrapper.setAttribute("data-tooltip", `Merge (${totalBehind} update${totalBehind > 1 ? 's' : ''} from upstream)`);
+    } else {
+        wrapper.setAttribute("data-tooltip", "Merge");
+    }
+}
+
+function updateUpstreamBadge() {
+    let badge = document.getElementById("top-titlebar-merge-badge");
+    if (!badge) return;
+    if (!hasUpstreamRemote()) {
+        badge.style.display = "none";
+        return;
+    }
+    let totalBehind = 0;
+    let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'main';
+    let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+    let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+    if (cachedBranchList && cachedBranchList.branches) {
+        for (let b in cachedBranchList.branches) {
+            if (cachedBranchList.branches[b] && cachedBranchList.branches[b].upstreamAhead) {
+                if (isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                    totalBehind += (cachedBranchList.branches[b].behindCount || 1);
+                }
+            }
+        }
+    }
+    if (totalBehind > 0) {
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
+
+var pendingUpstreamMerge = null;
+
+function showConfirmMergeUpstreamDialog(upstreamBranch, currentBranch, count = 1) {
+    pendingUpstreamMerge = {
+        selectedBranch: upstreamBranch,
+        currentBranch: currentBranch
+    };
+    let dialog = document.getElementById("confirmMergeUpstreamDialog");
+    let msgEl = document.getElementById("confirmMergeUpstreamMessage");
+    if (msgEl) {
+        msgEl.innerHTML = `Do you want to merge <b>${count} commit${count > 1 ? 's' : ''}</b> from <b>${upstreamBranch}</b> into your current branch <b>${currentBranch}</b>?`;
+    }
+    if (dialog && typeof dialog.showModal === "function") {
+        dialog.showModal();
+    }
+}
+
 async function gitStash(){
     // Stash
     try{
@@ -5164,10 +5808,19 @@ async function gitStash(){
             // Write latest commit to message area placeholder (because there is nothing uncommited now)
             let latestCommit = await simpleGit(state.repos[state.repoNumber].localFolder).log( {'-1': null, 'multiLine': null});
             commitMessage = latestCommit.latest.message + '\n\n' + latestCommit.latest.body;
+            let placeholderText = (latestCommit && latestCommit.latest && latestCommit.latest.message) ?
+                ('Last commit : "' + latestCommit.latest.message + '"') : "No previous commits";
             writeTextOutput( { 
-                placeholder: "You may write what is ongoing here," + os.EOL + os.EOL + "Change text to commit message (or stash name) when done", 
+                placeholder: placeholderText, 
                 value: '' 
             } ); 
+            if (state.repoNumber >= 0 && state.repos && state.repos[state.repoNumber]) {
+                state.repos[state.repoNumber].draftMessage = '';
+                saveSettings();
+            }
+            if (typeof onMessageBlur === 'function') {
+                onMessageBlur();
+            } 
         }
         
         
@@ -5303,6 +5956,91 @@ async function gitStashMap( folder ){
 
 }     
 
+// Detect why a local branch and remote tracking branch have diverged
+async function detectDivergenceReason() {
+    // Returns: 'AMENDED_COMMIT' | 'COLLEAGUE_COMMITS' | 'GENERAL_BEHIND'
+    try {
+        const localFolder = state.repos[state.repoNumber].localFolder;
+        const status = await gitStatus();
+        const currentBranch = status.current;
+
+        if (!(status.ahead > 0 && status.behind > 0)) {
+            return 'GENERAL_BEHIND';
+        }
+
+        // Case 1: Exactly 1 ahead and 1 behind — verify if local HEAD was created by an amend replacing origin
+        if (status.ahead === 1 && status.behind === 1) {
+            try {
+                // Check git reflog for HEAD@{0}: if the latest action was a commit (amend)
+                const latestReflogAction = (await simpleGit(localFolder).raw(['log', '-g', '-1', '--format=%gs', 'HEAD'])).trim();
+                const remoteHash = (await simpleGit(localFolder).raw(['rev-parse', `origin/${currentBranch}`])).trim();
+                const previousHeadHash = (await simpleGit(localFolder).raw(['rev-parse', 'HEAD@{1}'])).trim();
+
+                // If HEAD was created by 'commit (amend)' and directly replaced the remote commit (or remote shares previous HEAD)
+                if (latestReflogAction.startsWith('commit (amend)') && previousHeadHash === remoteHash) {
+                    return 'AMENDED_COMMIT';
+                }
+            } catch (reflogErr) {
+                console.warn('detectDivergenceReason reflog check failed:', reflogErr);
+            }
+        }
+
+        return 'COLLEAGUE_COMMITS';
+    } catch (err) {
+        console.warn('detectDivergenceReason error:', err);
+        return 'GENERAL_BEHIND';
+    }
+}
+
+// Prepare and display forcePushOrPullPushDialog with context-aware labels.
+// Reuses the single #forcePushOrPullPushDialog in app.html across all diverged scenarios:
+//   - Case 1 (AMENDED_COMMIT): User modified a commit after pushing it; pre-selects & recommends 'Overwrite server'
+//   - Case 2 (COLLEAGUE_COMMITS): Remote has newer commits from another machine/collaborator; pre-selects & recommends 'Download updates'
+//   - Fallback (GENERAL_BEHIND): Default prompt when branch is behind remote
+async function showForcePushOrPullPushDialog() {
+    let reason = await detectDivergenceReason();
+    let titleEl = document.getElementById('divergedDialogTitle');
+    let descEl = document.getElementById('divergedDialogDescription');
+    let pullTextEl = document.getElementById('behindPullText');
+    let forcePushTextEl = document.getElementById('behindForcePushText');
+    let pullRadio = document.getElementById('behindPull');
+    let forcePushRadio = document.getElementById('behindForcePush');
+
+    if (reason === 'AMENDED_COMMIT') {
+        // Case 1: Local commit was amended after being pushed
+        if (titleEl) titleEl.innerText = 'Local commit was amended';
+        if (descEl) {
+            descEl.innerText = 'You modified your latest commit after it was already sent to the server. The server still has your older version.';
+            descEl.style.display = 'block';
+        }
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server with your updated commit (recommended)';
+        if (pullTextEl) pullTextEl.innerText = 'Download older commit from server (will undo your amend)';
+        if (forcePushRadio) forcePushRadio.checked = true;
+    } else if (reason === 'COLLEAGUE_COMMITS') {
+        // Case 2: Teammate or another machine pushed new commits to the server
+        if (titleEl) titleEl.innerText = 'Server has newer commits';
+        if (descEl) {
+            descEl.innerText = 'A colleague (or another machine) pushed new work to the server while you were working locally.';
+            descEl.style.display = 'block';
+        }
+        if (pullTextEl) pullTextEl.innerText = 'Download updates and combine with local changes (pull & rebase) (recommended)';
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server -- discard remote updates (dangerous: deletes remote work)';
+        if (pullRadio) pullRadio.checked = true;
+    } else {
+        // General behind / fallback
+        if (titleEl) titleEl.innerText = 'WARNING -- local branch behind remote branch !';
+        if (descEl) descEl.style.display = 'none';
+        if (pullTextEl) pullTextEl.innerText = 'Download updates and combine with local changes (pull)';
+        if (forcePushTextEl) forcePushTextEl.innerText = 'Overwrite server -- discard remote updates (dangerous)';
+        if (pullRadio) pullRadio.checked = true;
+    }
+
+    let dialog = document.getElementById('forcePushOrPullPushDialog');
+    if (dialog && typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    }
+}
+
 async function gitPush( forcePush){
     // forcePush = true, means a --force push is used
     
@@ -5350,7 +6088,7 @@ async function gitPush( forcePush){
             
             // Sometimes github gives an error, with files being locked. This is an attempt to retry a second time
             try{
-                push();
+                await push();
                 console.log('success push - first attempt');
             }catch(err){
                 // Try again
@@ -5387,16 +6125,22 @@ async function gitPush( forcePush){
                     // Helpful dialog if possible:
                     if (  (err.toString()).includes('tip of your current branch is behind')   ||
                           ( err.toString()).includes('not have locally')   ){
-                        // Give options to 'pull' or 'push --force'
-                        document.getElementById('forcePushOrPullPushDialog').showModal();
+                        // Give context-aware options to 'pull' or 'push --force'
+                        await showForcePushOrPullPushDialog();
+                        return;
                     }else{
                         // General error dialog
                         displayLongAlert('Push Error' + attempt , err, 'error');
+                        return;
                     }
                 }
                 
                 // Push branchname notes (git push origin refs/notes/branchname)
-                await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( '--force', 'origin', 'refs/notes/branchname', onPush);    
+                try {
+                    await simpleGitLog( state.repos[state.repoNumber].localFolder ).push( '--force', 'origin', 'refs/notes/branchname', onPush);    
+                } catch(notesErr) {
+                    console.warn('Failed pushing branchname notes:', notesErr);
+                }
                 
                 if (ERR){
                     throw 'Push Error';
@@ -5465,7 +6209,7 @@ async function gitEnsureUpstream() { // Set upstream to origin/[same name as bra
         console.error('Error checking or setting upstream:', err);
     }
 }
-function gitFetch( longUpstreamBranch){ // Fetch 
+async function gitFetch( longUpstreamBranch){ // Fetch 
     // Default without argument -- fetch from origin
     // With argument -- fetch from that upstream branch.  For instance git fetch upstream
     console.log('Starting gitFetch()');
@@ -5491,35 +6235,33 @@ function gitFetch( longUpstreamBranch){ // Fetch
 
         if ( longUpstreamBranch == undefined){
             
-            // Fetch from default (origin)
-            simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, 'origin'], onFetch);
-            function onFetch(err, result) {
-            };
+            // Fetch from all configured remotes (--all) so origin, upstream, etc. are updated automatically
+            await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, '--all']);
+            if (typeof updateBranchListWithUpstream === 'function') {
+                await updateBranchListWithUpstream();
+            }
             
         }else{
             
-            // Fetch from longUpstreamBranch
-                
-            // "remotes/test5/child-process-with-timer" -> repo=test5, branch=child-process-with-timer"
-            let splitted = longUpstreamBranch.split('/');
-            let repo = splitted[1];
-            let branch = splitted[2];
+            // Fetch from longUpstreamBranch (e.g. 'remotes/upstream/main' or 'upstream/main')
+            let clean = longUpstreamBranch.replace(/^remotes\//, '');
+            let slashIdx = clean.indexOf('/');
+            if (slashIdx !== -1) {
+                let upstreamName = clean.substring(0, slashIdx);
+                let upstreamBranch = clean.substring(slashIdx + 1);
 
-            
-            // Shorten upstream branchname if remote ( remotes/upstream/main becomes upstream)
-
-            if ( longUpstreamBranch.startsWith( 'remotes' ) ){
-                let upstreamName = longUpstreamBranch.split('/')[1];
-                let upstreamBranch = longUpstreamBranch.split('/')[2];
-
+                setStatusBar('fetching from remote ' + upstreamName);
                 
-                setStatusBar('fetching from remote ' );
-                
-                simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch], onFetch);
-                function onFetch(err, result) {
-                    console.log(result);
-                    updateBranchListWithUpstream(); // Update ahead flags
-                };
+                await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, upstreamName, upstreamBranch]);
+                if (typeof updateBranchListWithUpstream === 'function') {
+                    await updateBranchListWithUpstream(); // Update ahead flags
+                }
+            } else {
+                setStatusBar('fetching from remote ' + clean);
+                await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw([...fetchCommands, clean]);
+                if (typeof updateBranchListWithUpstream === 'function') {
+                    await updateBranchListWithUpstream();
+                }
             }           
             
         }
@@ -5547,11 +6289,7 @@ function gitFetch( longUpstreamBranch){ // Fetch
         };
 
         // Fetch
-        simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw(['-c', 'core.askpass=', 'fetch', 'origin', 'refs/notes/*:refs/notes/*'], onFetch);
-        function onFetch(err, result) {
-            //console.log(result) 
-        };        
-        
+        await simpleGit( state.repos[state.repoNumber].localFolder ).env(fetchEnv).raw(['-c', 'core.askpass=', 'fetch', 'origin', 'refs/notes/*:refs/notes/*']);
         
     }catch(err){
         console.log('Error in gitFetch() -- failed getting notes');
@@ -5572,6 +6310,28 @@ async function gitPull(){
     
     var currentBranch = status_data.current;
     var remoteBranch = currentBranch; // Assume that always same branch name locally and remotely
+
+    // Protect against rebasing/pulling over uncommitted changes
+    if (status_data && status_data.changedFiles) {
+        pragmaLog('   gitPull blocked -- uncommitted changes present');
+        let pullWarnDialog = document.getElementById('uncommittedBeforePullDialog');
+        if (pullWarnDialog && typeof pullWarnDialog.showModal === 'function') {
+            pullWarnDialog.showModal();
+        } else {
+            displayAlert('Uncommitted changes', 'Please Store or Stash modified files before downloading updates.', 'warning');
+        }
+        return;
+    }
+
+    // Intercept diverged pull if local commit was amended (Case 1) to avoid resurrecting old commit
+    if (status_data && status_data.ahead > 0 && status_data.behind > 0) {
+        let reason = await detectDivergenceReason();
+        if (reason === 'AMENDED_COMMIT') {
+            pragmaLog('   gitPull intercepted -- amended commit diverged state');
+            await showForcePushOrPullPushDialog();
+            return;
+        }
+    }
 
     // Pull
     if (status_data.behind > 0){
@@ -5629,11 +6389,13 @@ async function gitMerge( currentBranchName, selectedBranchName){
         options = ['--no-ff', '--no-commit' ];
     }
     
-    // Merge
+    // Merge: use git.merge with array arguments ([selectedBranchName, ...options]) instead of mergeFromTo.
+    // In simple-git v4, mergeFromTo internally generates `git merge <from> <to> <options>`, which fails or misparses
+    // in git CLI because `git merge` only accepts commits/branches to merge INTO the current branch (not a target branch operand).
     try{
-        setStatusBar( 'mergeFromTo "' + selectedBranchName + '" -> "' + currentBranchName + '"');
+        setStatusBar( 'merge "' + selectedBranchName + '" -> "' + currentBranchName + '"');
         await simpleGitLog( state.repos[state.repoNumber].localFolder )
-            .mergeFromTo( selectedBranchName, currentBranchName, options, onMerge);
+            .merge( [ selectedBranchName, ...options ], onMerge);
             
         function onMerge(err, result) {console.log(result); mergeResult = result; mergeError = err;  };
        
@@ -5644,15 +6406,16 @@ async function gitMerge( currentBranchName, selectedBranchName){
   
       
     // Finish up
-    //writeMessage('',false);  // Remove this message  
-    
-    //await _setMode('UNKNOWN');
-    await _setMode('CHANGED_FILES_TEXT_ENTERED');
-    await _update()
-    
     textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
     textOutput.readOnly = false;
-    //textOutput.placeholder = 'Write description of Merge here, and press Store';
+    writeTextOutput( textOutput);
+
+    await _setMode('CHANGED_FILES_TEXT_ENTERED');
+    await _update();
+
+    // Re-assert merge message in case _update() or mode transition reset it
+    textOutput.value = "Merge branch '" + selectedBranchName + "' into " + currentBranchName;
+    textOutput.readOnly = false;
     writeTextOutput( textOutput);
 }
 
@@ -5748,28 +6511,31 @@ async function addUpstream( forkParentUrl){
     
     try{
    
+        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
+
         // Set remote repo
         let commands = [ 'remote', 'add', 'upstream' , forkParentUrl];
-        let localFolderAfterClone = state.repos[state.repoNumber].localFolder;
-        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddemote);
-        function onAddemote(err, result ){
-            console.log(result);
-            console.log(err);
+        await simpleGitLog( localFolderAfterClone).raw(  commands, onAddRemote);
+        function onAddRemote(err, result ){
+            if (err) console.warn(err);
+            if (result) console.log(result);
         };
         
-        // Modify push url (so it will be different from fetch url)
+        // Block push by setting pushurl to NO-PUSH (so upstream can never be pushed to)
         commands = [ 'remote', 'set-url', '--push', 'upstream', 'NO-PUSH'  ];                
         await simpleGitLog( localFolderAfterClone).raw(  commands, onSetRemoteUrl);
         function onSetRemoteUrl(err, result ){
-            console.log(result);
-            console.log(err);
+            if (err) console.warn(err);
+            if (result) console.log(result);
         };
         
         // Document fork parent in settings
-        state.repos[repoNumber].forkedFromURL = forkParentUrl;
+        state.repos[state.repoNumber].forkedFromURL = forkParentUrl;
         
         await cacheBranchList();
-        await updateRemoteRepos();
+        if (typeof updateRemoteRepos === 'function') {
+            await updateRemoteRepos();
+        }
     }catch (err){
         console.warn(`Failed setting fork-parent URL (url=${forkParentUrl} ) :` );
         console.warn(err);
@@ -5946,47 +6712,117 @@ async function cacheBranchList(){
         }
 
         // Check upstreams in parallel
-        await Promise.allSettled( promises )
+        await Promise.allSettled( promises );
+        
+        // Also check any existing local tracking branches for upstream remotes (e.g. remotes/upstream/*)
+        // against current branch using rev-list, so that branches already fetched are flagged as ahead
+        try {
+            const { execSync } = require('child_process');
+            let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'HEAD';
+            let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+            for (let b of cachedBranchList.all) {
+                if (b.startsWith('remotes/') && !b.startsWith('remotes/origin/')) {
+                    if (!isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                        continue;
+                    }
+                    try {
+                        let countStr = execSync(`git rev-list --count ${current}..${b}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+                        let count = parseInt(countStr, 10) || 0;
+                        if (count > 0) {
+                            if (!cachedBranchList.branches[b]) {
+                                cachedBranchList.branches[b] = {current: false, name: b, commit: undefined, label: undefined, show: true};
+                            }
+                            cachedBranchList.branches[b].upstreamAhead = true;
+                            cachedBranchList.branches[b].behindCount = count;
+                        }
+                    } catch (e) {
+                        // branch or ref may not exist
+                    }
+                }
+            }
+        } catch (err) {
+            console.log('Error verifying fetched upstream refs:', err);
+        }
+        
+        // Update UI badge & merge tooltip
+        if (typeof updateUpstreamBadge === 'function') {
+            updateUpstreamBadge();
+        }
+        if (typeof updateMergeTooltip === 'function') {
+            updateMergeTooltip();
+        }
         
     }
         async function gitListUpstreamsNeedingFetch(branchName){
-            // Sets upstreamAhead flag
+            // Sets upstreamAhead flag and computes behind count
             
-            let INCLUDE_PATH = `include.path = ${configFile}` ;
-            RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git -c '${INCLUDE_PATH}' -c core.askpass= fetch --dry-run ${branchName}`;
-        
-            let child = await exec( RUN , 
-                (error, stdout, stderr) => { 
-        
-                    // Typical response (or totally empty if fetch is not needed) :
-                    //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
-                            //276f6e7..1c89d32  main       -> upstream/main
-                    //`
-        
-                    // Parse response and update  cachedBranchList.branches.upstreamAhead 
-                    let returnedRemotes = [];
-        
-                    let rows = stderr.split('\n'); 
-                    for (var i = 0; i < rows.length; ++i) {
-                        
-                        let columns = rows[i].split('->'); 
-                        let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
-                        
-                        if ( remoteBranchShortName.startsWith(branchName) ){
-                            let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
-                            
-                            //cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
-                            cachedBranchList.branches[remoteBranchLongName] =
-                                {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true};
-                            
-                            if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
-                                cachedBranchList.all.push(remoteBranchLongName);
+            return new Promise((resolve) => {
+                let INCLUDE_PATH = typeof configFile !== 'undefined' ? `include.path = ${configFile}` : '';
+                let configFlag = INCLUDE_PATH ? `-c '${INCLUDE_PATH}' ` : '';
+                let RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git ${configFlag}-c core.askpass= fetch --dry-run ${branchName}`;
+            
+                exec( RUN , 
+                    async (error, stdout, stderr) => { 
+            
+                        // Typical response (or totally empty if fetch is not needed) :
+                        //stderr = `From https://github.com/JanAxelssonTest/test_fork_this
+                        //        276f6e7..1c89d32  main       -> upstream/main
+                        //`
+            
+                        // Parse response and update  cachedBranchList.branches.upstreamAhead 
+                        if (stderr) {
+                            let rows = stderr.split('\n'); 
+                            for (var i = 0; i < rows.length; ++i) {
+                                if (!rows[i].includes('->')) continue;
+                                let columns = rows[i].split('->'); 
+                                let remoteBranchShortName = columns[columns.length - 1].trim();  // in last column, trim spaces
+                                
+                                if ( remoteBranchShortName.startsWith(branchName) ){
+                                    let remoteBranchLongName = 'remotes/' + remoteBranchShortName; 
+                                    
+                                    // Parse commit difference if available (e.g. 276f6e7..1c89d32)
+                                    let diffParts = columns[0].trim().split(/\s+/);
+                                    let count = 1;
+                                    if (diffParts.length > 0 && diffParts[0].includes('..')) {
+                                        let range = diffParts[0];
+                                        try {
+                                            const { execSync } = require('child_process');
+                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count ${range}`, { encoding: 'utf8' }).trim();
+                                            count = parseInt(res, 10) || 1;
+                                        } catch (e) {
+                                            count = 1;
+                                        }
+                                    } else {
+                                        // Brand new upstream branch or ref not locally present
+                                        try {
+                                            const { execSync } = require('child_process');
+                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count HEAD..${branchName}/${remoteBranchShortName.replace(branchName + '/', '')}`, { encoding: 'utf8' }).trim();
+                                            count = parseInt(res, 10) || 1;
+                                        } catch (e) {
+                                            count = 1;
+                                        }
+                                    }
+
+                                    if (cachedBranchList.branches[remoteBranchLongName]) {
+                                        cachedBranchList.branches[remoteBranchLongName].upstreamAhead = true;
+                                        cachedBranchList.branches[remoteBranchLongName].behindCount = count;
+                                    } else {
+                                        cachedBranchList.branches[remoteBranchLongName] =
+                                            {current: false, name: remoteBranchLongName, commit: undefined, label: undefined, show: true, upstreamAhead: true, behindCount: count};
+                                    }
+                                    
+                                    if ( !cachedBranchList.all.includes(remoteBranchLongName) ){    
+                                        cachedBranchList.all.push(remoteBranchLongName);
+                                    }
+                                }
                             }
                         }
-                    }
-             
-                }  // end callback handler
-            );  // End exec
+                 
+                        resolve();
+                    }  // end callback handler
+                );  // End exec
+            });
             
         }
 
@@ -6022,22 +6858,36 @@ async function cacheRemoteOriginStatus( start = 0 ){
     //}
     //await Promise.allSettled( promises )
     
-    let promisesLocal = [];
-    let promisesSSH = [];
-    for (var i = start; i < state.repos.length; ++i) {
-        if ( state.repos[ i ].localFolder.startsWith('ssh:') ){
-            promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
-        }else{
-            promisesLocal.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
-        }
-    }
-    
     // First time
     if (cachedRemoteOrigins.isActiveRemote == undefined){
         cachedRemoteOrigins = newCachedRemoteOrigins;
     }
     if (cachedRemoteOrigins.reason == undefined){
         cachedRemoteOrigins.reason = new Array(state.repos.length).fill('');
+    }
+
+    let promisesLocal = [];
+    let promisesSSH = [];
+    for (var i = start; i < state.repos.length; ++i) {
+        if ( state.repos[ i ].localFolder.startsWith('ssh:') ){
+            let localExists = (cachedLocalStatus && cachedLocalStatus.exists && cachedLocalStatus.exists[i] !== undefined)
+                ? cachedLocalStatus.exists[i]
+                : true;
+            if (!localExists) {
+                newCachedRemoteOrigins.isActiveRemote[i] = false;
+                newCachedRemoteOrigins.reason[i] = 'SSH project folder offline';
+                if (cachedRemoteOrigins.isActiveRemote) {
+                    cachedRemoteOrigins.isActiveRemote[i] = false;
+                }
+                if (cachedRemoteOrigins.reason) {
+                    cachedRemoteOrigins.reason[i] = 'SSH project folder offline';
+                }
+            } else {
+                promisesSSH.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+            }
+        }else{
+            promisesLocal.push( getRemoteOrigin( i, state.repos[ i ].localFolder) ); 
+        }
     }
     
     
@@ -6050,6 +6900,15 @@ async function cacheRemoteOriginStatus( start = 0 ){
     console.log('START promisesSSH');
     await Promise.allSettled( promisesSSH )
     await console.log('STOP promisesSSH');
+        
+    // If settings window is currently open, dynamically update remote status without rebuilding the table or stealing focus
+    if (localState.settings && settings_win && settings_win.window) {
+        try {
+            if (typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                settings_win.window.updateRemoteStatusColors();
+            }
+        } catch(e) {}
+    }
         
     
     
@@ -6086,6 +6945,11 @@ async function cacheRemoteOriginStatus( start = 0 ){
             if (result == undefined){
                 newCachedRemoteOrigins.isActiveRemote[repoNumber] = false;
                 cachedRemoteOrigins.isActiveRemote[repoNumber] = false;
+                if (localState.settings && settings_win && settings_win.window && typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                    try {
+                        settings_win.window.updateRemoteStatusColors();
+                    } catch(e) {}
+                }
                 if (repoNumber === state.repoNumber) {
                     _update();
                 }
@@ -6122,6 +6986,11 @@ async function cacheRemoteOriginStatus( start = 0 ){
                     cachedRemoteOrigins.isActiveRemote[repoNumber] = newCachedRemoteOrigins.isActiveRemote[repoNumber];
                     if (cachedRemoteOrigins.reason && newCachedRemoteOrigins.reason) {
                         cachedRemoteOrigins.reason[repoNumber] = newCachedRemoteOrigins.reason[repoNumber];
+                    }
+                    if (localState.settings && settings_win && settings_win.window && typeof settings_win.window.updateRemoteStatusColors === 'function') {
+                        try {
+                            settings_win.window.updateRemoteStatusColors();
+                        } catch(e) {}
                     }
                     if (repoNumber === state.repoNumber) {
                         _update();
@@ -6225,6 +7094,13 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             promisesLocal.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
         }
     }
+
+    // On Windows, if any SSH repos exist, ensure keys are synced once before running SSH checks
+    if (promisesSSH.length > 0 && process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        try {
+            await syncSshKeysToWsl();
+        } catch (e) {}
+    }
     
     //promisesSSH.push( cachedLocalStatus = cachedLocalStatus );
     
@@ -6233,57 +7109,77 @@ async function cacheLocalFolderExistStatus( start = 0 ){
     console.log('STOP promisesLocal');
     
     console.log('START promisesSSH');
-    Promise.allSettled( promisesSSH )
+    await Promise.allSettled( promisesSSH )
     console.log('STOP promisesSSH');
+    
+    // If settings window is currently open, refresh its repo table so it reflects the updated SSH/network status
+    if (localState.settings && typeof updateSettingsRepoTable === 'function') {
+        try {
+            await updateSettingsRepoTable();
+        } catch(e) {}
+    }
     
     
     // Internal function
     async function testLocalStatus( repoNumber, folder){
         let repoKey = (state.repos[repoNumber] && state.repos[repoNumber].sshKey) ? state.repos[repoNumber].sshKey : '';
-        cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
         cachedLocalStatus.localFolder[ repoNumber]  = folder;  // For debugging purposes
         
         if ( !cachedLocalStatus.reason ){
             cachedLocalStatus.reason = new Array(state.repos.length).fill('');
         }
 
-        // Figure out if git repository two ways: 1) if ssh, look for .git folder; 2) if local repo, use git to check 
+        // Figure out if git repository two ways: 1) if ssh, look for .git/HEAD first (single SSH call); 2) if local repo, use git to check 
 
         if ( folder.startsWith('ssh:') ){
-            if ( cachedLocalStatus.exists[ repoNumber] ){
-                cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that folder existed on ssh-server  
-                cachedLocalStatus.isRepo[ repoNumber]  = await fs_existsSync( `${folder}/.git/HEAD`, repoKey );
-                if ( cachedLocalStatus.isRepo[ repoNumber] ){
-                    cachedLocalStatus.reason[ repoNumber] = '';
-                }else{
-                    cachedLocalStatus.reason[ repoNumber] = 'not a repo';
+            // Probe .git/HEAD first: verifies both folder and repo in a single SSH call for valid repos
+            let hasGitHead = await fs_existsSync( `${folder}/.git/HEAD`, repoKey );
+            if ( hasGitHead ){
+                cachedLocalStatus.exists[ repoNumber] = true;
+                cachedLocalStatus.isRepo[ repoNumber] = true;
+                cachedLocalStatus.ping[ repoNumber] = true;  // true because we know that .git/HEAD existed on ssh-server
+                cachedLocalStatus.reason[ repoNumber] = '';
+                cachedLocalStatus.platform[ repoNumber] = await typeOfRepoServer(folder, repoKey);
+            } else {
+                // Skip secondary folder probe if SSH already failed due to network, rejected key, or missing WSL
+                let headReason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : '';
+                if (headReason === 'no network' || headReason === 'key rejected' || headReason === 'wsl missing') {
+                    cachedLocalStatus.exists[ repoNumber] = false;
+                } else {
+                    cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
                 }
-                let platform = await typeOfRepoServer(folder); 
-                cachedLocalStatus.platform[ repoNumber] = platform;
-            }else{
-                cachedLocalStatus.isRepo[ repoNumber] = false;
-                cachedLocalStatus.platform[ repoNumber] = undefined;
-                let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
-                
-                // If key was rejected, SSH actively responded -- ping is unnecessary and must NOT overwrite the reason!
-                if ( reason === 'key rejected' ){
+
+                if ( cachedLocalStatus.exists[ repoNumber] ){
                     cachedLocalStatus.ping[ repoNumber] = true;
-                }else{
-                    // Check if host responds to ping to differentiate 'no network' from 'not a folder'
-                    try {
-                        let hostname = new URL( folder).hostname;
-                        let pingCmd = (process.platform === 'win32') ? `ping -n 1 ${hostname}` : `ping -c 1 -W 1 ${hostname}`;
-                        await runCommandWithTimeout(pingCmd, args = [], timeoutMs = 1500);
-                        cachedLocalStatus.ping[ repoNumber] = true;  
-                    }catch (err){
-                        cachedLocalStatus.ping[ repoNumber] = false;  
-                        reason = 'no network';
+                    cachedLocalStatus.isRepo[ repoNumber] = false;
+                    cachedLocalStatus.reason[ repoNumber] = 'not a repo';
+                    cachedLocalStatus.platform[ repoNumber] = await typeOfRepoServer(folder, repoKey);
+                } else {
+                    cachedLocalStatus.isRepo[ repoNumber] = false;
+                    cachedLocalStatus.platform[ repoNumber] = undefined;
+                    let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
+                    
+                    // If key was rejected, SSH actively responded -- ping is unnecessary and must NOT overwrite the reason!
+                    if ( reason === 'key rejected' ){
+                        cachedLocalStatus.ping[ repoNumber] = true;
+                    }else{
+                        // Check if host responds to ping to differentiate 'no network' from 'not a folder'
+                        try {
+                            let hostname = new URL( folder).hostname;
+                            let pingCmd = (process.platform === 'win32') ? `ping -n 1 ${hostname}` : `ping -c 1 -W 1 ${hostname}`;
+                            await runCommandWithTimeout(pingCmd, args = [], timeoutMs = 1500);
+                            cachedLocalStatus.ping[ repoNumber] = true;  
+                        }catch (err){
+                            cachedLocalStatus.ping[ repoNumber] = false;  
+                            reason = 'no network';
+                        }
                     }
+                    cachedLocalStatus.reason[ repoNumber] = reason;
                 }
-                cachedLocalStatus.reason[ repoNumber] = reason;
             }
             
         }else{
+            cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder);
             cachedLocalStatus.platform[ repoNumber] = 'Local';
             if ( !cachedLocalStatus.exists[ repoNumber] ){
                 cachedLocalStatus.isRepo[ repoNumber] = false;
@@ -6342,12 +7238,17 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             let numberOfHiddenBranches = 0;
             let submenu = new gui.Menu(); // Prepare an empty submenu for future use
             let remoteSubmenu = new gui.Menu(); // Prepare an empty submenu for future use
+            let upstreamMenuItems = []; // Direct menu items for relevant upstream branches
             
-            let isRemoteUpstreamAhead = false;  // Flag to tell if remotes main menu should be flagged as having upstreams ahead
+            let isRemoteUpstreamAhead = false;  // Flag to tell if remotes/upstream main menu should be flagged as having upstreams ahead
+            let upstreamAheadCount = 0;         // Total upstream updates pending
             const UPSTREAM_AHEAD_MARKER = '!  ';
             
             let isCurrentSubmenuBranch = false;  // Signal to true when I want to checkbox the main menu-item (where one submenu item is currentBranch)
             
+            let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+
             for (var i = 0; i < branchNames.length; ++i) {
                 
                 // Populate utility variables 
@@ -6382,7 +7283,8 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                 
                 // 1) Branch menu
-                if (  isRemoteBranch &&  ( !isOrigin ) && ( callbackName === "clickedBranchContextualMenu")  ) {
+                //    only show remote/origin and locals (skip all other remotes including upstream)
+                if ( isRemoteBranch && !isOrigin && ( callbackName === "clickedBranchContextualMenu") ) {
                     continue
                 }
 
@@ -6430,9 +7332,21 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                 
                         
                 // If upstream ahead -- add hint
-                if ( cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
-                    secondPart = UPSTREAM_AHEAD_MARKER + secondPart;
+                let isUpstreamBranch = isRemoteBranch && secondPart.startsWith('upstream');
+                let isRelevantUpstream = isUpstreamBranch && isRelevantUpstreamBranch(branchNames[i], currentBranch, upstreamDefault);
+                
+                // Only include relevant upstream branches (default branch or matching current branch) in upstream menu
+                if (isUpstreamBranch && !isRelevantUpstream) {
+                    continue;
+                }
+
+                if ( isRelevantUpstream && cachedBranchList.branches[ branchNames[i] ].upstreamAhead ){
+                    let countHint = (cachedBranchList.branches[ branchNames[i] ].behindCount > 1) 
+                        ? ` (+${cachedBranchList.branches[ branchNames[i] ].behindCount})` 
+                        : '';
+                    secondPart = '★ ' + secondPart + countHint;
                     isRemoteUpstreamAhead = true;
+                    upstreamAheadCount += (cachedBranchList.branches[ branchNames[i] ].behindCount || 1);
                 }
                                                          
                 // Skip upstream not needing fetch
@@ -6447,7 +7361,7 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                         label : branchNames[i], 
                         type: 'checkbox',
                         checked : isCurrentBranch,
-                        enabled: !isCurrentBranch,
+                        enabled: true,
                         click :  () => { _callback(callbackName,myEvent);}  
                     }));    
                 }
@@ -6469,12 +7383,16 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
                                 label: secondPart,
                                 type: 'checkbox',
                                 checked : isCurrentBranch,
-                                enabled: !isCurrentBranch,  
+                                enabled: true,  
                                 click :  () => { _callback( callbackName, myEvent); }  
                             });
                         
                         if (isRemoteBranch && showRemote) {
-                            remoteSubmenu.append( tempSubMenu); 
+                            if (isUpstreamBranch) {
+                                upstreamMenuItems.push( tempSubMenu);
+                            } else {
+                                remoteSubmenu.append( tempSubMenu);
+                            }
                             submenuInProgress = false;
                         }else {
                             submenu.append( tempSubMenu); 
@@ -6499,14 +7417,19 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
             } // End - branch list loop 
                  
                 
+            // Add upstream directly to menu (no extra hover submenu needed for 1-2 items)
+            if ( upstreamMenuItems.length > 0 ){
+                menu.append(new gui.MenuItem({ type: 'separator' }));
+                for (let item of upstreamMenuItems) {
+                    menu.append(item);
+                }
+            }
+
             // Add remotes to menu
             if ( remoteSubmenu.items.length > 0 ){
                 menu.append(new gui.MenuItem({ type: 'separator' }));
-                if (isRemoteUpstreamAhead){
-                    cachedFirstPart = UPSTREAM_AHEAD_MARKER + cachedFirstPart;
-                }
-
-                menu.append( new gui.MenuItem( { label : cachedFirstPart, submenu: remoteSubmenu }  )); 
+                let remoteLabel = 'Remotes';
+                menu.append( new gui.MenuItem( { label : remoteLabel, submenu: remoteSubmenu }  )); 
             }
                  
                  
@@ -6529,25 +7452,47 @@ function makeBranchMenu(menu, currentBranch, branchList, callbackName){ // helpe
 
 // Utility functions
 
-async function typeOfRepoServer( sshUrl){  // For ssh-folders, returns : Mac, Linux or undefined.   For local, returns 'Local'
+async function typeOfRepoServer( sshUrl, sshKey = '' ){  // For ssh-folders, returns : Mac, Linux or undefined.   For local, returns 'Local'
     
     if ( !sshUrl.startsWith('ssh:') ){
         return 'Local'
     }
+    if (!typeOfRepoServer._cache) {
+        typeOfRepoServer._cache = {};
+    }
     
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    const serverHost = urlParts.host || urlParts.hostname;
+    const serverKey = `${urlParts.username}@${serverHost}`;
+
+    // Fast path 1: infer directly from path prefix without any SSH call
+    if (urlParts.pathname.startsWith('/home/')) {
+        typeOfRepoServer._cache[serverKey] = 'Linux';
+        return 'Linux';
+    }
+    if (urlParts.pathname.startsWith('/Users/')) {
+        typeOfRepoServer._cache[serverKey] = 'Mac';
+        return 'Mac';
+    }
+
+    // Fast path 2: return cached server platform if already probed in this session
+    if (typeOfRepoServer._cache[serverKey]) {
+        return typeOfRepoServer._cache[serverKey];
+    }
     
     // Check home directory
     try{
         // Assume linux
-        let baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
-        if ( await fs_existsSync(baseUrl)){
+        let baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}/home/${urlParts.username}`;  // ssh://host/home/jan
+        if ( await fs_existsSync(baseUrl, sshKey)){
+            typeOfRepoServer._cache[serverKey] = 'Linux';
             return 'Linux';
         }
         
         // Assume MacOS
-        baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
-        if ( await fs_existsSync(baseUrl)){
+        baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}/Users/${urlParts.username}`;  // ssh://host/Users/jan
+        if ( await fs_existsSync(baseUrl, sshKey)){
+            typeOfRepoServer._cache[serverKey] = 'Mac';
             return 'Mac';
         }
         
@@ -6560,23 +7505,45 @@ async function typeOfRepoServer( sshUrl){  // For ssh-folders, returns : Mac, Li
     
 }
 
-async function setupSshServer( ){ // Copies config, and executables to ssh server "$HOME/.Pragma-git" folder
-    
+async function setupSshServer( force = false ){ // Copies config, and executables to ssh server "$HOME/.Pragma-git" folder
+    if (state.repoNumber < 0 || !state.repos || !state.repos[state.repoNumber]) {
+        return;
+    }
     const sshUrl = state.repos[state.repoNumber].localFolder;  
-    if ( !sshUrl.startsWith('ssh:') ){
+    if ( !sshUrl || !sshUrl.startsWith('ssh:') ){
         //console.log(`NOT A SSH URL -- ${sshUrl}`);
         return
     }
+    if (!setupSshServer._initialized) {
+        setupSshServer._initialized = new Set();
+    }
     const urlParts = new URL( sshUrl);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
+    const serverHost = urlParts.host || urlParts.hostname;
+    const serverKey = `${urlParts.username}@${serverHost}`;
+
+    // Skip if helper scripts have already been uploaded to this user@host:port during this session
+    if (!force && setupSshServer._initialized.has(serverKey)) {
+        return;
+    }
+
+    // Try known platform home directory first so macOS servers do not waste 3 failed Linux scp attempts
+    const cachedPlat = (typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]) || (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[state.repoNumber]);
+    const isMac = (urlParts.pathname.startsWith('/Users/') || cachedPlat === 'Mac');
+    const primaryHome = isMac ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
+    const fallbackHome = isMac ? `/home/${urlParts.username}` : `/Users/${urlParts.username}`;
     
     try{
-        // Assume linux
-        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/home/${urlParts.username}`;  // ssh://host/home/jan
+        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${primaryHome}`;
         await putFiles(baseUrl);
+        setupSshServer._initialized.add(serverKey);
     }catch (err){
-        // Assume MacOS
-        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${urlParts.hostname}/Users/${urlParts.username}`;  // ssh://host/Users/jan
-        await putFiles(baseUrl);
+        try {
+            const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${fallbackHome}`;
+            await putFiles(baseUrl);
+            setupSshServer._initialized.add(serverKey);
+        } catch (err2) {
+            console.warn('setupSshServer failed:', err2);
+        }
     }
     
     // Internal function
@@ -6719,6 +7686,12 @@ function fixWindowsMappedNetworkDrive( folder, topFolder){  // Windows OS, retur
     // If folder2 is UNC path (//vll.se/...) then topFolder is correct
     if ( folder2.startsWith('//') ){
         return topFolder.replaceAll( '/', '\\');  // Return using Windows '\'
+    }
+    
+    // Only applies if git rev-parse returned a UNC path (//server/share/...) for a mapped drive (Z:/...)
+    let topFolderSlash = topFolder.replaceAll('\\', '/');
+    if (!topFolderSlash.startsWith('//')) {
+        return topFolder.replaceAll('/', '\\');
     }
     
     // 
@@ -6943,7 +7916,7 @@ async function runCommandWithTimeout(command, args = [], timeoutMs = 10000) {
     });
   });
 }
-async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000 ){  // Run git bash in 'folder', on all platforms. 
+async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, timeoutInMs = 2000, execExtra = {} ){  // Run git bash in 'folder', on all platforms. 
 	 // Run command line program as in terminal
      //
      // Inputs:
@@ -6954,6 +7927,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
      //		forcelocal		Windows typically runs git on ssh-folder over WSL.  Force running local git-bash instead
      //     mode            'timeout'
      //     timeoutInMs     
+     //     execExtra       optional object, e.g. { sshKey: '...' }
      //
      // Output
      //     string output of command, trimmed  (without leading and trailing spaces)
@@ -6961,16 +7935,25 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     let options = {};
     let out;
     
-    // Set path if known
-    let isDefinedFolder =  ( folder !== undefined);
-    let isLocalFolder = ( ! folder.startsWith('ssh:') );
+    // Set path if known (only for real local directories)
+    let isDefinedFolder = ( folder !== undefined );
+    let isLocalFolder = ( typeof folder === 'string' && !folder.startsWith('ssh:') );
     if ( isDefinedFolder && isLocalFolder ){  
-        options = {cwd: folder};
+        options.cwd = folder;
     }
     
     // Set time-out if defined
     if (mode == 'timeout'){
-        options = {cwd: folder, timeout: timeoutInMs};  
+        options.timeout = timeoutInMs;  
+    }
+
+    // Attach SSH key environment if running an ssh operation
+    if (folder.startsWith('ssh:') && typeof sshKeyEnv === 'function') {
+        let keyOverride = (execExtra && execExtra.sshKey) ? execExtra.sshKey : '';
+        let keyEnvs = sshKeyEnv(folder, keyOverride);
+        if (keyEnvs && Object.keys(keyEnvs).length > 0) {
+            options.env = Object.assign({}, process.env, options.env || {}, keyEnvs);
+        }
     }
 
     //
@@ -6985,10 +7968,10 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
         if ( folder.startsWith('ssh:') ) {
             
             try{
-                return await runCommandWithTimeout(cmd, {}, timeoutInMs);
+                return await runCommandWithTimeout(cmd, options, timeoutInMs);
             }catch (err){
                 console.error( err);
-                return err.toString();
+                throw err;
             }
         }
         
@@ -7034,18 +8017,24 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 		// forcelocal=false is required 
 		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
 		{  
-		cmd =  cmd.replaceAll('\\','/').replaceAll('C:/','/mnt/c/');  // Change to wsl path
+		cmd = cmd.replaceAll('\\','/').replaceAll(/(^|[\s"'])([a-zA-Z]):\//g, (match, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
 
 		try{
 
-			 let out =  await runCommandWithTimeout(`wsl ${cmd}`, {}, timeoutInMs);
+			 let out =  await runCommandWithTimeout(`wsl bash -c "${cmd.replace(/"/g, '\\"')}"`, options, timeoutInMs);
 			 
 			 console.log('Output:', out);
              return out;
 		} catch (err) {
 			  console.warn('Warning:', err.message);
-			  console.warn('stderr:', err.stderr?.toString());
-			  throw new Error( `multiPlatformExecSync error: = ${err}`);
+			  let stderrStr = err.stderr ? err.stderr.toString() : '';
+			  if (stderrStr) console.warn('stderr:', stderrStr);
+			  let errStr = (err?.message || stderrStr || err?.toString() || '');
+			  if (errStr.includes('is not recognized') || errStr.includes('cannot find the file specified') || err?.code === 127) {
+			      throw new Error(`WSL is required on Windows to access SSH repositories. Please install WSL by running 'wsl --install' in PowerShell.`);
+			  }
+			  let detailedMsg = stderrStr ? `${err.message || err} (stderr: ${stderrStr.trim()})` : (err.message || err);
+			  throw new Error( `multiPlatformExecSync error: = ${detailedMsg}`);
 		}
 
 	}
@@ -7137,6 +8126,11 @@ let ciMemoryCache = {};
 function normalizeRepoUrl(url) {
     if (!url || typeof url !== 'string') return '';
     let clean = url.trim();
+
+    // Local filesystem paths or file:// URLs are not remote hosting providers
+    if (clean.startsWith('/') || clean.startsWith('\\') || /^[a-zA-Z]:[\\\/]/.test(clean) || clean.startsWith('file://')) {
+        return '';
+    }
 
     // Convert scp-style SSH: git@host:owner/repo(.git) or ssh://git@host:owner/repo
     clean = clean.replace(/^ssh:\/\//, '');
@@ -7402,7 +8396,7 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
     if (ciQueryInProgress) return;
     ciQueryInProgress = true;
     try {
-        let provider = await gitProvider(rawRemoteUrl || remoteUrl, true);
+        let provider = await gitProvider(remoteUrl, true);
         let ciResult = await provider.getValue('ci-status', commitSha);
         if (ciResult && ciResult.status && ciResult.status !== 'none') {
             setCachedCiStatus(remoteUrl, commitSha, ciResult);
@@ -7442,11 +8436,19 @@ async function queryCommitCiStatus(forceRefresh = false, targetSha = null) {
         }
     } catch (err) {
         console.warn('Error querying CI status:', err);
-        // Do not cache 'none' on API or network errors!
+        // On error (e.g. rate limit 403 or server without CI), cache negative result in memory for 60 seconds
+        // so we don't repeatedly spam the server or console on every 1-second interval loop
+        localState.ciStatus = {
+            repoUrl: remoteUrl,
+            commitSha: commitSha,
+            status: 'none',
+            url: null,
+            lastChecked: Date.now()
+        };
         // Keep displaying the cached status if available; otherwise hide if commit changed
         if (cached && (cached.status === 'success' || cached.status === 'failure' || cached.status === 'pending')) {
             updateCiBadge(cached);
-        } else if (!localState.ciStatus || localState.ciStatus.commitSha !== commitSha) {
+        } else {
             updateCiBadge({ status: 'none', url: null });
         }
     } finally {
@@ -7462,6 +8464,8 @@ global.getCachedCiStatus = getCachedCiStatus;
 global.setCachedCiStatus = setCachedCiStatus;
 global.updateCiBadge = updateCiBadge;
 global.queryCommitCiStatus = queryCommitCiStatus;
+global.updateUpstreamBadge = updateUpstreamBadge;
+global.updateMergeTooltip = updateMergeTooltip;
 listUnstarredGithub = async function( state, owner, repo) {
     // state is state for pragma-git
     // owner is the repo-owner for the repo we wish to check if it has been starred by current (looped) repo
@@ -7522,10 +8526,11 @@ function pragmaLog(message){
         mainLogFileStream = require('fs').createWriteStream(MAINLOGFILE, { 'flags': 'a', 'encoding': 'utf8'} );
     }
     
-    // Write message to stream
+    // Write message to stream (strip NUL bytes from git output to keep log clean text for editors like Geany)
     let timeStamp = new Date().toISOString();
     let space = '   ';
-    let output = timeStamp + space + cleanedMessage + os.EOL;
+    let safeMessage = cleanedMessage.replaceAll('\0', '');
+    let output = timeStamp + space + safeMessage + os.EOL;
     mainLogFileStream.write( output);
 }
 function sendGitOutputToFile( id) {
@@ -7599,6 +8604,17 @@ function stackInfo( level ){
 
 
 // Update other windows
+
+function getSensibleWindowSize(idealWidth, idealHeight) {
+    const marginW = 40;
+    const marginH = 60;
+    const screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+    const screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+    return {
+        width: Math.min(idealWidth, Math.max(600, screenW - marginW)),
+        height: Math.min(idealHeight, Math.max(500, screenH - marginH))
+    };
+}
 
 async function showWindow(win){ // Show external window that was opened hidden
     
@@ -7703,7 +8719,7 @@ async function updateSettingsRepoTable(){  // Only update Repo table
 	    settings_win.window.document.getElementById("settingsTableBody").innerHTML = ""; 
 	    await settings_win.window.createHtmlTable(settings_win.window.document)
 	    await updateSettingsWindow()  
-        win.focus();
+        //win.focus();
 	}catch(err){ 
 	}
 }
@@ -7715,6 +8731,83 @@ async function updateChangedListWindow(){
     }
 
     //win.focus();
+}
+
+function showSshFileBrowser(sshFolder) {
+    if (!sshFolder) return;
+
+    if (sshFileBrowserWindows[sshFolder]) {
+        try {
+            sshFileBrowserWindows[sshFolder].focus();
+            return;
+        } catch (err) {
+            delete sshFileBrowserWindows[sshFolder];
+        }
+    }
+
+    let repoName = sshFolder.split('/').filter(Boolean).pop() || sshFolder;
+    let title = `SSH Server Files - ${repoName}`;
+    let browserSize = getSensibleWindowSize(850, 750);
+    let url = 'sshFileBrowser.html?repo=' + encodeURIComponent(sshFolder);
+
+    // If an SSH file browser is already open, offset the new window by ~20px down and right
+    let openCount = Object.keys(sshFileBrowserWindows).length;
+    let windowOptions = {
+        show: false,
+        width: browserSize.width,
+        height: browserSize.height,
+        title: title
+    };
+
+    let baseWin = ssh_file_browser_win;
+    if (openCount > 0 && baseWin) {
+        try {
+            let offset = 20 * openCount;
+            let screenW = (window.screen && window.screen.availWidth) ? window.screen.availWidth : 1400;
+            let screenH = (window.screen && window.screen.availHeight) ? window.screen.availHeight : 900;
+            let targetX = baseWin.x + offset;
+            let targetY = baseWin.y + offset;
+            if (targetX + browserSize.width > screenW) targetX = Math.max(0, screenW - browserSize.width - 20);
+            if (targetY + browserSize.height > screenH) targetY = Math.max(0, screenH - browserSize.height - 20);
+            windowOptions.x = targetX;
+            windowOptions.y = targetY;
+        } catch (e) {
+            windowOptions.position = 'center';
+        }
+    } else {
+        windowOptions.position = 'center';
+    }
+
+    gui.Window.open(url, windowOptions,
+        win => win.on('loaded', () => {
+            ssh_file_browser_win = win;
+            sshFileBrowserWindows[sshFolder] = win;
+            updateWindowMenu(title, 'ssh_file_browser_win');
+            showWindow(win);
+
+            win.on('close', function() {
+                if (win.window && typeof win.window.requestCloseWithWarning === 'function') {
+                    win.window.requestCloseWithWarning();
+                } else {
+                    onSshFileBrowserClosed(sshFolder, win);
+                    fixNwjsBug7973(win);
+                }
+            });
+        })
+    );
+}
+
+function onSshFileBrowserClosed(sshFolder, closedWin) {
+    if (sshFolder && sshFileBrowserWindows[sshFolder]) {
+        delete sshFileBrowserWindows[sshFolder];
+    }
+    if (ssh_file_browser_win === closedWin) {
+        let remainingKeys = Object.keys(sshFileBrowserWindows);
+        ssh_file_browser_win = remainingKeys.length > 0 ? sshFileBrowserWindows[remainingKeys[remainingKeys.length - 1]] : undefined;
+    }
+    try {
+        updateWindowMenu();
+    } catch (e) {}
 }
 
 
@@ -8250,16 +9343,22 @@ async function updateTrayMenu(){  // Update Tray menu   (same as MacOS but with 
                         let firstWordInTitle = title.split(' ')[0]
                         let winHandleNameAsString = windowNamesStartsWith[firstWordInTitle];  // Lookup name of handle-variable from first word in title
                         
-                        // Fix for Pragma-merge window, which does not have 'Pragma-merge' in title (but has 'File=...')
-                        if (firstWordInTitle == 'File'){
-                            title = 'Pragma-merge';
+                        // Fix for Pragma-merge window, which has title 'Pragma-merge (<filename>)' or 'File = <filename>'
+                        if (firstWordInTitle === 'File') {
+                            let fileName = path.basename(title.replace(/^File\s*=\s*/, ''));
+                            title = fileName ? `Pragma-merge (${fileName})` : 'Pragma-merge';
+                        } else if (title.startsWith('Pragma-merge (')) {
+                            // Already formatted as Pragma-merge (<filename>)
+                        } else if (title.startsWith('Pragma-merge -- ')) {
+                            let fileName = path.basename(title.substring('Pragma-merge -- '.length).replace(/\s*\( READ-ONLY VIEW \)\s*$/, ''));
+                            let isReadOnly = title.includes('( READ-ONLY VIEW )');
+                            title = fileName ? `Pragma-merge (${fileName})${isReadOnly ? ' (READ-ONLY)' : ''}` : title;
                         }
         
                         console.log('Adding to menu = ' + title);
                             
-                        // Add to menu 
-                        let click = `() => { ${winHandleNameAsString}.focus(); }`;
-                        newWindowMenu.append(  new gui.MenuItem( {  label: pad(title), click: eval(click)  }  )); 
+                        // Add to menu (focus the specific window instance directly)
+                        newWindowMenu.append( new gui.MenuItem( { label: pad(title), click: () => { win_handle.focus(); } } ) ); 
                         
                     }catch (err){
                         
@@ -8457,6 +9556,9 @@ function readMessage(){
 let _saveDraftTimeout = null;
 
 function saveCurrentRepoDraftMessage(syncSave = false, repoIdx = state.repoNumber) {
+    if (typeof window !== 'undefined' && !window._msgAllowAction && getMode() === 'NO_FILES_TO_COMMIT') {
+        return;
+    }
     if (repoIdx >= 0 && state.repos && state.repos[repoIdx]) {
         if (localState.historyNumber < 0 && getMode() !== 'HISTORY') {
             state.repos[repoIdx].draftMessage = readMessage();
@@ -8491,14 +9593,18 @@ function restoreRepoDraftMessage(repoIdx = state.repoNumber) {
         let draft = getRepoDraftMessage(repoIdx);
         textOutput.value = draft;
         textOutput.readOnly = false;
-        textOutput.placeholder = 
-            "You may write what is ongoing here," + os.EOL + os.EOL + 
-            "Change text to commit message (or stash name) when done";
+        // Keep existing placeholder if already set (e.g. Last commit : "..."), otherwise fallback
+        if (!textOutput.placeholder || textOutput.placeholder === '') {
+            textOutput.placeholder = "No previous commits";
+        }
         writeTextOutput(textOutput);
         if (draft.length > 0) {
             if (getMode() === 'CHANGED_FILES' || getMode() === 'CHANGED_FILES_TEXT_ENTERED') {
                 _setMode('CHANGED_FILES_TEXT_ENTERED');
             }
+        }
+        if (typeof updateEditCommitTextDiv === 'function') {
+            updateEditCommitTextDiv();
         }
     }
 }
@@ -8761,10 +9867,20 @@ function loadSettings(settingsFile){
                 }
                 
                 if ( !isDecimal(state.zoom) ){
-                    state.zoom = '1.0'
-                } 
+                    state.zoom = '1.0';
+                } else {
+                    let z = parseFloat(state.zoom);
+                    if (z < 0.5) z = 0.5;
+                    if (z > 3.0) z = 3.0;
+                    state.zoom = String(z);
+                }
                 if ( !isDecimal(state.zoomMain) ){
-                    state.zoomMain = '1.0'
+                    state.zoomMain = '1.0';
+                } else {
+                    let zm = parseFloat(state.zoomMain);
+                    if (zm < 0.5) zm = 0.5;
+                    if (zm > 3.0) zm = 3.0;
+                    state.zoomMain = String(zm);
                 } 
             
         
@@ -8773,6 +9889,7 @@ function loadSettings(settingsFile){
             state.forceCommitBeforeBranchChange = setting( state_in.forceCommitBeforeBranchChange, true);
             state.FirstParent = setting( state_in.FirstParent, true);
             state.StashPop = setting( state_in.StashPop, true);
+            state.maxRecentRepos = setting( state_in.maxRecentRepos, 5);
          
          // Debug   
             state.debug  = setting( state_in.debug, false );  // Note, set by editing settings.json
@@ -8783,6 +9900,7 @@ function loadSettings(settingsFile){
             state.tools = setting( state_in.tools, {} ); 
             state.tools.difftool = setting( state_in.tools.difftool, "");
             state.tools.mergetool = setting( state_in.tools.mergetool, "");
+            state.tools.editor = setting( state_in.tools.editor, "pragma-merge");
             state.tools.terminal = setting( state_in.tools.terminal, "");
             state.tools.fileBrowser = setting( state_in.tools.fileBrowser, "");
             state.tools.addedPath = setting( state_in.tools.addedPath, "");
@@ -8809,8 +9927,12 @@ function loadSettings(settingsFile){
             state.pragmaMerge = setting( state_in.pragmaMerge, {} );
             state.pragmaMerge.hide_unchanged = setting( state_in.pragmaMerge.hide_unchanged, false );
             state.pragmaMerge.align = setting( state_in.pragmaMerge.align, false );
+            state.pragmaMerge.ignoreWhitespace = setting( state_in.pragmaMerge.ignoreWhitespace, false );
             state.pragmaMerge.codeTheme = setting( state_in.pragmaMerge.codeTheme, 'default' );
             state.pragmaMerge.mergePanes = setting( state_in.pragmaMerge.mergePanes, 2 );
+            state.pragmaMerge.window = setting( state_in.pragmaMerge.window, {} );
+            state.pragmaMerge.windowSinglePane = setting( state_in.pragmaMerge.windowSinglePane, {} );
+            state.pragmaMerge.windowMultiPane = setting( state_in.pragmaMerge.windowMultiPane, {} );
             
         // Graph window 
             state.graph = setting( state_in.graph, {} );
@@ -8842,6 +9964,14 @@ function loadSettings(settingsFile){
                 console.warn('Failed reading individual repos');
             }
             
+        // Preserve any unknown/newer top-level keys from incoming state at the end
+        if (typeof state_in === 'object' && state_in !== null) {
+            for (let key of Object.keys(state_in)) {
+                if (!(key in state)) {
+                    state[key] = state_in[key];
+                }
+            }
+        }
   
     //
     // Post-process state
@@ -8993,6 +10123,15 @@ function loadSettings(settingsFile){
         // Draft message / Mental note
         repoState.draftMessage = setting( repoStateIn.draftMessage, '' );
 
+        // Preserve any unknown/newer keys from incoming repo state at the end
+        if (typeof repoStateIn === 'object' && repoStateIn !== null) {
+            for (let key of Object.keys(repoStateIn)) {
+                if (!(key in repoState)) {
+                    repoState[key] = repoStateIn[key];
+                }
+            }
+        }
+
         return repoState;
     }
     function setting( input, defaultValue){             // Utility function to set a single undefined value to its default
@@ -9033,6 +10172,11 @@ function updateWithNewSettings(){                   // Call from window that mod
     if ( state.tools.mergetool.trim().length == 0 ){
         state.tools.mergetool = "pragma-git";
     }   
+
+    // Blank external editor -> use built in pragma-merge
+    if ( !state.tools.editor || state.tools.editor.trim().length == 0 ){
+        state.tools.editor = "pragma-merge";
+    }
 
     // Set dark mode variable
     switch (state.darkmode) {
@@ -9115,6 +10259,13 @@ function updateWithNewSettings(){                   // Call from window that mod
                             win_handle.window.onThemeChanged();
                         } catch(e) {}
                     }
+
+                    // Update editor label in open SSH File Browser windows
+                    if (win_handle.window.updateEditorHeaderInfo) {
+                        try {
+                            win_handle.window.updateEditorHeaderInfo();
+                        } catch(e) {}
+                    }
                     
                                     
                 
@@ -9156,7 +10307,12 @@ function dev_show_all_icons(){
     document.getElementById('bottom-titlebar-stash_pop-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-branch-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-tag-icon').style.visibility = 'visible'
-    document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible'
+    let mergeIconWrapper = document.getElementById('top-titlebar-merge-icon-wrapper');
+    if (mergeIconWrapper) {
+        mergeIconWrapper.style.visibility = 'visible';
+    } else {
+        document.getElementById('top-titlebar-merge-icon').style.visibility = 'visible';
+    }
     document.getElementById('top-titlebar-push-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pull-icon').style.visibility = 'visible'
     document.getElementById('top-titlebar-pinned-icon').style.visibility = 'visible' 
@@ -9184,6 +10340,9 @@ window.onblur = function() {
 window.onresize = function() {
   //win.reload();
   updateContentStyle();
+  if (typeof adjustMessageOverlayOffset === 'function') {
+    adjustMessageOverlayOffset();
+  }
 };
 window.onload = async function() {
     
@@ -9262,9 +10421,11 @@ window.onload = async function() {
   }
   
   // Dialog if author's name is unknown (for  local folder)
-  let folder = state.repos[state.repoNumber].localFolder;
-  if ( ! folder.startsWith('ssh:') ){
-    showUserDialog(true)  // test = true, will show only if author is unknown
+  if (state.repos && state.repos[state.repoNumber] && state.repos[state.repoNumber].localFolder) {
+    let folder = state.repos[state.repoNumber].localFolder;
+    if ( ! folder.startsWith('ssh:') ){
+      showUserDialog(true)  // test = true, will show only if author is unknown
+    }
   }
  
   // Hide settings icon
@@ -9291,10 +10452,28 @@ window.onload = async function() {
   
   // Fix that is it hidden when starting (was misplaced in GUI at start)
   document.getElementById('top-titlebar-ci-placeholder').style.visibility = 'visible';
+  let upstreamPlaceholder = document.getElementById('top-titlebar-upstream-placeholder');
+  if (upstreamPlaceholder) upstreamPlaceholder.style.visibility = 'visible';
   
 
 };
 async function closeWindow(a){
+    // Check if any open SSH File Browser window has active watched files before closing Pragma-git
+    if (a !== true) {
+        for (let repoKey of Object.keys(sshFileBrowserWindows)) {
+            let browserWin = sshFileBrowserWindows[repoKey];
+            try {
+                if (browserWin && browserWin.window && typeof browserWin.window.hasOpenWatchedFiles === 'function' && browserWin.window.hasOpenWatchedFiles()) {
+                    browserWin.window.requestCloseWithWarning(() => {
+                        closeWindow(true);
+                    });
+                    return;
+                }
+            } catch (e) {
+                delete sshFileBrowserWindows[repoKey];
+            }
+        }
+    }
   
     win.hide(); // Close to make it swifter
     closeAllWindows();  // Close all except main window

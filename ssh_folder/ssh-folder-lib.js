@@ -68,21 +68,26 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
   
     // run ssh-test-if-file-exists bash script
     try{
-        let keyArg = (sshKey && typeof sshKey === 'string' && sshKey.trim().length > 0) ? ` "${sshKey.trim()}"` : '';
-        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"${keyArg}`;
+        let CMD = `${CWD_INIT}/ssh_folder/ssh-test-if-file-exists "${sshUrl}"`;
         MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
         
-        //MAIN.multiPlatformExecSync( sshUrl, CMD);
-        await MAIN.multiPlatformExecSync( sshUrl, CMD, forcelocal = false, 'timeout', timeoutInMs = 2000)
+        let res = await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 2000, { sshKey: sshKey });
+        if (res && typeof res === 'string' && (res.includes('SSH ERROR') || res.includes('timed out') || res.startsWith('Error:'))) {
+            throw new Error(res);
+        }
         
         fs_existsSync.lastReason = '';
+        fs_existsSync.lastError = null;
         return true
     }catch (err){
+        fs_existsSync.lastError = err;
         let msg = (err && err.message) ? err.message : String(err);
         let lower = msg.toLowerCase();
-        if (lower.includes('permission denied') || lower.includes('key rejected')) {
+        if (lower.includes('wsl is required') || lower.includes('wsl')) {
+            fs_existsSync.lastReason = 'wsl missing';
+        } else if (lower.includes('permission denied') || lower.includes('key rejected')) {
             fs_existsSync.lastReason = 'key rejected';
-        } else if (lower.includes('timed out') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host')) {
+        } else if (lower.includes('timed out') || lower.includes('timeout') || lower.includes('could not resolve') || lower.includes('connection refused') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
             fs_existsSync.lastReason = 'no network';
         } else {
             fs_existsSync.lastReason = 'not a folder';
@@ -94,7 +99,7 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
   }
   
 }
-async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- works on both local and over ssh
+async function fs_mkdir( folder_or_sshUrl, sshKey = '') {                    // mkdir -p -- works on both local and over ssh
 
 
     // TODO : Make app.js mkdir call this function !
@@ -109,7 +114,8 @@ async function fs_mkdir( folder_or_sshUrl) {                    // mkdir -p -- w
                 // SSH folder
                 
                   // run ssh-get bash script
-                  let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"`;
+                  let keyArg = (sshKey && typeof sshKey === 'string' && sshKey.trim().length > 0) ? ` "${sshKey.trim()}"` : '';
+                  let CMD = `${CWD_INIT}/ssh_folder/ssh-mkdir "${folder_or_sshUrl}"${keyArg}`;
                   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
                   await MAIN.multiPlatformExecSync( folder_or_sshUrl, CMD, false, 'timeout', 30000);
 
@@ -163,6 +169,46 @@ async function sshPut( sshUrl, fileRelativeRepoBase) {          //  Copy file fr
   
   MAIN=global.windows['main_win'];    // Used to call functions defined in Main window
   await MAIN.multiPlatformExecSync( sshUrl, CMD);
+}
+async function sshLs( sshUrl, relativeSubPath = '' ) {          //  List files and directories on ssh server
+  //
+  //  Inputs :
+  //    sshUrl           -- git repo's base sshURL
+  //    relativeSubPath  -- subfolder path relative to git repo's base (empty string for root)
+  //  Output :
+  //    Array of { name, isDirectory, relativePath } sorted directories-first, then alphabetically
+
+  let cleanRel = (relativeSubPath || '').replace(/^\/+|\/+$/g, '');
+  let cwdInit = (typeof CWD_INIT !== 'undefined' && CWD_INIT) ? CWD_INIT : (global.CWD_INIT || '');
+  let CMD = `${cwdInit}/ssh_folder/ssh-ls "${sshUrl}" "${cleanRel}"`;
+  let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+  let output = await MAIN.multiPlatformExecSync( sshUrl, CMD);
+
+  if (!output || typeof output !== 'string') return [];
+
+  let lines = output.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  let entries = [];
+  for (let line of lines) {
+      if (line === '.git/' || line === '.git') continue;
+      let isDirectory = line.endsWith('/');
+      let name = isDirectory ? line.slice(0, -1) : line;
+      if (!name || name === '.' || name === '..') continue;
+      let entryRelPath = cleanRel ? `${cleanRel}/${name}` : name;
+      entries.push({
+          name: name,
+          isDirectory: isDirectory,
+          relativePath: entryRelPath
+      });
+  }
+
+  entries.sort((a, b) => {
+      if (a.isDirectory !== b.isDirectory) {
+          return a.isDirectory ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
+
+  return entries;
 }
 async function sshPutSimple( absoluteLocalFilePath, sshUrl) {   //  Copy file from absoluteLocalFilePath to ssh 
 	//  Copy file from ssh to absoluteLocalFilePath
@@ -275,7 +321,18 @@ function getSelectedSshKey( mode ) {
 function selectSshKey( mode ) {
     let fileInput = document.getElementById(mode === 'clone' ? 'sshKeyFileInput_clone' : 'sshKeyFileInput_add');
     if (fileInput) {
+        try {
+            const os = require('os');
+            const path = require('path');
+            fileInput.setAttribute('nwworkingdir', path.join(os.homedir(), '.ssh'));
+        } catch (e) {}
         fileInput.value = '';
+        try {
+            let os = require('os');
+            let path = require('path');
+            let sshDir = path.join(os.homedir(), '.ssh');
+            fileInput.setAttribute('nwworkingdir', sshDir);
+        } catch (e) {}
         fileInput.click();
     }
 }
@@ -333,6 +390,11 @@ function onSshKeyFileSelected( mode, inputEl ) {
     if (resetBtn) resetBtn.style.display = 'inline-block';
     if (deployBtn) deployBtn.textContent = 'Deploy public key';
 
+    // Sync to WSL mirror if on Windows
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        syncSshKeysToWsl().catch(() => {});
+    }
+
     onServerInputsChanged(mode);
 }
 
@@ -389,10 +451,9 @@ async function sshTestLogin( sshUrl, keyPath ) {                 // Test if pass
   // Output :
   //   string status from ssh-test-login ('STATUS:OK', 'STATUS:KEY_NEEDED', 'STATUS:TIMEOUT', or 'STATUS:ERROR: ...')
 
-  let keyArg = (keyPath && keyPath.trim().length > 0) ? ` "${keyPath.trim()}"` : '';
-  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"${keyArg}`;
+  let CMD = `${CWD_INIT}/ssh_folder/ssh-test-login "${sshUrl}"`;
   let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
-  return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000);
+  return await MAIN.multiPlatformExecSync( sshUrl, CMD, false, 'timeout', 8000, { sshKey: keyPath });
 }
 
 async function testSshKeyLogin( mode ) {                        // UI handler for Settings (Clone and Add Repo tabs)
@@ -428,6 +489,19 @@ async function testSshKeyLogin( mode ) {                        // UI handler fo
     if (deployBtn) deployBtn.disabled = true;
     statusEl.style.color = 'var(--dim-text, #888)';
     statusEl.textContent = 'Testing connection...';
+
+    // Windows pre-check: verify WSL is available before attempting SSH
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            statusEl.style.color = 'var(--red-text, red)';
+            statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = true;
+            if (testBtn) testBtn.disabled = false;
+            return;
+        }
+    }
 
     try {
         let fakeFolder = `ssh://${username}@${server}/`;
@@ -509,17 +583,37 @@ async function deploySshKey( mode ) {                           // Deploys key p
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     if (submitBtn) submitBtn.disabled = true;
+
+    // Windows pre-check: verify WSL is available before attempting SSH key deploy
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (testBtn) testBtn.disabled = false;
+            if (deployBtn) deployBtn.disabled = false;
+            return;
+        }
+    }
+
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
         statusEl.textContent = 'Deploying public key to remote server...';
     }
 
+    // Ensure WSL has the latest synced keys from Windows before deploying
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        await syncSshKeysToWsl();
+    }
+
     let fakeFolder = `ssh://${username}@${server}/`;
-    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${selectedKey}"`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
 
     try {
-        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000, { sshKey: selectedKey } );
     } catch (err) {
         console.error('Error when setting up password-less login:', err);
         if (MAIN.displayLongAlert) {
@@ -595,8 +689,15 @@ function generateLocalSshKey( keyPath ) {
         fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
     }
 
+    let username = '';
+    try {
+        username = (os.userInfo().username || '').replace(/^.*\\/, '');
+    } catch (e) {}
+    if (!username) {
+        username = process.env.USER || process.env.USERNAME || 'user';
+    }
     let hostname = os.hostname() || 'local';
-    let comment = `pragma-git@${hostname}`;
+    let comment = `${username}@${hostname} (pragma-git)`;
     let cmd = `ssh-keygen -t ed25519 -f "${resolvedPath}" -N "" -C "${comment}"`;
 
     let options = {};
@@ -658,7 +759,28 @@ let currentSshConfigState = {
     selectedKey: ''
 };
 
-function openSshConfigDialog( options = {} ) {
+async function openSshConfigDialog( options = {} ) {
+    // On Windows, if WSL is not available, show a dedicated clean WSL installation dialog
+    if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            let win = (typeof displayAlert === 'function') ? window : (global.windows && global.windows['settings_win'] && global.windows['settings_win'].window) || window;
+            if (win && typeof win.displayAlert === 'function') {
+                win.displayAlert(
+                    'WSL Required for SSH on Windows',
+                    'WSL (Windows Subsystem for Linux) is required on Windows to access repositories over SSH.<br><br>' +
+                    'Please install WSL by running in PowerShell (as Administrator):<br><br>' +
+                    '<code>wsl --install</code><br><br>' +
+                    'Once installed, restart your computer if prompted, then restart Pragma-git.'
+                );
+            }
+            return;
+        }
+        if (typeof syncSshKeysToWsl === 'function') {
+            await syncSshKeysToWsl();
+        }
+    }
+
     let dialog = document.getElementById('sshConfigDialog');
     if (!dialog) return;
 
@@ -774,6 +896,11 @@ function sshConfigDoGenerateKey() {
         updateSshConfigKeyDisplay(createdPath);
         sshConfigToggleGeneratePanel(false);
 
+        // Sync new key to WSL mirror immediately
+        if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+            syncSshKeysToWsl({ force: true }).catch(() => {});
+        }
+
         let noticeEl = document.getElementById('sshConfigKeyNotice');
         if (noticeEl) {
             let pathMod = require('path');
@@ -813,6 +940,10 @@ function updateSshConfigKeyDisplay( keyPath ) {
     let resetBtn = document.getElementById('sshConfigResetKeyButton');
     let noticeEl = document.getElementById('sshConfigKeyNotice');
     let deployBtn = document.getElementById('sshConfigDeployBtn');
+
+    if (keyPath) {
+        currentSshConfigState.selectedKey = keyPath.trim();
+    }
 
     let defaultKey = getDefaultSshKey();
     let hasExplicitKey = (keyPath && typeof keyPath === 'string' && keyPath.trim().length > 0);
@@ -875,13 +1006,26 @@ function updateSshConfigKeyDisplay( keyPath ) {
     if (deployBtn) {
         let keyExists = fs.existsSync(activeKey) || fs.existsSync(activeKey + '.pub');
         deployBtn.textContent = keyExists ? 'Deploy public key' : 'Create key pair';
+        deployBtn.style.display = keyExists ? 'inline-block' : 'none';
+        deployBtn.disabled = false;
     }
 }
 
 function sshConfigSelectKey() {
     let fileInput = document.getElementById('sshConfigKeyFileInput');
     if (fileInput) {
+        try {
+            const os = require('os');
+            const path = require('path');
+            fileInput.setAttribute('nwworkingdir', path.join(os.homedir(), '.ssh'));
+        } catch (e) {}
         fileInput.value = '';
+        try {
+            let os = require('os');
+            let path = require('path');
+            let sshDir = path.join(os.homedir(), '.ssh');
+            fileInput.setAttribute('nwworkingdir', sshDir);
+        } catch (e) {}
         fileInput.click();
     }
 }
@@ -899,10 +1043,13 @@ function onSshConfigFilePicked( inputEl ) {
     currentSshConfigState.selectedKey = privPath;
     updateSshConfigKeyDisplay(privPath);
 
+    // Sync to WSL mirror if on Windows
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        syncSshKeysToWsl().catch(() => {});
+    }
+
     let statusEl = document.getElementById('sshConfigStatusText');
     if (statusEl) statusEl.textContent = '';
-    let deployBtn = document.getElementById('sshConfigDeployBtn');
-    if (deployBtn) deployBtn.style.display = 'none';
 }
 
 function sshConfigResetKey() {
@@ -913,8 +1060,6 @@ function sshConfigResetKey() {
 
     let statusEl = document.getElementById('sshConfigStatusText');
     if (statusEl) statusEl.textContent = '';
-    let deployBtn = document.getElementById('sshConfigDeployBtn');
-    if (deployBtn) deployBtn.style.display = 'none';
 }
 
 async function sshConfigTestLogin() {
@@ -926,6 +1071,11 @@ async function sshConfigTestLogin() {
     if (targetInputs && targetInputs.style.display !== 'none') {
         currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
         currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    } else if (!currentSshConfigState.username || !currentSshConfigState.server) {
+        let uInp = document.querySelector('input[name="username_clone"]') || document.querySelector('input[name="username"]');
+        let sInp = document.querySelector('input[name="server_clone"]') || document.querySelector('input[name="server"]');
+        if (uInp && uInp.value) currentSshConfigState.username = uInp.value.trim();
+        if (sInp && sInp.value) currentSshConfigState.server = sInp.value.trim();
     }
 
     let username = currentSshConfigState.username;
@@ -939,13 +1089,28 @@ async function sshConfigTestLogin() {
         return;
     }
 
-    let keyToTest = currentSshConfigState.selectedKey || getDefaultSshKey();
+    let rawKeyInput = (document.getElementById('sshConfigKeyInput')?.value || '').trim();
+    let keyToTest = rawKeyInput || currentSshConfigState.selectedKey || getDefaultSshKey();
 
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
         statusEl.textContent = 'Testing connection...';
+    }
+
+    // Windows pre-check: verify WSL is available before attempting SSH
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (deployBtn) deployBtn.style.display = 'none';
+            if (testBtn) testBtn.disabled = false;
+            return;
+        }
     }
 
     try {
@@ -1011,26 +1176,58 @@ async function sshConfigDeployKey() {
     let statusEl = document.getElementById('sshConfigStatusText');
     let testBtn = document.getElementById('sshConfigTestBtn');
     let deployBtn = document.getElementById('sshConfigDeployBtn');
+    let targetInputs = document.getElementById('sshConfigTargetInputs');
+
+    if (targetInputs && targetInputs.style.display !== 'none') {
+        currentSshConfigState.username = (document.getElementById('sshConfigUsername')?.value || '').trim();
+        currentSshConfigState.server = (document.getElementById('sshConfigHost')?.value || '').trim();
+    } else if (!currentSshConfigState.username || !currentSshConfigState.server) {
+        let uInp = document.querySelector('input[name="username_clone"]') || document.querySelector('input[name="username"]');
+        let sInp = document.querySelector('input[name="server_clone"]') || document.querySelector('input[name="server"]');
+        if (uInp && uInp.value) currentSshConfigState.username = uInp.value.trim();
+        if (sInp && sInp.value) currentSshConfigState.server = sInp.value.trim();
+    }
 
     let username = currentSshConfigState.username;
     let server = currentSshConfigState.server;
-    let keyToDeploy = currentSshConfigState.selectedKey || getDefaultSshKey();
+    let rawKeyInput = (document.getElementById('sshConfigKeyInput')?.value || '').trim();
+    let keyToDeploy = rawKeyInput || currentSshConfigState.selectedKey || getDefaultSshKey();
 
     if (!username || !server) return;
 
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
+
+    // Windows pre-check: verify WSL is available before attempting SSH key deploy
+    if (process.platform === 'win32') {
+        let wslOk = await isWslAvailable();
+        if (!wslOk) {
+            if (statusEl) {
+                statusEl.style.color = 'var(--red-text, red)';
+                statusEl.textContent = '✗ WSL is required on Windows (run "wsl --install" in PowerShell)';
+            }
+            if (testBtn) testBtn.disabled = false;
+            if (deployBtn) deployBtn.disabled = false;
+            return;
+        }
+    }
+
     if (statusEl) {
         statusEl.style.color = 'var(--dim-text, #888)';
         statusEl.textContent = 'Deploying public key to remote server...';
     }
 
+    // Ensure WSL has latest synced keys from Windows before deploying
+    if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
+        await syncSshKeysToWsl();
+    }
+
     let fakeFolder = `ssh://${username}@${server}/`;
-    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server} "${keyToDeploy}"`;
+    let CMD = `${CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
 
     try {
-        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000 );
+        await MAIN.multiPlatformExecSync( fakeFolder, CMD, false, 'timeout', 60000, { sshKey: keyToDeploy } );
     } catch (err) {
         console.error('sshConfigDeployKey error:', err);
         if (MAIN.displayLongAlert) {
@@ -1127,18 +1324,270 @@ async function closeSshConfigDialog( save = false ) {
     dialog.close();
 }
 
+let _wslAvailableCache = null;
+
+// Checks whether WSL (Windows Subsystem for Linux) is installed and available
+async function isWslAvailable() {
+    if (process.platform !== 'win32') return true;
+    if (_wslAvailableCache !== null) return _wslAvailableCache;
+
+    const { exec } = require('child_process');
+    return new Promise((resolve) => {
+        exec('where wsl.exe', { timeout: 3000 }, (error, stdout) => {
+            if (error || !stdout || stdout.trim().length === 0) {
+                _wslAvailableCache = false;
+                resolve(false);
+            } else {
+                _wslAvailableCache = true;
+                resolve(true);
+            }
+        });
+    });
+}
+
+function resetWslCache() {
+    _wslAvailableCache = null;
+}
+
+// Detailed error classifier for SSH connection & project folder issues
+function formatSshErrorDetails(rawError, sshUrl) {
+    let server = '';
+    let port = '22';
+    try {
+        if (sshUrl && sshUrl.startsWith('ssh:')) {
+            let u = new URL(sshUrl);
+            server = u.hostname || '';
+            port = u.port || '22';
+        }
+    } catch (e) {}
+
+    let errStr = (rawError && (rawError.message || String(rawError))) || '';
+    let lower = errStr.toLowerCase();
+
+    let title = 'SSH Project Folder Error';
+    let summary = 'Failed to connect to SSH host';
+    let suggestion = '';
+
+    if (process.platform === 'win32' && (lower.includes('wsl is required') || lower.includes('wsl') || lower.includes('is not recognized'))) {
+        title = 'WSL Required';
+        summary = 'WSL (Windows Subsystem for Linux) is required on Windows to access repositories over SSH.';
+        suggestion = 'Please install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.';
+    } else if (lower.includes('missing host') || !server || server.trim().length === 0) {
+        summary = 'Invalid SSH URL: Host/server name is missing.';
+        suggestion = 'Check the repository URL in Settings (e.g. ssh://user@server/path).';
+    } else if (lower.includes('could not resolve') || lower.includes('name or service not known') || lower.includes('nodename nor servname provided')) {
+        summary = `Could not resolve hostname "${server}".`;
+        suggestion = `Verify that server name "${server}" is spelled correctly and DNS or ~/.ssh/config is configured.`;
+    } else if (lower.includes('connection refused')) {
+        summary = `Connection refused by "${server}" on port ${port}.`;
+        suggestion = `Verify that the SSH server daemon (sshd) is running on port ${port} and not blocked by a firewall.`;
+    } else if (lower.includes('timed out') || lower.includes('timeout') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
+        summary = `Connection to "${server}" timed out.`;
+        suggestion = `Check your network connection, Wi-Fi, or VPN. Ensure "${server}" is online and reachable.`;
+    } else if (lower.includes('permission denied') || lower.includes('key rejected')) {
+        summary = `SSH login rejected by "${server}" (permission denied / key not accepted).`;
+        suggestion = `Click "Fix" or "Setup SSH" in Settings to verify and deploy your SSH public key.`;
+    } else if (lower.includes('file missing') || lower.includes('not a folder') || lower.includes('no such file')) {
+        summary = `Target directory does not exist on "${server}".`;
+        suggestion = `Verify the path on the server in Settings.`;
+    } else {
+        summary = errStr.length > 0 ? errStr : `Unknown error communicating with "${server}".`;
+        suggestion = `Test connecting via terminal: ssh ${server}`;
+    }
+
+    return {
+        title: title,
+        summary: summary,
+        suggestion: suggestion,
+        server: server,
+        fullMessage: `${summary}\n\nPath: ${sshUrl}\n\n${suggestion}`
+    };
+}
+
 // WINDOWS specific helpers
+let _lastSyncedSshSignature = null;
+
+// Synchronizes the Windows ~/.ssh folder to WSL ~/.ssh using ssh-sync-keys
+// Only executes on Windows, and skips if the Windows ~/.ssh directory has not changed.
+async function syncSshKeysToWsl(options = {}) {
+    if (process.platform !== 'win32') {
+        return { skipped: true, reason: 'not_windows' };
+    }
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+
+    let winSshDir = path.join(os.homedir(), '.ssh');
+    if (!fs.existsSync(winSshDir)) {
+        return { skipped: true, reason: 'no_win_ssh_dir' };
+    }
+
+    // Build signature of Windows .ssh folder (names, mtimes, sizes) to avoid redundant syncs
+    let currentSignature = '';
+    try {
+        let entries = fs.readdirSync(winSshDir).sort();
+        for (let name of entries) {
+            let fullPath = path.join(winSshDir, name);
+            try {
+                let stat = fs.statSync(fullPath);
+                currentSignature += `${name}:${stat.size}:${stat.mtimeMs};`;
+            } catch (e) {}
+        }
+    } catch (e) {
+        currentSignature = String(Date.now());
+    }
+
+    if (!options.force && _lastSyncedSshSignature === currentSignature) {
+        return { skipped: true, reason: 'unchanged' };
+    }
+
+    let wslSrcDir = windowsToWslPath(winSshDir);
+    let cwdInit = (typeof CWD_INIT !== 'undefined' && CWD_INIT) ? CWD_INIT : (global.CWD_INIT || '');
+    let wslCwd = windowsToWslPath(cwdInit);
+    let cmd = `wsl "${wslCwd}/ssh_folder/ssh-sync-keys" "${wslSrcDir}"`;
+
+    let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+    let runCmd = (MAIN && MAIN.runCommandWithTimeout) ? MAIN.runCommandWithTimeout : null;
+    if (!runCmd && typeof require !== 'undefined') {
+        let child_process = require('child_process');
+        runCmd = (c, o, t) => new Promise((resolve, reject) => {
+            child_process.exec(c, { timeout: t || 10000 }, (err, stdout, stderr) => {
+                if (err) reject(new Error(stderr || err.message));
+                else resolve((stdout || '').trim());
+            });
+        });
+    }
+
+    try {
+        let out = await runCmd(cmd, {}, 10000);
+        _lastSyncedSshSignature = currentSignature;
+        console.log('syncSshKeysToWsl success:', out);
+        return { success: true, output: out };
+    } catch (err) {
+        console.warn('syncSshKeysToWsl warning:', err);
+        return { success: false, error: err };
+    }
+}
+
+// Computes the environment variable object for SSH operations.
+// Resolves PRAGMA_SSH_KEY (and on Windows, WSLENV) from the repository's configuration
+// or an explicit key override.
+function sshKeyEnv(sshUrl, keyOverride = '') {
+    let key = '';
+    if (keyOverride && typeof keyOverride === 'string' && keyOverride.trim().length > 0) {
+        key = keyOverride.trim();
+    } else if (sshUrl) {
+        // Look up matching repo in global.state or opener.state or state
+        let st = (typeof state !== 'undefined' && state) || (typeof global !== 'undefined' && global.state) || (typeof opener !== 'undefined' && opener.state);
+        if (st && Array.isArray(st.repos)) {
+            let longestMatch = null;
+            let longestLen = -1;
+            for (let r of st.repos) {
+                if (!r || !r.localFolder) continue;
+                if (sshUrl === r.localFolder || sshUrl.startsWith(r.localFolder + '/') || sshUrl.startsWith(r.localFolder + '\\')) {
+                    if (r.localFolder.length > longestLen) {
+                        longestLen = r.localFolder.length;
+                        longestMatch = r;
+                    }
+                }
+            }
+            if (longestMatch && longestMatch.sshKey) {
+                key = longestMatch.sshKey.trim();
+            }
+        }
+    }
+
+    if (!key) {
+        if (process.platform === 'win32' && process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS) {
+            let existingWslEnv = process.env.WSLENV || '';
+            let combined = existingWslEnv.split(':').filter(Boolean);
+            if (!combined.includes('PRAGMA_REMOTE_AUTHORIZED_KEYS')) {
+                combined.push('PRAGMA_REMOTE_AUTHORIZED_KEYS');
+            }
+            let wslAuthKeys = windowsToWslPath(process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS);
+            return {
+                PRAGMA_REMOTE_AUTHORIZED_KEYS: wslAuthKeys,
+                WSLENV: combined.join(':')
+            };
+        }
+        return {};
+    }
+
+    const path = require('path');
+    let envVal = '';
+    if (process.platform === 'win32') {
+        // If key is a Unix/WSL path (e.g. /tmp/... or ~/.ssh/...)
+        if (key.startsWith('/') || key.startsWith('~')) {
+            let cleanKey = key.endsWith('.pub') ? key.slice(0, -4) : key;
+            envVal = cleanKey;
+            // If it's a Linux/WSL temp path (like /tmp/...), ensure it's also mirrored to ~/.ssh
+            // or usable directly with strict permissions.
+        } else if (/^[a-zA-Z]:[/\\]/.test(key)) {
+            // Windows absolute path (e.g. C:\Users\... or C:/Users/...)
+            // IMPORTANT: Keys on /mnt/c have 0777 permissions in WSL, causing OpenSSH to reject them with:
+            // "Permissions 0777 for ... are too open. It is required that your private key files are NOT accessible by others."
+            // Therefore, we mirror/copy the private & public key into WSL native ~/.ssh (chmod 600/644)
+            // so OpenSSH will accept the key without permission errors.
+            let keyBaseName = path.basename(key);
+            if (keyBaseName.endsWith('.pub')) keyBaseName = keyBaseName.slice(0, -4);
+            let wslKey = windowsToWslPath(key);
+            let cleanWslKey = wslKey.endsWith('.pub') ? wslKey.slice(0, -4) : wslKey;
+
+            try {
+                let { execSync } = require('child_process');
+                execSync(`wsl bash -c "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cp -f '${cleanWslKey}' ~/.ssh/'${keyBaseName}' && chmod 600 ~/.ssh/'${keyBaseName}' && if [ -f '${cleanWslKey}.pub' ]; then cp -f '${cleanWslKey}.pub' ~/.ssh/'${keyBaseName}.pub' && chmod 644 ~/.ssh/'${keyBaseName}.pub'; fi"`, { stdio: 'ignore' });
+                envVal = keyBaseName;
+            } catch (e) {
+                // Fallback to direct wslKey path if copy failed
+                envVal = cleanWslKey;
+            }
+        } else {
+            // Under WSL, Windows ~/.ssh is mirrored to ~/.ssh, so pass bare filename
+            let base = path.basename(key);
+            if (base.endsWith('.pub')) base = base.slice(0, -4);
+            envVal = base;
+        }
+
+        let wslEnvVars = {
+            PRAGMA_SSH_KEY: envVal
+        };
+        let envList = ['PRAGMA_SSH_KEY'];
+        if (process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS) {
+            wslEnvVars.PRAGMA_REMOTE_AUTHORIZED_KEYS = windowsToWslPath(process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS);
+            envList.push('PRAGMA_REMOTE_AUTHORIZED_KEYS');
+        }
+
+        let existingWslEnv = process.env.WSLENV || '';
+        let combined = existingWslEnv.split(':').filter(Boolean);
+        for (let k of envList) {
+            if (!combined.includes(k)) {
+                combined.push(k);
+            }
+        }
+        wslEnvVars.WSLENV = combined.join(':');
+
+        return wslEnvVars;
+    } else {
+        // macOS / Linux: pass full path (strip .pub)
+        if (key.endsWith('.pub')) key = key.slice(0, -4);
+        envVal = key;
+        return {
+            PRAGMA_SSH_KEY: envVal
+        };
+    }
+}
+
 function wslToWindowsPath( wslPath) {                           // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		wslPath = wslPath.replace('/mnt/c/', 'C:\\').replaceAll('/','\\');  // Change from wsl path Windows
+		wslPath = wslPath.replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:\\`).replaceAll('/','\\');  // Support any drive letter (/mnt/c/ -> C:\)
 	}
 	return wslPath
 }
 function windowsToWslPath( windowsPath) {                       // Transform between WSL and Windows paths (do nothing if linux / macos)
 	
 	if ( process.platform === 'win32' ) {
-		windowsPath = windowsPath.replaceAll('\\','/').replace('C:/','/mnt/c/');   // Change from Windows to wsl 
+		windowsPath = windowsPath.replaceAll('\\','/').replace(/^([a-zA-Z]):\//, (m, d) => `/mnt/${d.toLowerCase()}/`);   // Support any drive letter (C:/ -> /mnt/c/)
 	}
 	return windowsPath
 }
@@ -1162,6 +1611,11 @@ function getAndCreateWinTempFolder(){                           // Returns windo
 
 // Export for Node.js environments / automated tests
 if (typeof module !== 'undefined' && module.exports) {
+	module.exports.fs_existsSync = fs_existsSync;
+	module.exports.fs_mkdir = fs_mkdir;
+	module.exports.sshGet = sshGet;
+	module.exports.sshPut = sshPut;
+	module.exports.sshLs = sshLs;
 	module.exports.parseSshUrl = parseSshUrl;
 	module.exports.getDefaultSshKey = getDefaultSshKey;
 	module.exports.getSelectedSshKey = getSelectedSshKey;
@@ -1174,4 +1628,9 @@ if (typeof module !== 'undefined' && module.exports) {
 	module.exports.wslToWindowsPath = wslToWindowsPath;
 	module.exports.windowsToWslPath = windowsToWslPath;
 	module.exports.getAndCreateWinTempFolder = getAndCreateWinTempFolder;
+	module.exports.isWslAvailable = isWslAvailable;
+	module.exports.resetWslCache = resetWslCache;
+	module.exports.formatSshErrorDetails = formatSshErrorDetails;
+	module.exports.syncSshKeysToWsl = syncSshKeysToWsl;
+	module.exports.sshKeyEnv = sshKeyEnv;
 }

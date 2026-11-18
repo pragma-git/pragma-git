@@ -1,5 +1,5 @@
 {
-  "version": "2.0.1",
+  "version": "2.1.1",
   "nwVersion": "0.100.1",
   "name": "Pragma-git",
   "description": "The pragmatic git client",
@@ -35,10 +35,12 @@
     "isbinaryfile": "^5.0.2",
     "mime-types": "^2.1.35",
     "node-fetch": "^2.7.0",
-    "simple-git": "^3.23.0",
+    "simple-git": "^4.0.2",
     "windows-network-drive": "^3.0.2"
   },
   "devDependencies": {
-    "nw-builder": "^4.7.8"
+    "js-yaml": "^5.5.0",
+    "nw-builder": "^4.7.8",
+    "ws": "^8.22.1"
   }
 }

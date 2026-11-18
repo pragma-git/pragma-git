@@ -153,13 +153,21 @@ async function runTests() {
             { name: 'Gitea', url: 'https://gitea.com/gitea/tea.git' }
         ];
 
+        let failedProviders = [];
         for (const p of providers) {
-            const out = execSync(`git ls-remote --heads "${p.url}"`, {
-                timeout: 15000,
-                stdio: ['ignore', 'pipe', 'pipe'],
-                env: { ...process.env, GIT_TERMINAL_PROMPT: '0' }
-            }).toString();
-            assert.ok(out.includes('refs/heads/'), `${p.name} responded with valid git branches`);
+            try {
+                const out = execSync(`git -c http.extraheader="" ls-remote --heads "${p.url}"`, {
+                    timeout: 20000,
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' }
+                }).toString();
+                assert.ok(out.includes('refs/heads/'), `${p.name} responded with valid git branches`);
+            } catch (pErr) {
+                failedProviders.push(`${p.name}: ${pErr.message}`);
+            }
+        }
+        if (failedProviders.length > 0) {
+            throw new Error(failedProviders.join('; '));
         }
         assertPass('2.5: Live Git HTTPS protocol (ls-remote) verified for GitHub, GitLab, Bitbucket, and Gitea');
     } catch (err) {

@@ -1,0 +1,32 @@
+#!/bin/bash
+# Lists files and directories in a folder on the remote SSH server
+# Usage: ./ssh-ls SSH_URL [relativeSubPath]
+#
+# Arguments
+#   $1      --  SSH URL, for instance 'ssh://jan@localhost/Users/jan/Documents/Projects/Pragma-git/testOnMyMac'
+#   $2      --  Optional path relative to SSH URL base folder
+
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+source "$(dirname "$0")/lib/ssh-functions"
+
+# Get server info
+getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
+
+RELATIVE_PATH="$2"
+if [ -n "$RELATIVE_PATH" ] && [ "$RELATIVE_PATH" != "." ] && [ "$RELATIVE_PATH" != "/" ]; then
+    RELATIVE_PATH="${RELATIVE_PATH#/}"
+    RELATIVE_PATH="${RELATIVE_PATH%/}"
+    SERVER_PATH="${SERVER_BASE_PATH}/${RELATIVE_PATH}"
+else
+    SERVER_PATH="${SERVER_BASE_PATH}"
+fi
+
+# Execute ls -1Ap on remote server (appends '/' to directories, omits '.' and '..')
+ssh -T "$SERVER" -p "${PORT}" $SSH_OPTIONS "cd \"$SERVER_PATH\" && ls -1Ap"
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+    echo "SSH ERROR in 'ssh-ls' (code $exit_code) for $SERVER:$PORT$SERVER_PATH" >&2
+    exit $exit_code
+fi
+exit 0

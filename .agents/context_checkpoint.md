@@ -1,16 +1,19 @@
 ### 🛠️ Tech Stack
 * **Runtime & Framework**: NW.js (`0.100.1`) med Chromium och Node.js
-* **Core Libraries**: `simple-git`, `@hackolade/keytar`, `chokidar`, `diff-match-patch`, `@toast-ui/editor`
+* **Core Libraries**: `simple-git` (^4.0.2), `@hackolade/keytar`, `chokidar`, `diff-match-patch`, `@toast-ui/editor`
 * **Packaging & Signing**: `create-dmg`, macOS `codesign`, Apple `notarytool` / `stapler`
 * **Coding Standard**: Always write code comments, documentation, and variable/function names in **American English**.
 
 ---
 
 ### 🏛️ Architecture & Files
+* **Git Wrapper & Resilience (`lib/simpleGitWithRetry.js`)**: Central Proxy wrapper for `simple-git` providing automated exponential retry logic on index.lock/config.lock collisions, transparent normalization for `simple-git` v4 CommonJS exports, and automatic injection of required security guard flags (`allowEnvironment` and `opts.unsafe.*`).
+* **UI Test Framework**: Framework för automatiserade och interaktiva UI-tester av Pragma-git via Chrome DevTools Protocol med YAML-scenarier och isolerade testmiljöer ([automated-tests/ui/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/run_ui_tests.js), [automated-tests/ui/cdp_client.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/cdp_client.js), [automated-tests/ui/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/ui_fixtures.js), [automated-tests/ui/scenarios/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/))
 * **Application Core**: Huvudfönster och event-loop ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js))
 * **Modified Files List**: Fönster för modifierade filer och filurval ([listChanged.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.html), [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js))
 * **Settings Window**: Inställningsvy med tabbar för Repository, Branch, Software, System Info, Clone ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.css))
-* **SSH Folder Integration**: Hjälpskript och wrappers för fjärr-git över SSH ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [ssh_folder/ssh-mkdir](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login), [ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login))
+* **SSH Server File Browser**: Filbläddrare för SSH-serverrepon med mappnavigering, `sshGet`/`sshPut` + `chokidar` auto-synkning vid sparning, ny fil/mapp-skapande, lista över öppna filer med klick-för-fokus och stängningsvarning ([sshFileBrowser.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.html), [sshFileBrowser.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.js), [ssh_folder/ssh-ls](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-ls))
+* **SSH Folder Integration**: Hjälpskript och wrappers för fjärr-git över SSH ([ssh_folder/ssh-folder-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js), [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [ssh_folder/ssh-mkdir](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-mkdir), [ssh_folder/ssh-ls](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-ls), [ssh_folder/ssh-get](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get), [ssh_folder/ssh-put](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-put), [ssh_folder/ssh-generate-key-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-generate-key-login), [ssh_folder/ssh-test-login](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-test-login))
 * **Automated Testing Suite (Headless/CLI)**: Master test runner och automatiserade tester för backend och filsystemsintegration utan GUI ([_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/_run_tests), [automated-tests/_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests), [automated-tests/test_setup.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/test_setup.sh), [automated-tests/test_setup.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/test_setup.js), [automated-tests/non_gui/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/))
 * **Git Provider APIs & CI Status**: Abstraktionslager och klasser för GitHub, GitLab och Bitbucket REST APIs med commit CI-statusfrågor och 2-stegs persistent cache ([apis_github_and_others/](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/), [apis_github_and_others/github.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/github.com.js), [apis_github_and_others/gitlab.com.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/gitlab.com.js), [apis_github_and_others/bitbucket.org.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/bitbucket.org.js))
 * **Build Orchestration**: Master-byggskript för plattformsoberoende paketering ([make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build))
@@ -29,101 +32,295 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Remote Status Startup Flashing Fix (`cacheRemoteOriginStatus`)**:
-  - Fixed premature display of red `"Remote : remote error"` indicator in the bottom footer on startup ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
-  - Initialized `newCachedRemoteOrigins.isActiveRemote` with `null` instead of `false` so unverified/checking remotes are not treated as failed.
-  - When background verification completes (`testRemoteOrigin` or error handling), `cachedRemoteOrigins.isActiveRemote` is updated and calls `_update()` if the repository is the currently selected active repo (`state.repoNumber`), ensuring the footer updates only when an actual result is known.
-  - All 109 automated tests pass 100% across all 7 test categories.
-* **Interactive Visual Map & Modern Help Guide (`about.html`)**:
-  - Fixed initial dark mode theme initialization in [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html): removed `class="light"` when dark mode is active (`document.body.classList.remove('light'); document.body.classList.add('dark');`), preventing `body.light` CSS specificity from overriding dark mode titlebar colors (`#303030`) on initial window open.
-  - Overhauled [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) with an authentic **Interactive UI Map** embedding the real CSS stylesheets ([`color_styles.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/color_styles.css), [`style.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [`slider_switch.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/slider_switch.css), and [`lib/css-tooltip.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/css-tooltip.css)) and the exact `#grid-container` structure directly derived from [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html).
-  - Encapsulated the mockup in a standalone window frame (`.mockup-window-wrapper`) with rounded corners, subtle drop shadow, and a contrasting inset canvas background so it clearly reads as a miniaturized standalone window.
-  - Dynamically synchronizes titlebar colors and icons via `updateMockupTitlebarColors()`, `window.onThemeChanged`, a `MutationObserver` on `document.body` class list, and CSS theme scoping (`body.dark #mockup-frame .top-titlebar, body.dark #mockup-frame .bottom-titlebar { background-color: #303030 !important; }` and `filter: var(--titlebar-icon-filter) !important`) so switching between light and dark mode while [`about.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) is open instantly updates the mockup header, footer, and icons.
-  - Fixed CSS parsing bugs in [`style.css`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css) where unit-less numbers (`right: 80`, `right: 115`, `right: 150`, `right: 175`, and `bottom: 5; right: 5` on `#amend_commit_div`) caused Chromium to discard offsets; added `px` units to restore exact bottom-right alignment for Revert, Cherry-pick, Stash, Stash Pop, and Amend checkbox.
-  - Corrected DOM and computed CSS: matched the exact 148px height (`grid-template-rows: 33px 82px 0px 33px`), resolved grid-container hierarchy so `#bottom-titlebar` spans full width (`grid-column: 1 / 4`), applied textarea border and background tokens (`--message-border`, `--message-background`, `--message-shadow`), and populated authentic SVG CI badge, branch name (`main`), repository name (`Hello World`), commit hash (`#a1b2c3d`), and modified files status (`Modified = 2 | New = 0 | Deleted = 0`).
-  - Clicking any element on the visual map instantly scrolls and pulses the corresponding help card below.
-  - Overhauled help topic contents and visuals:
-    - **CI Status**: Clarified that CI badges are not color-coded but styled with native titlebar text/stroke themes; differences are communicated purely via shape and outline (solid rectangle for Passed, cracked/fractured for Failed, dashed rectangle with ellipsis for In Progress).
-    - **Store Button Appearance**: Configured `.card-title-button` to display blue (`#2b70ca`) in light mode and white (`#ffffff` with dark text) in dark mode, matching the application's actual dark mode button styling.
-    - **Sidebar Group Titles**: Increased visibility of `.nav-group-title` by binding to `var(--header-color)` (`#2F5496` in light mode, `#d6b51d` gold in dark mode) with full opacity.
-    - **Light Mode Icon Coloring**: Applied `var(--titlebar-icon-filter, brightness(0.35))` to sidebar and help card icons in light mode so they display in charcoal/dark styling matching the titlebar, while remaining clean and un-inverted in dark mode.
-    - **Sidebar CI Badge Alignment**: Refined the CI badge in the sidebar navbar (`.nav-ci-badge`) by shifting it up 1.5px and left 3px, and halving the margin gap to the "CI Status Badge" label so it aligns naturally with the other navigation icons.
-    - **Dropdown Arrow Aspect Ratios**: Fixed arrow distortion for repository and branch switchers in both navbar sidebar (`.nav-item img[src*="dropdown-arrow"]`) and documentation cards (`.card-title img[src*="dropdown-arrow"]`) by ensuring `width: auto` and `object-fit: contain` preserve their natural aspect ratio (`48:69`, aspect ratio ~0.696) without stretching horizontally. Enforced `height: 16px !important; width: auto !important; object-fit: contain;` on `#mockup-frame #top-titlebar-repo-arrow` and `#mockup-frame #top-titlebar-branch-arrow` to guarantee identical crisp rendering with `app.html`.
-    - **Unified Highlight Navigation**: Connected the sidebar navigation click handler (`selectNav()`) directly to `highlightHelpTopic(targetId)`, guaranteeing identical visual highlight, pulse effect, and smooth scrolling whether clicking any control in the mockup window or selecting any topic in the sidebar navigation menu.
-    - **Amend Last Commit Header**: Updated header format to `[ ] Store in same` with a checkbox element (`<span class="card-title-checkbox"><input type="checkbox" disabled> Store in same</span> (Amend Last Commit)`).
-    - **Tag Revisions**: Added explicit documentation that opening the Tag Manager allows checking out any old tag directly.
-    - **History Navigation & Returning to HEAD**: Accurately documented that you navigate back in history using the **▼ (Down Arrow)** and forward toward newer commits using the **▲ (Up Arrow)**; documented that clicking **^HEAD** in the top header (where `^` symbolizes the up arrow) instantly returns to HEAD and restores the active mental scratchpad note.
-  - Keeps [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) 100% unharmed and standard; main window operations remain completely uninhibited.
-  - Added responsive two-column layout (sidebar navigation + live search + categorized cards).
-  - All 109 automated tests pass 100% across all 7 test categories.
-* **Repository-Specific Mental Note Memory (`draftMessage`)**:
-  - Implemented per-repository draft mental notes in `#message` ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
-  - Updated empty-state placeholder in `#message` to direct prompt: `"You may write what is ongoing here,\n\nChange text to commit message (or stash name) when done"`.
-  - Fixed returning to HEAD from historical commits (`upArrowClicked`): cleared historical commit text from DOM before computing mode in `_setMode('UNKNOWN')`, ensured `NO_FILES_TO_COMMIT` always synchronizes placeholder and value, and updated `restoreRepoDraftMessage` to immediately restore draft note/placeholder without requiring a second up-arrow click.
-  - Mental notes persist per repository across repo switches, branch changes, and app restarts (`settings.json`).
-  - Browsing `HISTORY` displays past commit log messages; returning to `HEAD` (via `▲` or up-arrow) restores the repo's mental note.
-  - Making a commit (`gitAddCommitAndPush`) clears the active repo draft note.
-  - Added full test coverage in [test_01_repo_settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_01_repo_settings.js) and [test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js). All 109 automated tests pass across all 7 categories.
-* **Automated Test Runner & SSH Key Generation Test Suites**:
-  - Added failed test collection and end-of-run summary in `automated-tests/_run_tests`.
-  - Added isolated SSH key generation automated tests (`test_07_ssh_key_generation.js`), passing 100/100 tests across all 7 categories.
-* **Titlebar Icon Alignments & CI Badge**:
-  - Resolved a CSS syntax error (an extra `}`) in `style.css` which had caused the browser to ignore subsequent titlebar icon rules (`top-titlebar-tag-icon`, `top-titlebar-close-field`, minimize, and close icons).
-  - Restored exact horizontal and vertical positions for close (`x`), minimize (`-`), and action buttons (`tag`, `push`, `pull`, `merge`, `branch`).
-  - Verified exact vertical centering of the CI badge with the notes icon (`centerY = 15.7px`).
-  - All 92 automated tests across 7 categories pass 100%. Pushed to `origin/develop` (`298ae6a7`).
-* **Cracked CI Badge (V2 Split Fracture)**:
-  - Implemented the V2 broken CI design split into two independent SVG pieces with a stroked fracture line, matched typography, subpixel geometry, light/dark mode support, and removed the red dot and strike line.
-  - Verified locally (100% test pass rate, 92/92 tests) and pushed to `develop`.
-  - **Ongoing Test (Pending) Active Polling & Post-Push Workflow** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
-    - Immediately on push, displays the `pending` badge (`CI ...`) and initiates an automated polling sequence (every 3-4 seconds, up to 40 attempts / 2 minutes) until CI check runs are registered and reach terminal status (`success` / `failure`).
-    - Added recursive auto-polling in `queryCommitCiStatus` whenever `ciResult.status === 'pending'`.
-    - Avoided stale 30s debouncing on in-flight / pending checks so state transitions appear dynamically in real time.
-  - **Fixed Credential Lookup for Normalized Provider URLs** ([lib/pragma-credentials-lib.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/pragma-credentials-lib.js), [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
-    - Fixed a bug where `util.findObjectIndex` returned `null` on URL mismatch, causing `null < 0` to evaluate to `false` and skipping clean normalized URL matching. As a result, unauthenticated API calls were made that failed with `403 Forbidden` and hid the badge.
-    - Updated `getLocalFolder` to properly check `null`/`undefined` and retrieve the Keychain token, and updated `queryCommitCiStatus` to pass `rawRemoteUrl` directly to `gitProvider`.
-  - **Enhanced Visibility for Pending Badge** ([style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
-    - Updated `.top-titlebar-ci-pending` to `color: rgba(255, 255, 255, 0.8)` and `border: 1px dashed rgba(255, 255, 255, 0.45)` for high readability in dark mode.
-  - **CI Placeholder & Fixed Notes Alignment** ([app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css)):
-    - Positioned CI badge in fixed placeholder with 5px gap from branch, keeping personal notes icon stationary across all CI states.
-  - **Ubuntu CI Runner Optimization** ([.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml)):
-    - Optimized `Install System Dependencies (Linux)` by:
-      - Attempting direct installation from pre-cached package indexes first, falling back to `apt-get update` only on failure.
-      - Adding `--no-install-recommends` to eliminate downloading unnecessary desktop GUI libraries (GTK4, Cairo, GStreamer, Pinentry-GNOME3).
-      - Switching from C-header package `libsecret-1-dev` to runtime library `libsecret-1-0` (matching `@hackolade/keytar`'s precompiled binary requirement).
-    - Reduces the Ubuntu setup step from 29 seconds to ~4–5 seconds.
-  - **Windows CI Runner with WSL & OpenSSH** ([.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml)):
-    - Verified codebase Windows git vs WSL execution model:
-      - Local repository operations execute via Windows Git (`git.exe` / `bash.exe` in `C:\Program Files\Git`).
-      - SSH remote repository operations execute via WSL (`wsl` running `ssh_folder/ssh-git-client`).
-    - Added `windows-latest` to GitHub Actions workflow matrix.
-    - Integrated `Vampire/setup-wsl@v7` installing Ubuntu-22.04 with `openssh-server`, `git`, and `curl` with rootfs caching enabled.
-    - Automated Windows OpenSSH Server (`sshd`) and WSL SSH service startup with administrator ACL configuration for passwordless local testing.
-    - Fixed PowerShell 5.1 compatibility on Windows runner by removing bash `||` operator from PowerShell script and piping SSH keys directly to `wsl bash -c`.
-    - Updated `.gitattributes` to enforce LF line endings on `*.sh` and `_run_tests` scripts to prevent CRLF parsing errors on Windows checkouts.
-    - Cross-platform test enhancements:
-      - Sanitized `CURRENT_USER` across all test suites to strip Windows domain prefixes (`DOMAIN\user` -> `user`).
-      - Updated `test_01_simple_git_retry.js` to use `os.tmpdir()` instead of hardcoded `/tmp`.
-      - Updated `test_02_credentials_lib_safe.js` to normalize temp store paths to forward slashes, invoke Git Bash on Windows via `options.shell`, and use `!sh` command wrapper with `NUL` device.
-      - Configured Windows OpenSSH server to launch incoming SSH sessions into `C:\Program Files\Git\bin\bash.exe` and added `~/.ssh/config` with `UserKnownHostsFile /dev/null` for localhost loopback reliability.
-      - Removed temporary MINGW socket multiplexing bypass in `ssh_folder/lib/ssh-functions`: restored standard `REUSE_SSH_OPTIONS` since Windows SSH repos route through WSL where native Linux socket multiplexing works properly.
-      - Fixed transient test 2.4 timeout in `automated-tests/non_gui/apis/test_02_live_provider_query.js`: switched from heavyweight `gitlab-foss` repo to official lightweight `gitlab-test` repo and added `GIT_TERMINAL_PROMPT: '0'`.
-      - Fixed SFTP `/tmp` path resolution on Windows CI (`.github/workflows/tests.yml`, `ssh_folder/ssh-put`, `ssh_folder/ssh-get`): Windows OpenSSH native `sftp-server.exe` resolves `/tmp` to `C:\tmp` (or `D:\tmp`), whereas Git Bash routes `/tmp` to `%LOCALAPPDATA%\Temp`; created NTFS directory junctions at `C:\tmp` and `D:\tmp` pointing directly to `$env:LOCALAPPDATA\Temp`, eliminated stdout pollution in `ssh-get`, and safely quoted remote mkdir in `ssh-put`.
-  - **WSL Linux SSH Daemon & Remote Execution Alignment** ([.github/workflows/tests.yml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.github/workflows/tests.yml), [automated-tests/setup_wsl_ssh.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/setup_wsl_ssh.sh), [automated-tests/non_gui/ssh/_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/_run_tests)):
-    - Aligned Windows testing architecture with real-world Pragma-git usage (where SSH repos always connect to remote Linux/Unix servers through WSL):
-      - Disabled Windows native `sshd` so port 22 is reserved for WSL Linux `sshd`.
-      - Added [`automated-tests/setup_wsl_ssh.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/setup_wsl_ssh.sh) to configure matching user (`runneradmin`) in WSL Ubuntu 22.04 with passwordless sudo, ED25519 authentication keys, `/etc/wsl.conf` boot command (`service ssh start`), and start Linux OpenSSH service inside WSL as the authentic Linux SSH server target.
-      - Added persistent detached background process in Windows workflow (`Start-Process wsl -ArgumentList "sleep","infinity" -WindowStyle Hidden`) so WSL VM and its daemons remain alive across steps without idle timeout.
-      - Updated `ssh/_run_tests` on Windows to explicitly refresh WSL SSH daemon via `wsl -u root service ssh restart`, route `.sh` test scripts through `MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path"`, and execute `.js` unit tests (`test_06_ssh_lib_node.js`) in native Node.js without MSYS path collision.
-  - **Cracked / Split CI Failure Icon & Theme Support** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css), [automated-tests/non_gui/app_function_calls/test_03_ci_cache.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_03_ci_cache.js)):
-    - Implemented vector SVG representation for CI status badges:
-      - **Unbroken (Success / Pending)**: Solid rounded box (`rx="3"`) with matched 6.5px outer margins and 8.5px inner corridor between C and I, aligned on identical vertical centerline (`dominant-baseline="central"`).
-      - **Broken (Failure)**: Split into two independent pieces (`ci-piece-left` holding C, `ci-piece-right` holding I) with an authentic zigzag fracture line matching the 1px border stroke and fill. The right piece is dropped (1.2px) and tilted (1.8°) to create a cracked effect.
-      - Removed the legacy diagonal strike-line (`.top-titlebar-ci-strike`) and red dot (`.top-titlebar-ci-dot`).
-      - Full Light & Dark Mode support: Uses `currentColor` with `fill-opacity` and `stroke-opacity` to adapt dynamically to titlebar themes across both dark and light modes.
-    - Master test suite passing 100% across all 7 categories (19 suites, 92 passed tests).
+* **Prevent Unwanted `app.html` Focus Stealing in Background Status Checks (`app.js`) (Fixed & Verified)**:
+  - Identified and removed unintended `win.focus()` call in `updateSettingsRepoTable()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js#L8722).
+  - Background periodic checking (`cacheFolderStatus` -> `cacheLocalFolderExistStatus()` -> `updateSettingsRepoTable()`) was calling `win.focus()` whenever the Settings window was open, causing the main Pragma-git window to pop to the foreground and steal focus while working in unrelated applications.
+  - Commented out `win.focus()` in `updateSettingsRepoTable()` aligning it with `updateSettingsWindow()` and `updateChangedListWindow()`.
+  - Verified full test suite (`./_run_tests`), passing 8/8 test categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
+* **Merge Upstream UI Resilience & Direct Callback Invocation (`app.html`, `test_03_merge_upstream.yaml`) (Fixed & Verified)**:
+  - Eliminated race condition and false failure on Windows and macOS CI runners in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml):
+    - In `app.html`, fixed execution order in `#confirmMergeUpstreamOK`'s `onclick`: dispatched `_callback('confirmMergeUpstreamOK')` first before invoking `dlg.close()`, preventing synchronous dialog dismissal from terminating or dropping the unhandled callback promise.
+    - In `test_03_merge_upstream.yaml`, updated step 10 ("Confirm Merge from Upstream") to directly close `confirmMergeUpstreamDialog` and `await _callback('confirmMergeUpstreamOK')`, guaranteeing that the async merge callback is dispatched and resolved regardless of synthetic CDP mouse event drops or modal unmounting.
+  - Stress tested locally with `_run_03_merge_upstream`, passing 100%.
+  - Verified full test suite (`./_run_tests` and `npm test`), passing all 8 categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
+* **GitHub Actions CI Status on `develop` (All Passing - 100% Green)**:
+  - Workflow run `44180557986` for commit `b74fc000` on `develop` is **100% green across all platforms**:
+    - `Test on macos-latest`: **Passed** (1m 57s)
+    - `Test on ubuntu-latest`: **Passed** (1m 57s)
+    - `Test on windows-latest`: **Passed** (3m 48s)
+  - Full local test suite (`npm test`) also executed and passed 8/8 test categories (SSH, Utils, Git Client, Credentials, Git Configs, APIs, App Function Calls, UI).
+* **Prevent `(draft)` Badge from Lighting Up After Pressing Store (`app.js`) (Fixed)**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Immediately hides `#edit_commit_text_div` and resets `_draftInactivityExpired = false` and `_draftInactivityTimer = null` when the Store button is clicked in `storeButtonClicked()`.
+    - Also clears `_draftInactivityTimer` and explicitly hides `#edit_commit_text_div` right after clearing `textOutput.value` and `draftMessage` before invoking `onMessageBlur()` in `gitAddCommitAndPush()`, preventing any flash of the `(draft)` indicator when saving/committing.
+* **Fix CI Failure on Ubuntu (`.github/workflows/tests.yml`) (Fixed)**:
+  - Fixed apt-get dependency installation step for Linux runners: added explicit `sudo apt-get update` before installation and ensured fallback tries `libasound2` only if `libasound2t64` fails (preventing virtual package resolution failure on Ubuntu 24.04+/26.04+ runners).
+* **SSH Diff & File Transfer Fixes for Paths with Spaces & `localhost` SSH Repos (Implemented)**:
+  - **Root Causes Identified & Fixed**:
+    1. **Localhost SSH Session Collision (Why Pragma-git's own `.gitignore` appeared in the left `"new"` column on `ssh://jan@localhost/...`)**:
+       - When `git difftool` ran on `jan@localhost`, it executed `~/.Pragma-git/pragma-merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED" ssh` where `$LOCAL` (`$2`) was `/var/folders/.../xxxxxx_.gitignore` (the `HEAD` / stored version of `cliHelpLine/.gitignore`), and `$REMOTE` (`$3`) and `$MERGED` (`$4`) were the relative path `".gitignore"`.
+       - Because `localhost` shares `~/.Pragma-git/.tmp` with the client NW.js app, and `pragma-merge` created `~/.Pragma-git/.tmp/sessions/<SESSION_ID>/pragma-merge-running-ssh` while [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) line 435 listened for both `pragma-merge-running` and `pragma-merge-running-ssh`, `app.js` immediately launched `pragma-merge` on the un-transferred server-side session!
+       - In [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js), when `ROOT.startsWith('ssh:')`, it runs `process.chdir(parent.opener.CWD_INIT)` (which is `/Users/jan/Documents/Projects/Pragma-git/pragma-git`). Thus `loadFile(".gitignore")` loaded **Pragma-git's own `.gitignore`** into the left (`"new"`) column, while `loadFile(LOCAL)` loaded `cliHelpLine`'s stored `.gitignore` into the right (`"stored"`) column!
+       - **Fix**: Separated SSH server mode (`$5 == "ssh" || $3 == "ssh"`) from local GUI session mode in [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge), and restricted the `chokidar` watcher in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to `if (base === 'pragma-merge-running')`.
+    2. **Missing `$TMP/pragma-merge-running-ssh` Signal on SSH Server**:
+       - Commit `d7c475c1` had removed `touch "$RUNNING"` (`$TMP/pragma-merge-running-ssh`) from [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge), preventing [`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client) from detecting when `git difftool`/`mergetool` launched `pragma-merge` on a remote server.
+       - **Fix**: Restored `touch "$RUNNING"` and `$FILE_LIST_ON_SSH` (`/tmp/git_diff_file_list.txt`) handling in the SSH server branch of [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge), and updated [`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client) to automatically refresh `$HOME/.Pragma-git/pragma-merge` on the SSH server whenever `IS_MERGE_OR_DIFF_CMD == true`.
+    3. **Empty `$BASE` (`$1`) Shifting Arguments in [`ssh_folder/ssh-get-merge-files`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get-merge-files)**:
+       - In `git difftool`, `$1` (`$BASE`) is empty (`""`). The loop in `ssh-get-merge-files` previously had `[ -z "$var" ] && continue`, which dropped `$1` instead of preserving `""` in `ABSOLUTE_FILE_LOCATIONS`. That shifted `$2` (`$LOCAL` / stored) into `$1` (`BASE`) and `$3` (`$REMOTE` / new) into `$2` (`LOCAL` / stored).
+       - **Fix**: Changed empty argument handling in [`ssh_folder/ssh-get-merge-files`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get-merge-files) to append `""` (`ABSOLUTE_FILE_LOCATIONS="${ABSOLUTE_FILE_LOCATIONS} \"\""`), keeping all 4 positional arguments aligned, and guarded `REMOTE !== '' && REMOTE == MERGED` in `getMode()` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+    4. **Remote Paths with Spaces and `--` Breaking File Transfers (`testRepos -- local on ssh/cliHelpLine`)**:
+       - In [`ssh_folder/ssh-get-merge-files`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get-merge-files), [`ssh_folder/ssh-put`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-put), [`ssh_folder/ssh-get`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get), and [`ssh_folder/ssh-put-simple`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-put-simple), remote paths containing spaces and `--` were split by the remote shell (or legacy `scp`), causing `cat` to treat `--` as end-of-options and fail to upload edits from the SSH File Browser or download the modified file for diffing (truncating `${LOCAL}` to 0 bytes).
+       - **Fix**: Replaced unquoted remote paths and legacy `scp` calls with single-quote-escaped remote paths (`ESCAPED_SERVER_PATH="${SERVER_PATH//\'/\'\\\'\'}"`) over `ssh -T ... "cat > '${ESCAPED_SERVER_PATH}'"` and `"cat '${ESCAPED_SERVER_PATH}'"`.
+    5. **Clean Window Close & SSH Server Setup on Repo Switch**:
+       - Updated `startPragmaMerge` `win.on('close')` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [`ssh_folder/ssh-close-pragma-merge-ssh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-close-pragma-merge-ssh) so closing the window properly writes the exit code and cleans up both local session and remote SSH lock files.
+       - Updated `repoRadiobuttonChanged` in [`settings.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) to call `await opener.setupSshServer()` when switching to an `ssh:` repository.
+  - **Automated Tests Added & Verified**:
+    - Added Tests 5.10 and 5.11 in [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh) verifying `pragma-merge` SSH server mode (`$5="ssh"`) and `ssh-get-merge-files` positional argument preservation and space/`--` path transfers (11/11 passed).
+    - Added Tests 5.7 and 5.8 in [`automated-tests/non_gui/ssh/test_05_ssh_put_get.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_05_ssh_put_get.sh) verifying `ssh-put` and `ssh-get` with `testRepos -- local on ssh/cliHelpLine` paths (8/8 passed).
+* **Pragma-Merge Window Size Persistence Across Instances (Implemented - Dual Window Sizes for 1-Pane vs 2/3-Panes)**:
+  - Users resizing any `pragma-merge` editor/diff window now have those dimensions automatically remembered as the default for future windows, separated by pane mode:
+    - 1-pane mode (editor & file viewer, e.g. from File Browser or History View) remembers its own dimensions in `state.pragmaMerge.windowSinglePane`.
+    - 2-pane and 3-pane mode (diff & merge views) remember their own dimensions in `state.pragmaMerge.windowMultiPane` (and backward-compatible `state.pragmaMerge.window`).
+  - Added `getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes = 2)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) that checks the appropriate pane-specific stored dimensions and clamps them within available screen dimensions via `getSensibleWindowSize()`.
+  - Updated `updatePragmaMergeWindowSize(win, panes = 2)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) listening to `win.on('resize')` and `win.on('close')` in both `openPragmaMergeDirect()` and `startPragmaMerge()`, dynamically detecting single pane vs multi pane mode.
+  - Updated `closeWindowNicely()` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to store dimensions into `windowSinglePane` when in EDITOR mode and `windowMultiPane` / `window` when in 2- or 3-pane diff/merge mode.
+  - Updated settings initialization in `loadSettings()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with `windowSinglePane` and `windowMultiPane`.
+  - Expanded unit test suite [`automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_05_pragma_merge_window_size.js) testing default fallback, independent dimension persistence for 1-pane vs multi-pane, and preserving 1-pane dimensions when resizing 2- or 3-pane windows (10/10 tests passed).
+* **Pragma-Merge Multi-Window Support & Session Isolation (Option 1 Done, Option 2 Step 1 Done)**:
+  - **Option 1 (Direct URL Parameter Mode - Completed)**:
+    - Allows multiple editor windows to open concurrently without interfering with lockfiles or signaling mechanisms.
+    - Updated [`merge/pragma-merge.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.html) and [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to support direct query parameters (`?first=...&second=...`).
+    - Added `openPragmaMergeDirect()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with window cascading and focus-if-already-open tracking.
+    - Integrated in [`sshFileBrowser.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.js) and [`listChanged.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js).
+  - **Option 2 (Per-Instance Session IDs - Universal for Local & SSH Server)**:
+    - Group all session files inside dedicated session folders: `.tmp/sessions/<SESSION_ID>/` containing `first`, `second`, `third`, `fourth`, `running`, `exit`.
+    - **Step 1 (Automated Test Validation - Completed)**:
+      - Added `PRAGMA_SIGNAL_DIR` override support in [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge) to allow sandboxed / isolated test execution.
+      - Created [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh) validating `git difftool` / `pragma-merge` file creation, signal files, and clean exit. Registered in [`automated-tests/non_gui/git_client/_run_tests`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/_run_tests).
+    - **Step 2 (Grouped Session Folders & Isolated Signal Protocol - Completed)**:
+      - Updated [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge) to generate unique session IDs (`session_${$}_$(date +%s)`), create dedicated `.tmp/sessions/<SESSION_ID>/` directories, and isolate parameter files (`first`, `second`, etc.) and signal files (`pragma-merge-running`, `exit-pragma-merge`).
+      - Preserved dual-writing to root `.tmp/` and backward-compatible signaling so existing legacy watchers continue to operate without breaking.
+      - Added tests 5.5 - 5.9 in [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh), verifying session ID recording, isolated directory existence, and concurrent parallel sessions with independent exit codes (all 9/9 tests pass).
+    - **Step 3 (GUI Session Watcher & Direct Session Directory Integration - Completed)**:
+      - Updated [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) merge watcher to monitor `MERGESESSIONSDIR` via `chokidar`.
+      - When a session signal file is detected (`.tmp/sessions/<SESSION_ID>/pragma-merge-running`), `startPragmaMerge(sessionId, sessionDir)` is invoked, passing `?sessionId=...&sessionDir=...` to the merge window.
+      - Removed legacy `$TMP/pragma-merge-running` signal touch from [`pragma-merge`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge) so diff invocations exclusively signal through their dedicated session directories, completely eliminating duplicate window launches.
+      - Updated [`listChanged.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js) to allow concurrent diff/merge callback execution without blocking on `isOpenDialog` when `merge_win` is already open.
+      - Formatted Window Menu label and HTML title to `"Pragma-merge (<filename>)"` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) and [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (`makeWindowMenu`), binding focus directly to the specific window handle.
+      - Added startup cleanup of stale sessions in `MERGESESSIONSDIR` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and unlinking of both local and SSH session signal files in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+      - Fixed historical file viewing (`(view)` link) for SSH repositories in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) by using `ROOT || global.state.repos[global.state.repoNumber].localFolder` and trimming `THIRD` parameter.
+      - Updated [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) to detect `SESSION_DIR`, load parameters from that session directory, and write exit code / clear signal files in the session directory.
+      - Updated [`automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh) asserting session-based signal files and parallel concurrent runs. All 9 tests pass.
+      - Fixed simple-git directory validation error (`Cannot use simple-git on a directory that does not exist`) in [`lib/simpleGitWithRetry.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js) when switching to SSH repositories by ensuring `opts.baseDir` is only set for local filesystem paths and omitted for `ssh://` URLs.
+      - Fixed SSH history navigation and git operations failing after closing `pragma-merge` (`TypeError: Cannot read properties of undefined (reading 'length')` / `Cannot use simple-git on a directory that does not exist`): removed `process.chdir(SIGNALDIR)` in [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) (which left NW.js's shared `process.cwd()` inside the temporary `.tmp/sessions/<SESSION_ID>` directory that gets deleted on close), added explicit `baseDir: STARTDIR` for SSH repositories in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), and added a fallback `baseDir` check in [`lib/simpleGitWithRetry.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js).
+      - Fixed undeclared `platform` global in `configFilePath()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) by safely scoping `let platform`.
+    - **Next Step (Step 4)**: Update SSH helpers ([`ssh_folder/ssh-git-client`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client), [`ssh_folder/ssh-get-merge-files`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-get-merge-files), [`ssh_folder/ssh-close-pragma-merge-ssh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-close-pragma-merge-ssh)) to pass and handle session IDs across SSH connections.
+* **SSH Server File Browser (Implemented)**:
+  - **1. `ssh_folder/ssh-ls` & `sshLs` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js)**:
+    - Created executable bash script [`ssh_folder/ssh-ls`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-ls) accepting `SSH_URL` (`$1`) and optional `RELATIVE_SUBPATH` (`$2`), sourcing `lib/ssh-functions` (`getSshUrlParts "$1"`) and running `ls -1Ap` over the multiplexed SSH connection.
+    - Exported `sshLs(sshUrl, relativeSubPath)`, `sshGet`, `sshPut`, `fs_existsSync`, and `fs_mkdir` in [`ssh_folder/ssh-folder-lib.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-folder-lib.js). `sshLs` returns `{ name, isDirectory, relativePath }` sorted folders-first, then alphabetically (filtering out `.git/`).
+  - **2. Designated Editor Setting (`state.tools.editor` in `settings.json`)**:
+    - Added `#editorTool` input row in [`settings.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) under *Software -> Git & system tools (built-in if empty)*.
+    - Added `editorTool` callback, `state.tools.editor` initialization, and persistence in [`settings.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) and [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) (`loadSettings` and `updateWithNewSettings`).
+    - **Empty (`""`) or `"pragma-merge"`**: Defaults to `"pragma-merge"` and opens built-in `pragma-merge "<tempFile>" --edit --rw` (focuses existing `merge_win` if already open).
+    - **`"system"`** (case-insensitive): Opens with OS system default application (`gui.Shell.openItem(tempFile)`).
+    - **Custom command/app**: Opens with configured custom editor command/app (`cwd` set to `path.dirname(tempFile)`).
+  - **3. SSH Server File Browser Window ([`sshFileBrowser.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.html) & [`sshFileBrowser.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.js))**:
+    - Triggered from `folderClicked()` via `showSshFileBrowser(folder)` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) when `state.repos[state.repoNumber].localFolder.startsWith('ssh:')`. Opening multiple file browser windows cascades new windows with an offset of ~20px down and right from the previous window.
+    - Window title set to `SSH Server Files - <repoName>` and internal header set to `File Browser — <repoName>` with standard interactive help button (`#about-icon`) invoking `HELP/SSH File Browser.html`.
+    - Dedicated top breadcrumb/path bar with the `⬆ Up` button on the right, and responsive truncation (`renderBreadcrumbs()`): displays `HOME / seg1 / ... / last` when space permits, collapses middle segments to `HOME / ... / <fitting trailing segments>` when long, and falls back to `... / <last segment>` if space is very tight.
+    - `+ New File`, `+ New Folder`, and `↻ Refresh` buttons placed on the right edge of the bottom action bar below the directory table, styled with clean `border-radius: 4px` matching [`settings.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html).
+    - Folder entries in directory listing use the official Pragma-git folder icon (`images/folder.png`) matching [`app.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) with exact theme filter rules: crisp white in dark mode (`filter: none`) and charcoal in light mode (`filter: brightness(0.35)` with hover deepening to `brightness(0.05)`).
+    - File entries use a standing rectangle document icon with A4-style proportions (13x18) and dog-eared corner, matching the theme filter rules of the titlebar icons.
+    - Added keyboard shortcuts Cmd+R (macOS) and Ctrl+R (Windows/Linux) to trigger folder refresh.
+    - Double-clicking opens folders (`..` and subfolders) or edits files just like an ordinary file browser, while keeping single-click `(up)`, `(open)`, and `(edit)` links in the Action column.
+    - Double-clicking (or clicking `(edit)` on) a file downloads it via `sshGet(repoSshUrl, relativePath)` to `SSH_TEMP_FILE_LOCATION`, watches the local temp file with `chokidar` (`awaitWriteFinish`), and opens it in the configured editor.
+    - Multiple `pragma-merge` editor instances can now be opened concurrently via `openPragmaMergeDirect()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) passing query parameters to [`merge/pragma-merge.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.html) and [`merge/pragma-merge.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js), bypassing the singleton bash script lockfile and cascading each open file editor window cleanly.
+  - **4. Documentation**:
+    - Created [`HELP/SSH File Browser.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/SSH%20File%20Browser.html) formatted identically to [`HELP/Modified Files.html`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Modified%20Files.html), documenting navigation, double-click editing, auto-syncing on save, editor configuration, and close warning behavior.
+    - Updated folder icon reference to `images/folder.png` with theme-based filters (`body.light`: `brightness(0.35)`, `body.dark`: `none`), ensuring the folder icon renders cleanly in dark mode instead of pitch black.
+    - Saving the temp file triggers `sshPut(repoSshUrl, relativePath)` automatically (verifying buffer changes to avoid spurious uploads), updates the sync status/timestamp in the **Open Files** panel, and triggers `MAIN._update()` and `MAIN.updateChangedListWindow()`.
+    - Clicking an already-open file in the **Open Files** panel re-invokes `launchEditorForFile()` to bring the editor window/tab to focus. Clicking `[✕]` stops watching that file.
+  - **4. Close Warning & Watcher Lifecycle**:
+    - As long as the file browser window(s) are open, `chokidar` watchers keep syncing saved changes to the SSH server.
+    - Closing a file browser window (`win.on('close')`) or closing the Pragma-git main window (`closeWindow()` in [`app.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)) while any file browser has open/watched files displays `#closeWarningDialog` listing all open files and warning that this is the **last chance to save and close** them in the editor before syncing stops.
+  - **5. Automated Tests**:
+    - Added `ssh-ls` root and subdirectory tests (5.5 & 5.6) in [`automated-tests/non_gui/ssh/test_05_ssh_put_get.sh`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_05_ssh_put_get.sh) and export verification (6.15) in [`automated-tests/non_gui/ssh/test_06_ssh_lib_node.js`](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/ssh/test_06_ssh_lib_node.js).
+* **Fix for CI Failure on Linux and Windows (UI Test 03 and Windows Teardown)**:
+  - **Environment Guard Allowance in simple-git v4 Wrapper** ([lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js)):
+    - Added dynamic detection and whitelisting of all environment keys in `process.env` starting with `GIT_`, `SSH_`, or `PRAGMA_SSH_KEY` in `opts.allowEnvironment`.
+    - Fixes runtime error `Error: Use of "GIT_SSL_CAINFO" is blocked by the environment guard` on GitHub Actions Linux and Windows runners where custom Git CA bundles or credentials helper variables are injected into the runner environment.
+  - **Form Input & Textarea Value Access in CDP Test Client** ([automated-tests/ui/lib/cdp_client.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/cdp_client.js)):
+    - Updated `getText(selector)` to prioritize `el.value` when inspecting `<textarea>` or `<input>` elements before falling back to `el.innerText || el.textContent`.
+    - Resolves failure where `#message` commit description textarea returned empty string `""` because `textContent` in DOM remained empty while the active value resided in `el.value`.
+  - **Remote Upstream Branch Parsing Robustness in `gitFetch()`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Handled branch references regardless of whether prefixed with `remotes/` (e.g. `'remotes/upstream/main'` vs `'upstream/main'`), extracting remote name and branch cleanly.
+  - **Merge Command Robustness in `gitMerge()`** ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)):
+    - Switched from `.mergeFromTo(selectedBranchName, currentBranchName, options, onMerge)` to `.merge([selectedBranchName, ...options], onMerge)`.
+    - In `simple-git` v4, `mergeFromTo(from, to, options)` synthesizes `git merge <from> <to> <options>`, which fails or misparses in git CLI because `git merge` merges commits/branches directly into the currently checked-out branch and does not accept a destination branch operand.
+    - Updated `gitMerge()` to use `merge([selectedBranchName, ...options])`, ensuring `--no-ff` and `--no-commit` merge correctly without CLI errors.
+  - **Dynamic Wait in UI Test Scenario 03** ([automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml)):
+    - Replaced static `wait: 2500` ms with `action: wait_for_text` polling `#message` for `"Merge branch"` with a 10s timeout, eliminating timing race conditions on slower CI runners (Linux Xvfb and Windows).
+  - **Platform-Safe Teardown on Windows** ([automated-tests/ui/lib/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/ui_fixtures.js)):
+    - Guarded Unix-specific `pkill` commands with `if (process.platform !== 'win32')`.
+    - On Windows CI runners, executing `pkill` from Node spawned `cmd.exe` which printed `"The system cannot find the path specified."`.
+* **gitFetch Async Promise Completion**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Converted `gitFetch()` to a proper `async` function awaiting `simpleGit().raw([...fetchCommands, '--all'])` and `updateBranchListWithUpstream()`.
+    - Previously, `gitFetch` executed raw fetch calls with a callback without awaiting, which caused callers (such as automated tests or fast UI flows) to return before remote references and upstream ahead flags were updated in `cachedBranchList`.
+* **Automated Upgrade Dialog Suppression in UI Tests**:
+  - In [automated-tests/ui/lib/ui_fixtures.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/ui_fixtures.js):
+    - Automatically prepopulates test sandbox `settings.json` with `ignoredVersion: "999.999.999"`, preventing `#newVersionDetectedInputDialog` from showing during testing.
+  - In [automated-tests/ui/lib/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js):
+    - Added automatic dismissal of `#waitButton` upon window connection as a fallback guard.
+  - In `teardown()`, added cleanup killing any lingering NW.js process on the configured test CDP port.
+* **UI Test Framework git Tree Validation Robustness**:
+  - In [automated-tests/ui/lib/run_ui_tests.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/lib/run_ui_tests.js):
+    - In `assert_git_tree_match`, dynamically checks whether source/target has a `.git` subdirectory (`git -C`) or is a bare git repository (`git --git-dir`), preventing failures when comparing working tree repos against non-bare source repositories.
+* **UI Test Scenario: Merge from Upstream**:
+  - Created [automated-tests/ui/scenarios/test_03_merge_upstream.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.yaml):
+    - Configures an ephemeral bare upstream parent repo, a bare origin fork repo, and a local fork clone in Pragma-git with `upstream` remote set up (and `NO-PUSH` protected).
+    - Commits new changes into upstream parent and triggers `gitFetch()` in Pragma-git.
+    - Asserts star indicator badge (`★`) appears on top-right of the Merge icon (`#top-titlebar-merge-badge`) and verifies tooltip updates with upstream commit count.
+    - Simulates clicking the upstream badge / menu item, asserting that `#confirmMergeUpstreamDialog` opens.
+    - Confirms the merge via `#confirmMergeUpstreamOK`, verifying staged merge changes and commit text generation.
+    - Concludes the merge by clicking `#store-button`, asserting the star badge is hidden post-merge and checking working tree content.
+    - Concludes with mandatory `assert_git_tree_match` validating tree parity between the upstream seed repository and the merged local fork.
+  - Added runner scripts:
+    - [automated-tests/ui/scenarios/test_03_merge_upstream.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_03_merge_upstream.js)
+    - [automated-tests/ui/_run_03_merge_upstream](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/_run_03_merge_upstream)
+  - Successfully verified end-to-end; all 3 UI test suites passing (3/3 passed).
+* **Settings Clone Tab Help Documentation Update (Forked Repositories)**:
+  - In [HELP/Settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/HELP/Settings.html):
+    - Explicitly clarified that a fork must first be created on the provider's website (GitHub, GitLab, Bitbucket) using their web interface before cloning.
+    - Documented the full fork workflow: creating the fork on the provider, cloning the fork repository URL in Pragma-git, and automatic detection/configuration of the `upstream` remote.
+    - Documented upstream merge notifications via the star indicator (`★`) on the Merge button and the confirmation dialog flow.
+* **Message Overlay Badge Dynamic Offset on Scrollbar**:
+  - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+    - Added `adjustMessageOverlayOffset()` to calculate whether the `#message` textarea has a vertical scrollbar (`scrollHeight > clientHeight`) and measure the scrollbar width (`offsetWidth - clientWidth`).
+    - Dynamically offsets the `right` position of `#edit_commit_text_div` (containing `(draft)`, `(double-click to change)`, `(esc-key to cancel)`) and `#amend_commit_div` to `(scrollbarWidth + 5) + 'px'` (falling back to `20px`) when vertical scrolling is active, and resets back to `5px` when no scrollbar is present.
+    - Integrated offset recalculation into `updateEditCommitTextDiv()`, `_setMode()` amend div display, and `window.onresize`.
+  - In [automated-tests/non_gui/app_function_calls/test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js):
+    - Added unit test coverage verifying overlay badge offset behavior both with and without a vertical scrollbar.
+* **Selected Repository Row Highlighting in Settings**:
+  - In [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html):
+    - Added CSS rule `#settingsTableBody tr:has(.localFolderRadioButton:checked), #settingsTableBody tr.selectedRepoRow` using `var(--hoverBackGroundColor)`, styling the currently active radio-buttoned repository row with the identical highlight background color used when hovering over repository rows.
+  - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js):
+    - Added `selectedRepoRow` class application to the matching row during table generation in `generateRepoTable()`.
+    - Updated `repoRadiobuttonChanged` callback in `_callback()` to dynamically toggle the `selectedRepoRow` class on table rows when switching repositories.
+* **System Info Remote & Fork Status Enhancements**:
+  - In [automated-tests/non_gui/apis/test_05_live_ci_status.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/apis/test_05_live_ci_status.js):
+    - Expanded the external blocking / rate-limit regex for live GitLab tests 5.5 and 5.6 to match `"unavailable"` and `"did not return"`. When public GitLab web endpoints return 403 or anti-bot challenge pages on GitHub Actions runner IPs, the error message thrown by `getValue()` (`GitLab web pipelines.json did not return CI status (private repo or endpoint unavailable)`) is now accurately caught and recorded as `[SKIP]`.
+  - In [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) `updateRemoteInfo()`:
+    - Displaying reason alongside "fail" in `Provider API status`: If the API call fails or encounters an HTTP error (e.g. 401 Unauthorized, 403 Forbidden / rate limit, 404 Not Found), the specific HTTP code and description or network error is displayed in bold italic alongside `fail` (e.g. `fail (401 Unauthorized - invalid or missing credentials)`).
+    - Displaying fallback fork parent URL: If the API call does not return a `fork-parent` (due to authentication failure or API errors), Pragma-git falls back to the repository's locally stored `forkedFromURL` in `state.repos[state.repoNumber]` (e.g. `<upstream_url> (from settings)`), instead of stating `(this is not a known fork)`.
+  - In [apis_github_and_others/general_git_rest_api.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/apis_github_and_others/general_git_rest_api.js):
+    - Added `statusText` and `errorMessage` capture to `fetchWithApi()` response structure, preserving HTTP response status descriptions and error messages for diagnostic presentation in System Info.
+* **Upstream Remote Handling & Fork Incorporation (Phases 1-4 Complete)**:
+  - **Phase 1: Permanent NO-PUSH Protection**:
+    - Enhanced `addUpstream()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and `setRemoteRepoButton` in [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js) so that any configured `upstream` (or non-origin) remote always sets `git remote set-url --push <alias> NO-PUSH`.
+    - Permanently prohibits accidental pushing to upstream parent repositories at the Git level, while leaving `origin` (the user's fork) writable.
+  - **Phase 2: Upstream Ahead Detection (dry-run & parser)**:
+    - Wrapped `gitListUpstreamsNeedingFetch()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) in a Promise, robustly parsing dry-run fetch output (`... -> upstream/<branch>`) and marking `upstreamAhead = true` on `cachedBranchList.branches[remoteBranchLongName]`.
+  - **Phase 3: Visual Indicators, Badges & Menu Visibility**:
+    - Replaced the intrusive titlebar text badge with a discrete indicator flag featuring a star (`★`) directly on the top-right corner of the Merge icon (`#top-titlebar-merge-badge`) in [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html) and [style.css](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/style.css).
+    - Star styled in clean white (`#ffffff`, with subtle contrast drop shadow), sized down to 9px, and offset (`top: -4px; right: -7px;`) so it rests cleanly on the top-right corner without clashing with the theme palette.
+    - Synchronized visibility: Hiding the merge icon (e.g. when uncommitted changes exist after selecting merge, or in DEFAULT mode) hides `#top-titlebar-merge-icon-wrapper` as a whole, ensuring the star badge cleanly disappears whenever the merge icon closes.
+    - Preserved clean titlebar aesthetics next to the branch name/menu while keeping dynamic merge icon tooltip (`Merge (N updates from upstream)`).
+    - Removed upstream branches from the Branch menu entirely; upstream tracking is exclusively accessible from the Merge menu where the star badge points.
+    - Added smart relevance filtering via `getUpstreamDefaultBranch()` and `isRelevantUpstreamBranch()`:
+      - Added `hasUpstreamRemote()` check to bypass upstream checks entirely if no `upstream` remote is configured for the active repository, eliminating periodic `gitFetch` overhead on standard repos.
+      - Suppressed stderr using Node.js child_process `stdio: ['pipe', 'pipe', 'ignore']` and Node `cwd` options across `git symbolic-ref`, `git branch -r`, and `git rev-list`, ensuring full cross-platform compatibility across Windows, macOS, and Linux without shell-specific redirection (`2>/dev/null` or `cd`).
+      - Added local filesystem and `file://` detection in `normalizeRepoUrl()`, ensuring local disk remotes (e.g. `/Users/jan/.../origin.git`) bypass CI status API lookup cleanly without triggering `unknown provider for URL` errors.
+      - Added 404 response handling (`status: 'none'`) in `github.com.js` for repositories without CI and debounced memory caching on 403 rate-limit/errors in `queryCommitCiStatus()`, eliminating repeating console warnings on interval updates.
+      - Added graceful rate-limit / Cloudflare blocking error handling in live test suite 5.5 and 5.6 (`test_05_live_ci_status.js`) to prevent false-negative CI test failures on shared GitHub Actions IP pools.
+      - The star badge, alert tooltip count `N`, and the direct Merge menu items strictly track the upstream default branch (`upstream/HEAD` -> `upstream/main` or `master`) and matching branches (e.g. `upstream/<currentBranch>`).
+      - Completely prevents dozens or hundreds of irrelevant upstream experimental/feature branches from cluttering the menu or permanently holding the star badge on.
+    - Updated `makeBranchMenu()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js):
+      - Renders relevant upstream branches (`★ upstream/main (+N)` and/or `★ upstream/<branch> (+N)`) directly into the Merge menu with a preceding separator, rather than nesting them inside a submenu.
+      - 1-click access to merge upstream directly from the root Merge menu without hover delay.
+      - Kept `Remotes` cleanly dedicated to origin and other remotes.
+  - **Phase 4: Fetch & Merge Workflow**:
+    - In `clickedBranchContextualMenu` and `clicked-upstream-badge`, selecting/clicking upstream updates displays `<dialog id="confirmMergeUpstreamDialog" class="warning">` matching Pragma-git's standard warning dialog layout instead of browser `confirm()`.
+    - Merging executes standard `gitMerge()`, preparing the changes and placing the suggested commit message (`Merge branch '<selectedBranch>' into <currentBranch>`) into the commit text area for storing, maintaining full consistency with all other merges in Pragma-git.
+  - **Automated Remote Discovery & `--all` Fetch Support**:
+    - In `gitFetch()` within [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js), changed default fetch without arguments from `fetch origin` to `fetch --all`. Pragma-git now automatically fetches and populates remote tracking references from all configured remotes (`origin`, `upstream`, etc.) seamlessly without requiring terminal intervention.
+    - Updated `updateBranchListWithUpstream()` and dry-run parser to handle new tracking branches and automatically refresh branch lists upon fetch completion.
+    - In `updateBranchListWithUpstream()`, added inspection of existing local tracking branches (`remotes/upstream/*`) via `git rev-list --count HEAD..<remote_branch>` so that once upstream commits have been fetched locally, upstream branches are accurately flagged as ahead (`upstreamAhead = true`, `behindCount = N`), ensuring badges and menu indicators display both before and after fetches.
+    - Fixed `ReferenceError: status_data is not defined` in `updateBranchListWithUpstream()` and branch callbacks by ensuring safe `typeof status_data !== 'undefined'` evaluation.
+    - Set `.top-titlebar-upstream-placeholder` to `visibility: visible` in `style.css` so the badge is rendered without waiting for onload DOM modifications.
+  - **Automated Tests**:
+    - Created [automated-tests/non_gui/git_client/test_04_upstream_and_origin.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_04_upstream_and_origin.js) covering parent repository setup, origin fork push, upstream `NO-PUSH` enforcement, dry-run change detection, fetch commit counting, clean merging of upstream into local branch, and pushing merged upstream commits to origin (8/8 tests passed).
+    - Fixed GitHub Actions runner compatibility by explicitly setting `-b main` and `symbolic-ref HEAD refs/heads/main` on bare test repositories, preventing `src refspec main does not match any` errors when Git runners default to `master`.
+* **Upgraded to `simple-git` v4.0.2 with Full Backwards-Compatibility**:
+  - Upgraded `simple-git` to `^4.0.2` in `package.json` to resolve security vulnerabilities identified by `npm audit`.
+  - Normalized CommonJS imports in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js), [notes.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/notes.js), [edit_ignore.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/edit_ignore.html), and [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js) to resolve the factory function whether returned directly or as `{ simpleGit }` / `{ default }`.
+  - Configured `normalizeGitOptions` in [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js) to configure `simple-git` v4's environment guards (`allowEnvironment`) and security category flags (`unsafe.allowUnsafeInclude`, `allowUnsafeAskPass`, `allowUnsafeCredentialHelper`, etc.), allowing include configs, custom binaries (`ssh-git-client`), and credentials without throws.
+  - Verified 100% pass rate across all 8 test categories (SSH, utils, git_client, credentials, git_configs, apis, app_function_calls, and UI suites).
+* **Optimized Fast Graph & General Find in NW.js**:
+  - In [extend_find-in-nw.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/extend_find-in-nw.js), `getElementsToSearch()` now returns `#graphContent` directly for Graph windows so `window.findAndReplaceDOMText` performs a fast single pass over the entire commit list instead of iterating over hundreds of individual child rows.
+  - Bypassed costly ancestor tree crawling and `window.getComputedStyle(cur)` in `isNodeVisible` for Graph elements.
+  - Replaced per-element `_yieldToUI()` with 16ms time-chunking (`Date.now() - lastYieldTime > 16`) across all element, hash, and textarea loops, allowing find tokens and the match count (`1/432`) to compute and display virtually instantaneously without blocking input cancellation.
+* **Cancelable / Preemptible Find in NW.js**:
+  - Fixed UI freezing and lag when typing single characters or rapidly updating query text in [extend_find-in-nw.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/extend_find-in-nw.js).
+  - Search runs asynchronously across elements, yielding to the UI event loop between elements.
+  - Overrode the `input` event listener on `#find-in-nw-input` with a sequence counter (`_activeSearchId`).
+  - Any subsequent keystroke (typing a character, removing characters with backspace, or clearing) immediately increments `_activeSearchId`, dumping and cancelling any pending/in-flight DOM search so it is replaced with the new query string without blocking the UI.
+* **Pragma-merge "Ignore Whitespace" Option**:
+  - Added an `ignore whitespace` checkbox in [merge/pragma-merge_iframe.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge_iframe.html) alongside `align` and `hide unchanged`.
+  - Configured CodeMirror MergeView with `options.ignoreWhitespace = ignoreWhitespace` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+  - Defaults to `false` (safe merge behavior without silently ignoring indentation changes).
+  - Persisted in `settings.json` under `state.pragmaMerge.ignoreWhitespace` via `loadSettings()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and `closeWindowNicely()` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js).
+* **Consistent "Last commit : ..." Placeholder Across Repo Switches**:
+  - Removed remaining hardcoded "You may write what is ongoing here..." boilerplate across `app.js`, `app.html`, and `about.html`.
+  - In `restoreRepoDraftMessage()` and `UNKNOWN` mode transitions, the placeholder now preserves the existing `Last commit : "<title>"` (or defaults cleanly to `"No previous commits"` if there are no commits), ensuring switching repositories never flashes the old help text.
+* **Resizable Remote URL Textareas in Settings**:
+  - Restored vertical resizing (`resize: vertical; min-height: 24px;`) for `.remoteURL textarea` in [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html#L215).
+  - Users can pull the corner of remote repository URL inputs to view and edit long URLs conveniently.
+* **(draft) Scratchpad Indicator**:
+  - Implemented `(draft)` badge in the message area sharing the exact bottom-right position of `(double-click to change)` (`#edit_commit_text_div`).
+  - Coordinated through `updateEditCommitTextDiv()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) and [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html):
+    - Appears immediately upon leaving the textarea (`onblur`), or after 6 seconds of typing inactivity if still focused at HEAD.
+    - Unobtrusively muted with tooltip: `"Draft note for this repository (edit when ready to commit)"`.
+    - Automatically hides while actively typing, or reverts to `(double-click to change)` / `(esc-key to cancel)` when empty at HEAD, and remains completely hidden in historical navigation.
+  - Documented in [about.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/about.html) under **Message Area & Commit Flow**.
+  - Verified with comprehensive test coverage in [automated-tests/non_gui/app_function_calls/test_04_draft_message.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_04_draft_message.js) (14/14 passed).
+* **Dynamic Stash Naming Tooltip**:
+  - Added dynamic tooltip behavior for the stash button in `app.html` (`updateStashTooltip()`) and `app.js`.
+  - When in `CHANGED_FILES` or `CHANGED_FILES_TEXT_ENTERED`:
+    - If user has entered text in the commit message box, tooltip reflects the pending stash name: `Stash with name: "<entered text>"`.
+    - If empty, tooltip provides a subtle prompt: `Stash uncommitted files (type in above textarea to name stash)`.
+  - In other modes (or if no uncommitted changes), defaults back to clean `Stash uncommitted`.
+* **Clean Previous Commit Placeholder**:
+  - Replaced generic 3-line help boilerplate with `Last commit: "<title>"` placeholder in the message area for both `NO_FILES_TO_COMMIT` and `CHANGED_FILES` modes when at `HEAD` ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
+  - Provides instant context of the previous commit directly in grey text without unnecessary clutter.
+* **Menu Visual Contrast Fix**:
+  - Stopped greying out active repositories and branches in both the repo menu and the branch menu ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)).
+  - Active items remain enabled with full visual contrast and their checked status indicator, preventing them from appearing disabled or broken.
+* **Zoom Level Clamping (0.5 to 3.0)**:
+  - Enforced bounding between 0.5 and 3.0 for both `zoomMain` (main window) and `zoom` (other windows) in `loadSettings()` ([app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js)) and in input callbacks `zoomMainChanged` / `zoomChanged` ([settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js), [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html)).
+* **Recent Repositories Count Setting**:
+  - Added `Recent repos in menu:` numeric input under **Settings -> Software** tab ([settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html), [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js)).
+  - Persists `state.maxRecentRepos` to `settings.json` (defaults to 5) and dynamically sizes the root menu Recent section.
+* **Streamlined Repo Menu Architecture (Concept A)**:
+  - Replaced dynamic group-mode-switching with an intuitive, predictable menu layout.
+  - **Top section**: Top 5 most recent repositories listed directly in the root menu for 1-click access.
+  - **Middle section**: Defined repository groups cleanly organized into hoverable submenus.
+  - **Bottom section**: "All Repos (Alphabetical)" accessible in a submenu.
+  - Eliminates awkward "double-switching" and guarantees clicking any repository simply switches to that repository.
+* **Forward-Compatible Settings Preservation**:
+  - Enhanced loadSettings() and fixRepoSettingWithDefault() in app.js to preserve any unknown/newer keys from incoming JSON at both the root state and individual repo levels.
+  - Maintains the exact canonical key ordering in JSON export while safeguarding custom or branch-specific keys from being stripped on checkout or older version execution.
+  - Restored 14 historical repository groups in ~/.Pragma-git/settings.json.
+* **Sensible Default Window Sizes**:
+  - Implemented  in [](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) to set sensible first-time window dimensions adapted to screen resolution.
+  - Generous height applied across all sub-windows: Graph (), Settings (), Pragma-merge (), Notes (), Help (), About (), Changed Files (), Resolve Conflicts (), Git-ignore Editor (), JSON Viewer (), and Create Remote Repository ().
+  - Main window dimensions remain unchanged ().
+  - Screen-aware clamping ensures windows fit comfortably on smaller displays without exceeding screen bounds.
+  - Sub-window dimensions remain persistent across sessions via NW.js window IDs.
 
 ---
+
 
 ### 🐛 Open / Historical Bugs
 * **Bug: Failure strike-line invisible on CI badge due to CSS pseudo-element collision with tooltip library**:

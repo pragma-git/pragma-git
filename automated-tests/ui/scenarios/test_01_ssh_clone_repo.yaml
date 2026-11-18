@@ -1,0 +1,191 @@
+name: "SSH Clone Remote Repository"
+description: "Tests testing SSH connection, deploying SSH key, and cloning a remote repository into an SSH folder"
+
+steps:
+  # 1. Connect to Main Application Window
+  - name: "Connect to Main Window"
+    action: connect_window
+    target: "app.html"
+    verify: "Pragma-git main toolbar is visible."
+
+  # Dismiss upgrade dialog if shown on version 0.0.0
+  - name: "Dismiss New Version Dialog (if present)"
+    action: click_if_present
+    selector: "#waitButton"
+    timeout: 2000
+
+  # 2. Open Settings Window
+  - name: "Open Settings Window"
+    action: eval
+    code: "_callback('clicked-settings')"
+    verify: "The Settings window opens."
+
+  # 3. Connect to Settings Window
+  - name: "Connect to Settings Window"
+    action: connect_window
+    target: "settings.html"
+    verify: "Connected to Settings window DOM."
+
+  # Dismiss "No repositories" warning dialog if shown on fresh profile
+  - name: "Dismiss 'No repositories' Alert (if present)"
+    action: click_if_present
+    selector: "#alertDialog button#no"
+    timeout: 2000
+
+  # 4. Open the 'Clone' Tab
+  - name: "Switch to 'Clone' Tab"
+    action: click
+    selector: "#cloneTab"
+    verify: "The 'Clone' tab is active and visible."
+
+  # 5. Switch from Local to Server Mode
+  - name: "Toggle Server Mode Switch"
+    action: click
+    selector: "#local_server_switch_clone"
+    verify: "The 'Server' mode is activated: server fields (username, host, path) become visible."
+
+  # 6. Fill in Remote Server Credentials and Repository Details
+  - name: "Enter SSH Server & Repository Details"
+    action: fill
+    fields:
+      "#urlToClone": "${ORIGIN_REPO_PATH}"
+      "input[name='username_clone']": "${USER}"
+      "input[name='server_clone']": "127.0.0.1:${TEST_SSHD_PORT}"
+      "input[name='folder_clone']": "${TARGET_CLONE_PATH}"
+    verify: |-
+      - Remote URL points to test repository.
+      - User: Current system user.
+      - Host: 127.0.0.1 on the test SSH port.
+      - Destination: Clean target clone folder path.
+
+  # 7. Select the new client key in the Clone tab (which is not yet authorized on server)
+  - name: "Set Client Key in Clone Tab"
+    action: eval
+    code: |-
+      (() => {
+        let input = document.getElementById('sshKeyInput_clone');
+        if (input) {
+          input.value = ${CLIENT_KEY_JSON};
+          input.dataset.keyPath = ${CLIENT_KEY_JSON};
+        }
+      })()
+    verify: "Selected client key is set in Clone tab."
+
+  # 8. Test Login (Initial state: Client key not yet authorized on server)
+  - name: "Click 'Test Login' (Expecting Key Needed)"
+    action: click
+    selector: "#testSshLoginButton_clone"
+    verify: "Login is tested against the ephemeral SSH server using the selected key."
+
+  # 9. Verify 'Key needed' status and 'Deploy public key' button appears
+  - name: "Verify Key Needed Status & Deploy Button"
+    action: wait_for_text
+    selector: "#testSshStatus_clone"
+    text: "Key needed"
+    verify: |-
+      - Status indicates 'Key needed'.
+      - '[Setup SSH]' link and 'Deploy public key' / 'Setup SSH...' button are displayed.
+      - Clone button is disabled.
+
+  # 10. Click "Setup SSH..." button to open the SSH Connection Setup dialog
+  - name: "Click 'Setup SSH...' Button"
+    action: click
+    selector: "#setupSshButton_clone"
+    verify: |-
+      - The 'SSH Connection Setup' modal dialog opens.
+      - Displays target user@host and key selection controls.
+
+  # 11. Select the client key in the SSH Configuration dialog
+  - name: "Choose SSH Key in Dialog"
+    action: eval
+    code: |-
+      (() => {
+        let inp = document.getElementById('sshConfigKeyInput');
+        if (inp) {
+          inp.value = ${CLIENT_KEY_JSON};
+          if (typeof updateSshConfigKeyDisplay === 'function') {
+            updateSshConfigKeyDisplay(${CLIENT_KEY_JSON});
+          }
+        }
+      })()
+    verify: "Selected private key path is set in the SSH configuration dialog."
+
+  # 12. Test login inside the dialog (Key not yet authorized on server)
+  - name: "Click 'Test Login' Inside Dialog (Expecting Key Needed)"
+    action: click
+    selector: "#sshConfigTestBtn"
+    verify: |-
+      - Dialog tests connection using selected key.
+      - Status shows 'Key needed'.
+      - 'Deploy public key' button becomes visible in dialog.
+
+  # 13. Wait for 'Key needed' status in dialog so Deploy button is displayed
+  - name: "Wait for Key Needed Status in Dialog"
+    action: wait_for_text
+    selector: "#sshConfigStatusText"
+    text: "Key needed"
+    verify: "Dialog status indicates 'Key needed'."
+
+  # 14. Deploy public key to server via UI button
+  # NOTE ON PRE-EXISTING KEY:
+  # The ephemeral test OpenSSH server runs without root privileges (PAM/password auth disabled).
+  # In production, deploying a public key authenticates with password or an existing key.
+  # The test harness pre-authorizes the host's default key so ssh-generate-key-login can connect
+  # and execute the real public key deployment when clicking 'Deploy public key'.
+  - name: "Click 'Deploy public key' Button"
+    action: click
+    selector: "#sshConfigDeployBtn"
+    verify: |-
+      - Pragma-git deploys selected public key to remote server's ~/.ssh/authorized_keys.
+      - Automatically re-tests login after deployment.
+
+  # 15. Verify login works inside dialog
+  - name: "Verify 'Login works' Inside Dialog"
+    action: wait_for_text
+    selector: "#sshConfigStatusText"
+    text: "Login works"
+    verify: "Dialog status indicates '✓ Login works'."
+
+  # 16. Save and close dialog
+  - name: "Click 'Save & Close' Dialog Button"
+    action: click
+    selector: "#sshConfigSaveBtn"
+    verify: |-
+      - Dialog saves key to clone configuration and closes.
+      - Clone window status updates to '✓ Login works'.
+
+  # 17. Verify 'Login works' and Clone Button Enabled in Clone tab
+  - name: "Verify Clone Tab 'Login works' Status"
+    action: wait_for_text
+    selector: "#testSshStatus_clone"
+    text: "Login works"
+    verify: |-
+      - Status text displays '✓ Login works'.
+      - Clone button is enabled.
+
+  # 18. Click Clone Button
+  - name: "Click 'Clone' Button"
+    action: click
+    selector: "#cloneServerRepoButton"
+    verify: "Clone process initiates over SSH."
+
+  # 19. Verify Clone Completed
+  - name: "Verify Clone Completed and Switched to Remote Tab"
+    action: wait_for_selector
+    selector: "#gitHubTab.active"
+    timeout: 25000
+    verify: |-
+      - Clone completed successfully over SSH.
+      - Settings window switched to the Remote ('gitHubTab') tab.
+      - The newly cloned repository is registered and active in state.
+
+  # 20. Validate Cloned Git Tree Matches Source Git Tree
+  - name: "Validate Cloned Git Tree Matches Source Git Tree"
+    action: assert_git_tree_match
+    source: "${ORIGIN_REPO_PATH}"
+    target: "${TARGET_CLONE_PATH}/remote_clone_source"
+    verify: |-
+      - Both repositories exist on disk.
+      - HEAD tree hash of cloned repository matches origin repository exactly.
+      - Manual check:
+          diff -u <(git --git-dir="${ORIGIN_REPO_PATH}" ls-tree -r HEAD) <(git -C "${TARGET_CLONE_PATH}/remote_clone_source" ls-tree -r HEAD)

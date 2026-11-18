@@ -140,13 +140,17 @@ for test_path in "${TEST_FILES[@]}"; do
         echo ""
 
         TMP_OUT=$(mktemp)
+        set -o pipefail   # exit code of the test, not of tee (also inside the ( ... ) subshells used on Windows)
         if [[ "$test_path" == *.js ]]; then
             node "$test_path" 2>&1 | tee "$TMP_OUT"
         else
             bash "$test_path" 2>&1 | tee "$TMP_OUT"
         fi
-        exit_code=${PIPESTATUS[0]}
+        exit_code=$?
+        set +o pipefail
         OUTPUT=$(cat "$TMP_OUT")
+        # Safety net: any reported [FAIL] fails the suite, whatever exit code was propagated
+        if [ $exit_code -eq 0 ] && echo "$OUTPUT" | grep -q '\[FAIL\]'; then exit_code=1; fi
         rm -f "$TMP_OUT"
 
         if [ $exit_code -eq 0 ]; then

@@ -8,23 +8,17 @@
 #
 # Example:   ssh_folder/ssh-test-if-file-exists ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test tmp/jan
 
-# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS
+# Import functions and constants: TEMP_FILE_LOCATION, SSH_OPTIONS (includes key selected by PRAGMA_SSH_KEY)
 source $(dirname $0)/lib/ssh-functions
 
 # Get server info
 getSshUrlParts "$1"  # Sets SERVER PORT SERVER_BASE_PATH
-KEY_PATH="$2"
 
 # Setup paths
 SERVER_PATH="${SERVER_BASE_PATH}"
 
-KEY_OPT=""
-if [ -n "$KEY_PATH" ] && [ -f "$KEY_PATH" ]; then
-    KEY_OPT="-i \"$KEY_PATH\" -o IdentitiesOnly=yes"
-fi
-
 # Execute the test command 
-ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS $KEY_OPT "test -e \"$SERVER_PATH\""
+ssh -T $SERVER  -p ${PORT} $SSH_OPTIONS "test -e \"$SERVER_PATH\""
 exit_code=$?
 
 case $exit_code in

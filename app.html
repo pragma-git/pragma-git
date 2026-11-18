@@ -170,13 +170,14 @@
                     
                                                      
             <!-- Icon Merge  -->                             
-            <div class="top-titlebar-merge-icon tooltip-bottom " data-tooltip="Merge">
+            <div id="top-titlebar-merge-icon-wrapper" class="top-titlebar-merge-icon tooltip-bottom " data-tooltip="Merge">
                 <img id="top-titlebar-merge-icon" height="17" width="17" 
                     onclick="updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');
                              _callback('clicked-merge-button')" 
-                    onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png');" 
+                    onmouseover="updateImageUrl('top-titlebar-merge-icon', 'images/merge_hover.png'); updateMergeTooltip();" 
                     onmouseout= "updateImageUrl('top-titlebar-merge-icon', 'images/merge.png');" 
                     src="images/merge.png">
+                <span id="top-titlebar-merge-badge" class="top-titlebar-merge-badge">★</span>
             </div> 
                     
                             
@@ -274,12 +275,13 @@
                 id="message"
             
                 onmousedown="if (event.detail === 1) { window._messageHadFocus = (document.activeElement === this); }"
+                onfocus="window._messageHadFocus = true; _callback('message_focus');"
                 onkeyup="_callback('message_key_up');"
                 oninput="_callback('message_key_up');"
                 ondblclick="_callback('message_dblclick');"
-                onblur="window._messageHadFocus = false; window._msgAllowAction = true; _callback('message_blur');"
+                onblur="window._messageHadFocus = false; _callback('message_blur'); window._msgAllowAction = true;"
             
-                placeholder="You may write what is ongoing here,&#10;&#10;Change text to commit message (or stash name) when done"
+                placeholder="No previous commits"
                 readonly
             ></textarea>
             
@@ -527,11 +529,11 @@
                 
                                                    
             <!-- Icon Stash  -->                             
-            <div class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
+            <div id="bottom-titlebar-stash-icon-wrapper" class="bottom-titlebar-stash-icon tooltip-top-right " data-tooltip="Stash uncommitted">
                 <img id="bottom-titlebar-stash-icon" height="17" width="auto" 
                     onclick="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');
                              _callback('clicked-stash-button')" 
-                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png');" 
+                    onmouseover="updateImageUrl('bottom-titlebar-stash-icon', 'images/stash_hover.png'); updateStashTooltip();" 
                     onmouseout= "updateImageUrl('bottom-titlebar-stash-icon', 'images/stash.png');" 
                     src="images/stash.png">
             </div> 
@@ -587,6 +589,43 @@
     </dialog>  
  
  
+    <!-- Confirm merge upstream dialog -->
+    <dialog id="confirmMergeUpstreamDialog" class="warning">
+        <b><div id='confirmMergeUpstreamTitle'>Merge from upstream?</div></b><br>
+        <div>
+            <span id="confirmMergeUpstreamMessage"></span>
+            <br><br>
+            <button id="confirmMergeUpstreamOK" style="float:right; margin-left: 10px;"
+                onclick="_callback('confirmMergeUpstreamOK'); let dlg = document.getElementById('confirmMergeUpstreamDialog'); if (dlg && typeof dlg.close === 'function') { dlg.close(); }">
+                Merge
+            </button>
+            <button id="confirmMergeUpstreamCancel" style="float:right"
+                onclick="let dlg = document.getElementById('confirmMergeUpstreamDialog'); if (dlg && typeof dlg.close === 'function') { dlg.close(); }">
+                Cancel
+            </button>
+        </div>
+    </dialog>
+
+
+    <!-- Uncommitted files before pull warning dialog -->
+
+    <dialog id="uncommittedBeforePullDialog" class="warning">
+        <b>Uncommitted changes</b><br>
+        <br>
+        <div>
+            <span>
+                You have modified files in your repository.<br><br>
+                Please add a description and press <b>Store</b> (or click the <b>Stash</b> icon) before downloading updates from the server.
+            </span>
+            <br><br>
+            <button style="float:right"
+                onclick="document.getElementById('uncommittedBeforePullDialog').close();">
+                OK
+            </button>
+        </div>
+    </dialog>
+
+
     <!--  Amend alert dialog  --> 
 
     <dialog id="amendDialog"  class="warning">  
@@ -779,6 +818,11 @@
 
 
     <!-- Force push, or pull dialog -->   
+    <!-- NOTE: This single dialog (#forcePushOrPullPushDialog) is dynamically reused for all diverged scenarios:
+         1) AMENDED_COMMIT: User amended a commit already on remote (recommends 'Overwrite server')
+         2) COLLEAGUE_COMMITS: Teammate pushed newer commits to remote (recommends 'Download updates')
+         3) GENERAL_BEHIND / Fallback: Standard prompt when branch is behind
+         Text, descriptions, and recommended radio selection are populated dynamically in showForcePushOrPullPushDialog() in app.js -->
   
     <dialog id="forcePushOrPullPushDialog"  class="error" style="overflow: unset">  
         
@@ -797,20 +841,20 @@
         
         
         <!-- Warning text -->  
-        <b>WARNING -- local branch behind remote branch !</b><br>
-             <br>
+        <b id="divergedDialogTitle">WARNING -- local branch behind remote branch !</b><br>
+        <div id="divergedDialogDescription" style="font-size: 11px; margin: 6px 0 10px 0; color: #444; display: none;"></div>
 
-        <label for="behindPull">
+        <label for="behindPull" id="behindPullLabel">
             <input type="radio" id="behindPull" name="behindRemoteRadiobuttonGroup" value="Pull" checked>
-            Get remote, and push (pull --rebase, and push)
+            <span id="behindPullText">Download updates and combine with local changes (pull)</span>
         </label>
 
         <!-- Radio-buttons -->  
 
         
-        <label for="behindForcePush">
+        <label for="behindForcePush" id="behindForcePushLabel">
             <input type="radio" id="behindForcePush" name="behindRemoteRadiobuttonGroup" value="ForcePush">
-            Force push -- overwrite remote commits (dangerous)
+            <span id="behindForcePushText">Overwrite server -- discard remote updates (dangerous)</span>
         </label>
         
         
@@ -840,7 +884,10 @@
         </button>   
          
         <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
-            onclick="document.getElementById('forcePushOrPullPushDialog').close();">
+            onclick="
+                document.getElementById('forcePushOrPullPushDialog').close();
+                _callback('clicked-forcePushOrPullPushDialog', 'Cancel');
+            ">
             Cancel
         </button>  
         
@@ -997,11 +1044,11 @@
                     
                     // Hint text about edit commit message
                     if (getMode() == 'NO_FILES_TO_COMMIT'){
+                        restoreRepoDraftMessage();
+                        document.getElementById('store-button').disabled = true;
                         document.getElementById('message').blur();  // Unfocus
                         document.getElementById('up-arrow').click();
-                        let hasDraft = (readMessage().trim().length > 0);
-                        document.getElementById('edit_commit_text_div').innerHTML = '(double-click to change)';
-                        document.getElementById('edit_commit_text_div').style.visibility = hasDraft ? 'hidden' : 'visible';
+                        updateEditCommitTextDiv();
                     }
                     
                     // Close find fields

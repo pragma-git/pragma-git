@@ -107,8 +107,8 @@ async function _callback( name, event, event2){
     
     let folder = state.repos[state.repoNumber].localFolder;
     
-    // Bail out if pragma-merge is open and one of the listed callback-names
-    const importantCallback = 'diffLinkAll, diffLink, diffLinkHistory, editLinkHistory, '.includes( `${name},`); // Note: end name with ','
+    // Allow opening multiple merge/diff windows simultaneously via session IDs
+    const importantCallback = false; // Multi-window difftool/mergetool enabled
     if ( ( opener.merge_win !== undefined ) &&  importantCallback ){
         
         // Focus pragma-merge window
@@ -209,11 +209,13 @@ async function _callback( name, event, event2){
             }
        
             // Git 
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder).raw(command );
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw(command);
+            } catch(err) {
+                console.error('diffLinkAll -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLinkAll error: ' + (err.message || err));
+                }
             }
             
             
@@ -290,14 +292,13 @@ async function _callback( name, event, event2){
             ];
 
             // Git 
-            status_data;
-            try{
-                simpleGit( state.repos[state.repoNumber].localFolder)
-                    .raw(command, onStatus );
-                    function onStatus(err, result){ console.log(result); console.log(err); status_data = result; };
-            }catch(err){
-                console.log('diffLink -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( state.repos[state.repoNumber].localFolder ).raw(command);
+            } catch(err) {
+                console.error('diffLink -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLink error: ' + (err.message || err));
+                }
             }
         
 
@@ -329,11 +330,13 @@ async function _callback( name, event, event2){
             console.log( command.join(' ') );
 
             // Git 
-            try{
-                simpleGit( folder).raw(command );
-            }catch(err){
-                console.log('diffLinkHistory -- caught error ');
-                console.log(err);
+            try {
+                await simpleGit( folder).raw(command );
+            } catch(err) {
+                console.error('diffLinkHistory -- caught error:', err);
+                if (opener && typeof opener.pragmaLog === 'function') {
+                    opener.pragmaLog('diffLinkHistory error: ' + (err.message || err));
+                }
             }
         
 
@@ -365,9 +368,14 @@ async function _callback( name, event, event2){
             }
             
 
-            // Setup running pragma-merge in edit mode.  Edit mode means one pane (not rw, which is another flag)
+            // Setup running pragma-merge in edit mode. Edit mode means one pane (not rw, which is another flag)
             try{
-                
+                if (opener && typeof opener.openPragmaMergeDirect === 'function') {
+                    opener.pragmaLog('Starting pragma-merge in edit mode (direct)');
+                    opener.openPragmaMergeDirect(file, rw_switch, { root: folder });
+                    break;
+                }
+
                 const { exec } = require("child_process");
                 opener.pragmaLog('Starting pragma-merge in edit mode');
                 

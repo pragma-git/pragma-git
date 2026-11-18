@@ -19,13 +19,16 @@ source "$SCRIPT_DIR/lib/ssh-functions"  # Standard setup for SSH
 
 # INITIALIZE LOGGING (all echo commands and errors prefixed)
 PRAGMA_LOG="$TMP/pragma-git-log.txt"
+if [ ! -d "$(dirname "$PRAGMA_LOG")" ]; then
+    mkdir -p "$(dirname "$PRAGMA_LOG")" 2>/dev/null
+fi
 
 # Redirect ALL output (stdout and stderr) to the log
 PID=$$
 PREFIX="($PID) ssh-generate-key-login -- "
 
 exec > >(while IFS= read -r line; do
-    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG"
+    echo "$PREFIX$line" | tee -a "$PRAGMA_LOG" 2>/dev/null || echo "$PREFIX$line"
 done) 2>&1
 
 
@@ -33,19 +36,19 @@ done) 2>&1
 
 REMOTE_USER="$1"
 REMOTE_HOST="$2"
-KEY_INPUT="${3:-id_ed25519}"
-
-if [[ "$KEY_INPUT" == /* ]]; then
-    KEY_PATH="$KEY_INPUT"
-elif [[ "$KEY_INPUT" == ~* ]]; then
-    KEY_PATH="${KEY_INPUT/#\~/$HOME}"
-else
-    KEY_PATH="$HOME/.ssh/$KEY_INPUT"
+REMOTE_PORT="22"
+if [[ "$REMOTE_HOST" == *:* ]]; then
+    REMOTE_PORT="${REMOTE_HOST##*:}"
+    REMOTE_HOST="${REMOTE_HOST%:*}"
+    [[ -z "$REMOTE_PORT" ]] && REMOTE_PORT="22"
 fi
+
+# Key to deploy is selected centrally in lib/ssh-functions (PRAGMA_SSH_KEY => SSH_KEY_PATH)
+KEY_PATH="${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 KEY_PATH="${KEY_PATH%.pub}"
 
 if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_HOST" ]; then
-    echo "Usage: $0 <remote-user> <remote-host> [keyname_or_path]"  
+    echo "Usage: [PRAGMA_SSH_KEY=<keyname_or_path>] $0 <remote-user> <remote-host>"  
     exit 1
 fi
 
@@ -70,27 +73,38 @@ if [ -e "$KEY_PATH" ]; then
         echo "==> Generating missing public key from private key..."
         ssh-keygen -y -f "$KEY_PATH" > "${KEY_PATH}.pub"
     fi
+elif [ "$ISWSL" = true ]; then
+    # On Windows, %USERPROFILE%\.ssh is the source of truth and WSL ~/.ssh is a disposable mirror (ssh-sync-keys).
+    # A key generated here would be deleted on next sync -- keys must be generated on the Windows side.
+    echo "ERROR: Key not found in WSL: $KEY_PATH"
+    echo "       Generate the key in Windows (%USERPROFILE%\\.ssh) and let Pragma-git sync it to WSL."
+    exit 1
 else
     echo "==> Generating new ED25519 key (no passphrase)…"
     mkdir -p "$(dirname "$KEY_PATH")"
-    ssh-keygen -t ed25519 -f "$KEY_PATH" -N ""
+    KEY_USER="${USER:-$(whoami 2>/dev/null || echo "user")}"
+    KEY_HOST="${HOSTNAME:-$(hostname 2>/dev/null || echo "local")}"
+    ssh-keygen -t ed25519 -f "$KEY_PATH" -N "" -C "${KEY_USER}@${KEY_HOST} (pragma-git)"
 fi
 
 ###############################################################################
 # Prepare ControlMaster session (ONE PASSWORD, ONE FINGERPRINT DIALOG)
 ###############################################################################
-CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}"
+CONTROL_SOCKET="/tmp/ssh_mux_${REMOTE_USER}_${REMOTE_HOST}_${REMOTE_PORT}"
+rm -f "$CONTROL_SOCKET"
 
 echo "==> Opening master SSH connection (one password will be asked)…"
 
-EXIT="$HOME/.Pragma-git/.tmp/exit-pragma-askpass-ssh"
+EXIT="$TMP/exit-pragma-askpass"
 rm -f "$EXIT"
 
-# Start real master connection (handles fingerprint + password)
-ssh -o ControlMaster=yes \
+# Start real master connection (handles fingerprint + password; -p supports non-default ports)
+ssh -p "$REMOTE_PORT" \
+    -o ControlMaster=yes \
     -o ControlPersist=600 \
     -o ControlPath="$CONTROL_SOCKET" \
-    -N "$REMOTE_USER@$REMOTE_HOST" &
+    -o StrictHostKeyChecking=accept-new \
+    -N "$REMOTE_USER@$REMOTE_HOST" < /dev/null &
 SSH_PID=$!
 
 # Wait for either:
@@ -127,7 +141,7 @@ fi
 echo "==> Master SSH connection active."
 
 
-SSH_CM_OPTS="-o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
+SSH_CM_OPTS="-p $REMOTE_PORT -o ControlMaster=no -o ControlPath=$CONTROL_SOCKET"
 
 ###############################################################################
 # Detect PQ KEX support (just warn later)
@@ -165,7 +179,7 @@ ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 echo "==> Uploading public key…"
 
-cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
+tr -d '\r' < "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
     cat > /tmp/remote_tmp_key.pub
 "
 
@@ -175,15 +189,20 @@ cat "${KEY_PATH}.pub" | ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 echo "==> Installing key on remote host…"
 
+# Allow PRAGMA_REMOTE_AUTHORIZED_KEYS override for isolated test environments (e.g. ephemeral test sshd)
+# Defaults to standard ~/.ssh/authorized_keys
+REMOTE_AUTH_KEYS="${PRAGMA_REMOTE_AUTHORIZED_KEYS:-~/.ssh/authorized_keys}"
+
 ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
-    touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys
+    mkdir -p \"\$(dirname \"$REMOTE_AUTH_KEYS\")\" 2>/dev/null
+    touch \"$REMOTE_AUTH_KEYS\" && chmod 600 \"$REMOTE_AUTH_KEYS\"
 
-    PUBKEY_CONTENT=\$(cat /tmp/remote_tmp_key.pub)
+    PUBKEY_CONTENT=\$(tr -d '\r' < /tmp/remote_tmp_key.pub)
 
-    if grep -qxF \"\$PUBKEY_CONTENT\" ~/.ssh/authorized_keys; then
+    if grep -qxF \"\$PUBKEY_CONTENT\" \"$REMOTE_AUTH_KEYS\"; then
         echo '   -> Key already present — no change.'
     else
-        echo \"\$PUBKEY_CONTENT\" >> ~/.ssh/authorized_keys
+        echo \"\$PUBKEY_CONTENT\" >> \"$REMOTE_AUTH_KEYS\"
         echo '   -> Key added successfully.'
     fi
 
@@ -194,7 +213,7 @@ ssh $SSH_CM_OPTS "$REMOTE_USER@$REMOTE_HOST" "
 ###############################################################################
 # Close ControlMaster connection
 ###############################################################################
-ssh -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
+ssh -p "$REMOTE_PORT" -o ControlPath="$CONTROL_SOCKET" -O exit "$REMOTE_USER@$REMOTE_HOST" 2>/dev/null
 
 
 ###############################################################################

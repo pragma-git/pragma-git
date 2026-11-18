@@ -138,4 +138,77 @@ try {
     assertFail('6.8-6.9: generateLocalSshKey execution error', err.message);
 }
 
-printSuiteResult();
+// Test 7: isWslAvailable function exists and returns boolean
+(async () => {
+    try {
+        if (typeof sshLib.isWslAvailable === 'function') {
+            const wslRes = await sshLib.isWslAvailable();
+            if (typeof wslRes === 'boolean') {
+                assertPass(`6.10: isWslAvailable returns boolean (${wslRes}) on platform (${process.platform})`);
+            } else {
+                assertFail('6.10: isWslAvailable return type', typeof wslRes);
+            }
+        } else {
+            assertFail('6.10: isWslAvailable', 'Function is not exported');
+        }
+
+        // Test 8: formatSshErrorDetails classifies errors with actionable suggestions
+        if (typeof sshLib.formatSshErrorDetails === 'function') {
+            const timeoutDiag = sshLib.formatSshErrorDetails('Connection timed out', 'ssh://jan@linus/repo');
+            if (timeoutDiag && timeoutDiag.summary.includes('timed out') && timeoutDiag.server === 'linus') {
+                assertPass('6.11: formatSshErrorDetails accurately classifies connection timeout');
+            } else {
+                assertFail('6.11: formatSshErrorDetails timeout', JSON.stringify(timeoutDiag));
+            }
+
+            const keyDiag = sshLib.formatSshErrorDetails('Permission denied (publickey)', 'ssh://jan@myserver/repo');
+            if (keyDiag && keyDiag.summary.includes('rejected') && keyDiag.suggestion.includes('SSH')) {
+                assertPass('6.12: formatSshErrorDetails accurately classifies key rejection');
+            } else {
+                assertFail('6.12: formatSshErrorDetails key rejection', JSON.stringify(keyDiag));
+            }
+        } else {
+            assertFail('6.11-6.12: formatSshErrorDetails', 'Function is not exported');
+        }
+
+        // Test 9: sshKeyEnv helper resolves key environment correctly
+        if (typeof sshLib.sshKeyEnv === 'function') {
+            global.state = {
+                repos: [
+                    { localFolder: 'ssh://jan@130.239.99.15/home/jan/repoA', sshKey: '/Users/jan/.ssh/id_test_a' },
+                    { localFolder: 'ssh://jan@130.239.99.15/home/jan/repoA_sub', sshKey: '/Users/jan/.ssh/id_test_sub' }
+                ]
+            };
+            const envA = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA/.git/HEAD');
+            if (envA.PRAGMA_SSH_KEY && envA.PRAGMA_SSH_KEY.includes('id_test_a')) {
+                assertPass('6.13: sshKeyEnv resolves repo sshKey from longest prefix match');
+            } else {
+                assertFail('6.13: sshKeyEnv longest prefix match', JSON.stringify(envA));
+            }
+
+            const envOverride = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA', '/custom/path/id_override.pub');
+            if (envOverride.PRAGMA_SSH_KEY && envOverride.PRAGMA_SSH_KEY.includes('id_override') && !envOverride.PRAGMA_SSH_KEY.endsWith('.pub')) {
+                assertPass('6.14: sshKeyEnv keyOverride takes precedence and strips .pub');
+            } else {
+                assertFail('6.14: sshKeyEnv keyOverride', JSON.stringify(envOverride));
+            }
+        } else {
+            assertFail('6.13-6.14: sshKeyEnv', 'Function is not exported');
+        }
+
+        // Test 10: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported
+        if (typeof sshLib.sshLs === 'function' &&
+            typeof sshLib.sshGet === 'function' &&
+            typeof sshLib.sshPut === 'function' &&
+            typeof sshLib.fs_existsSync === 'function' &&
+            typeof sshLib.fs_mkdir === 'function') {
+            assertPass('6.15: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported by ssh-folder-lib.js');
+        } else {
+            assertFail('6.15: Exported SSH File Browser helpers', 'Missing one or more exported functions');
+        }
+    } catch (err) {
+        assertFail('6.10-6.12: Execution error', err.message);
+    }
+
+    printSuiteResult();
+})();

@@ -9,7 +9,13 @@ ISWSL=false
 
 # Mac or Linux  
 TMP="$HOME/.Pragma-git/.tmp"	# /home/jan
-CONTROLPATH="${TMP}/%r@%h:%p"	# Controlpath in "$HOME/.Pragma-git/.tmp"
+# ControlPath socket max length on Unix is 104-108 bytes.
+# If TMP path is long (e.g. temporary sandbox /var/folders/.../T/...), use short /tmp path to avoid "ControlPath too long".
+if [ ${#TMP} -gt 45 ]; then
+    CONTROLPATH="/tmp/pg_%r_%h_%p"
+else
+    CONTROLPATH="${TMP}/%r@%h:%p"
+fi
 TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders'          # Download folder temporary files (same path defined in pragma-merge.js)
 
 # Windows (git over ssh  is implemented using WSL)
@@ -17,17 +23,71 @@ if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
 
 	ISWSL=true
 
-    # Make paths for running inside WSL
-    TMP="${TMP/\/home/\/mnt\/c\/Users}" # Transform /home/jan/.Pragma-git/.tmp => /mnt/c/Users/jan/.Pragma-git/.tmp  
+    # 1. Fast path: assume WSL username matches Windows username (/home/jan -> /mnt/c/Users/jan)
+    WIN_WSL_PROFILE=""
+    if [[ "$HOME" == /home/* ]]; then
+        WIN_WSL_PROFILE="${HOME/\/home/\/mnt\/c\/Users}"
+    fi
+
+    # 2. If .Pragma-git does not exist there (username mismatch or root), use cached profile or query Windows once
+    if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE/.Pragma-git" ]; then
+        PROFILE_CACHE="/tmp/pragma_win_profile"
+        if [ -f "$PROFILE_CACHE" ]; then
+            WIN_WSL_PROFILE=$(<"$PROFILE_CACHE")
+        fi
+        if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE" ]; then
+            WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r\n')
+            if [ -n "$WIN_USER_PROFILE" ]; then
+                WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
+                if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+                    echo "$WIN_WSL_PROFILE" > "$PROFILE_CACHE" 2>/dev/null
+                fi
+            fi
+        fi
+    fi
+
+    if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
+        TMP="$WIN_WSL_PROFILE/.Pragma-git/.tmp"
+        TEMP_FILE_LOCATION="$WIN_WSL_PROFILE/AppData/Local/Temp/pragma-git-ssh-folders"
+    fi
+
+    # Final fallback if TMP directory cannot be established in Windows mount
+    if [ ! -d "$(dirname "$TMP")" ]; then
+        TMP="$HOME/.Pragma-git/.tmp"
+    fi
+
 	CONTROLPATH="${HOME}/%r@%h:%p"      # Sockets must be in native linux, not a mount points /mnt/c/... . Use  "$HOME/"
 	
-	TEMP_FILE_LOCATION="${HOME/\/home/\/mnt\/c\/Users}"
-	TEMP_FILE_LOCATION="${TEMP_FILE_LOCATION}/AppData/Local/Temp/pragma-git-ssh-folders"
 	if [ ! -d "$TEMP_FILE_LOCATION" ]; then
-		mkdir -p "$TEMP_FILE_LOCATION"
+		mkdir -p "$TEMP_FILE_LOCATION" 2>/dev/null
 	fi
-	
-	
+fi
+
+# Ensure TMP directory exists
+if [ ! -d "$TMP" ]; then
+	mkdir -p "$TMP" 2>/dev/null || TMP="/tmp"
+fi
+
+# SSH KEY SELECTION (central -- scripts in ssh_folder/ must NOT parse keys themselves)
+#
+# Pragma-git passes the key for the current ssh-folder repo in environment variable PRAGMA_SSH_KEY
+# (on Windows forwarded into WSL through WSLENV):
+#   - empty            => ssh default keys
+#   - bare file name   => "$HOME/.ssh/<name>"   (Windows: WSL ~/.ssh is a mirror of %USERPROFILE%\.ssh, see ssh-sync-keys)
+#   - path with "/"    => used as is            (macOS / Linux)
+SSH_KEY_PATH=""
+SSH_KEY_OPTIONS=""
+if [ -n "$PRAGMA_SSH_KEY" ]; then
+    case "$PRAGMA_SSH_KEY" in
+        "~/"*) SSH_KEY_PATH="$HOME/${PRAGMA_SSH_KEY#\~/}" ;;
+        */*)   SSH_KEY_PATH="$PRAGMA_SSH_KEY" ;;
+        *)     SSH_KEY_PATH="$HOME/.ssh/$PRAGMA_SSH_KEY" ;;
+    esac
+    SSH_KEY_PATH="${SSH_KEY_PATH%.pub}"   # Always point at private key
+    SSH_KEY_OPTIONS=" -i $SSH_KEY_PATH -o IdentitiesOnly=yes "
+
+    # Separate multiplexed master connection per key (otherwise a master opened with key A is reused when testing key B)
+    CONTROLPATH="${CONTROLPATH}-$(basename "$SSH_KEY_PATH")"
 fi
 
 # SSH AND SCP OPTIONS
@@ -36,8 +96,8 @@ CONNECT_OPTIONS=" -4 -o ConnectTimeout=${TIMEOUT}  -o PreferredAuthentications=p
 
 REUSE_SSH_OPTIONS=" -o ControlMaster=auto -o ControlPersist=1m -o ControlPath=${CONTROLPATH} "  # Reuse ssh channel (speed up )
 
-# Combine connection and reuse options  
-SSH_OPTIONS="${CONNECT_OPTIONS} ${REUSE_SSH_OPTIONS}"
+# Combine connection, key and reuse options  
+SSH_OPTIONS="${CONNECT_OPTIONS} ${SSH_KEY_OPTIONS} ${REUSE_SSH_OPTIONS}"
 
 SSH_LOG="${TMP}/ssh-log.log"
 MERGE_LOG="$TMP/mergelog.txt"

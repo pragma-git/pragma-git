@@ -10,14 +10,14 @@
 # Changes section :
 
 read -r -d '' CHANGES << ---
-* **Integrated Conflict Resolver**: Built-in Pragma-merge with 2-way and 3-way visual resolution, single-click chunk adoption, and syntax highlighting.
-* **Remote Repositories over SSH**: Control headless repositories directly from your desktop, with 1-click terminal and folder launch.
-* **Scratchpad Commit Workflow**: Commit message box acts as an active scratchpad with auto-saved drafts per repository.
-* **Live CI/CD Badges**: Real-time titlebar build status for GitHub Actions, GitLab CI, Bitbucket Pipelines, and Gitea.
-* **Interactive Help Guide**: Live click-to-explain inspector in About & Help with search and visual previews.
-* **Refreshed Themes**: Seamless high-contrast dark and light modes with instant switching.
-* **Drag & Drop Setup**: Drop folders to open or initialize, or drop Git URLs to clone.
-* **Privacy & Stability**: Zero external telemetry; full automated test coverage.
+* **Upstream Fork Sync**: Detect when parent repositories are ahead, with direct star-badge indicators, 1-click upstream merges, and diagnostic fork details.       
+* **SSH Server File Browser**: Built-in remote file manager with folder navigation, live file creation, and transparent local edit auto-sync via sshGet/sshPut.     
+* **Multi-Window Pragma-Merge**: Open multiple diff and merge windows simultaneously with isolated sessions, whitespace-ignore toggles, and remembered window sizes.
+* **Context-Aware Divergence Prompts**: Smart prompts distinguishing amended commits from colleague pushes to recommend the safe action on diverged pull/push.      
+* **Seamless Windows & WSL SSH**: Automatic mirroring of Windows SSH keys to WSL with POSIX permissions and hardened path escaping for spaces.                      
+* **Quick Access Recent Repos**: Recent repositories pinned directly to the root menu with customizable count limits and full-row table selection in Settings.      
+* **Unobtrusive Background Operations**: Clean, non-intrusive periodic status checks that never steal desktop window focus while multitasking.                      
+* **Automated End-to-End UI Testing**: Full CDP-based test framework exercising live Git clones, upstream merges, and cryptographic tree validations. 
 ---
 
 #

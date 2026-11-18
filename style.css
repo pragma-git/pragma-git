@@ -319,13 +319,12 @@ div#inner-content {
 }
 
 .top-titlebar-ci-placeholder {
-  visibility: hidden;
+  visibility: visible;
   display: inline-block;
   vertical-align: middle;
-  width: 36px;
   height: 19px;
-  margin-left: 5px;
-  margin-right: 10px;
+  margin-left: 0;
+  margin-right: 0;
   text-align: center;
   line-height: 19px;
   position: relative;
@@ -339,6 +338,8 @@ div#inner-content {
   vertical-align: middle;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  margin-left: 4px;
+  margin-right: 6px;
   padding: 0;
   border: none;
   background: transparent;
@@ -437,6 +438,20 @@ body.dark .top-titlebar-ci-badge {
   height: 17px;
   margin-top: 6px;
   margin-bottom: 6px;
+  overflow: visible;
+  -webkit-app-region: no-drag;
+}
+
+.top-titlebar-merge-badge {
+  display: none;
+  position: absolute;
+  top: -4px;
+  right: -7px;
+  font-size: 9px;
+  line-height: 9px;
+  color: #ffffff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
   -webkit-app-region: no-drag;
 }
 

@@ -374,20 +374,22 @@ class git_rest_api {
     
         async fetchWithApi( apiurl, options){
             
-            let response = { ok: false, status: '', json: ''}; // Default
+            let response = { ok: false, status: '', statusText: '', json: ''}; // Default
 
             // Fetch
             let json;  // Undefined if fetch fails
+            let errorMessage = '';
             try {
                 response = await fetch( apiurl, options);
                 
                 if (!response.ok) {
-                  throw new Error(`GitHub API error: ${response.statusText}`);
+                  throw new Error(`Git provider API error: ${response.statusText || response.status}`);
                 }
             
                 json = await response.json();
                 console.log('Repository Information:', json);
             } catch (error) {
+                errorMessage = error.message;
                 console.error('Error fetching repository info:', error.message);
             }
 
@@ -395,6 +397,8 @@ class git_rest_api {
             return { 
                 ok: response.ok, 
                 status: response.status,
+                statusText: response.statusText || '',
+                errorMessage: errorMessage,
                 json: json
             }
         }

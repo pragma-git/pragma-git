@@ -1,0 +1,83 @@
+<style>        
+    img{
+        filter: invert( 0% );
+    }
+
+    img[src="../images/find_black.png"] 
+    {
+        filter: invert( var(--image-invert) );
+    }
+
+    body.light .folder-icon,
+    body.light img[src*="folder"] {
+        filter: var(--titlebar-icon-filter, brightness(0.35));
+    }
+
+    body.dark .folder-icon,
+    body.dark img[src*="folder"] {
+        filter: var(--titlebar-icon-filter, none);
+    }
+</style>        
+
+
+<h2>SSH Server File Browser</h2>
+
+<p>
+The SSH Server File Browser allows you to inspect and modify files directly in remote Git repositories hosted on an SSH server. 
+It provides seamless, transparent editing by managing local temporary working copies and automatically syncing saved changes back to the remote server over SSH.
+</p>
+
+<h4>When is this window opened?</h4>
+<p>
+Clicking the <b>Project folder</b> icon (<img class="folder-icon" src="../images/folder.png" height="15" width="15" style="vertical-align: middle;">) in the bottom titlebar of the main window when your active repository is located on an SSH server (<code>ssh://...</code>) opens this file browser.
+If you switch repositories to another SSH repository and click the folder icon again, a new window will open for that repository, cascaded down and to the right.
+</p>
+
+<h4>Navigation</h4>
+<p>
+<ul>
+    <li><b>Top Breadcrumb bar:</b> Displays the full repository path from the repository root (🏠). Click any previous folder segment to jump straight to that folder. When deep inside nested folders, the path gracefully abbreviates intermediate segments (<code>...</code>) so the last item always remains visible.</li>
+    <li><b>Up button:</b> Click the <button>⬆ Up</button> button on the right of the path bar (or double-click the <code>..</code> row in the table) to go up one directory level.</li>
+    <li><b>Opening folders:</b> Double-click any folder row in the table (or click the <a>(open)</a> link in the Action column) to navigate into that folder.</li>
+    <li><b>Refresh:</b> Click the <button>↻ Refresh</button> button below the table (or press <kbd>Cmd</kbd>+<kbd>R</kbd> on macOS / <kbd>Ctrl</kbd>+<kbd>R</kbd> on Windows/Linux) to reload the contents of the current remote directory.</li>
+</ul>
+</p>
+
+<h4>Editing Files &amp; Automatic Syncing</h4>
+<p>
+Pragma-git allows you to edit files on remote servers using local editors without manual transfer commands:
+<ol>
+    <li><b>Opening a file:</b> Double-click a file (or click the <a>(edit)</a> link). Pragma-git securely downloads the file to an isolated local temporary folder and opens it in your configured editor.</li>
+    <li><b>Watching changes:</b> The opened file is added to the <b>Open Files</b> list at the bottom of the window, and a file watcher monitors your local copy.</li>
+    <li><b>Automatic syncing on save:</b> Whenever you save the file in your editor (<kbd>Cmd</kbd>+<kbd>S</kbd> / <kbd>Ctrl</kbd>+<kbd>S</kbd>), Pragma-git instantly detects the modification and uploads the updated content back to the SSH server. The live status changes to <span style="color: var(--green-text); font-weight: bold;">✓ Synced HH:MM:SS</span>, and Pragma-git's main window updates Git status and modified file counts.</li>
+    <li><b>Focusing opened files:</b> If a file is already open, clicking its path in the <b>Open Files</b> panel brings your editor back into focus.</li>
+    <li><b>Stopping synchronization:</b> Clicking the <b>✕</b> button next to a file in the Open Files list stops watching that file and removes it from the sync list.</li>
+</ol>
+</p>
+
+<h4>Configuring the Editor</h4>
+<p>
+You can choose which editor Pragma-git uses to open remote files in <b>Settings &rarr; Software &rarr; Git &amp; system tools &rarr; Editor</b>:
+<ul>
+    <li><b>Empty (default):</b> Opens the built-in <code>pragma-merge</code> editor in edit mode.</li>
+    <li><b><code>system</code>:</b> Uses your operating system's default application associated with that file type.</li>
+    <li><b>Custom command/app:</b> Specify any custom code editor or command (e.g. <code>code</code>, <code>subl</code>, <code>atom</code>, <code>gedit</code>, or an app name).</li>
+</ul>
+</p>
+
+<h4>Creating Files and Folders</h4>
+<p>
+Below the directory table, you have quick action buttons:
+<ul>
+    <li><b><button>+ New File</button>:</b> Creates a new file in the currently viewed remote directory. You can choose whether to open it in your editor immediately.</li>
+    <li><b><button>+ New Folder</button>:</b> Creates a new subdirectory in the currently viewed remote folder.</li>
+</ul>
+</p>
+
+<h4>Closing &amp; Safety Warning</h4>
+<p>
+As long as the SSH Server File Browser window remains open, watchers keep syncing your saved changes.
+<br><br>
+If you close the file browser (or close Pragma-git itself) while one or more files are still open and being watched, Pragma-git will display a <b>Warning dialog</b> listing the active files.
+This gives you your <b>last chance to save and close</b> those files in your editor before automatic synchronization stops.
+</p>

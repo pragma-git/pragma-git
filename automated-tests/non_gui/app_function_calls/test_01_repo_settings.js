@@ -139,10 +139,15 @@ async function runTests() {
     const nonEmptyCheck = !sandbox.isNullOrWhitespace('valid') && !sandbox.isNullOrWhitespace('  text  ');
     assert(emptyCheck && nonEmptyCheck, 'isNullOrWhitespace correctly flags empty/whitespace inputs');
 
-    // Test 5: typeOfRepoServer for local paths
+    // Test 5: typeOfRepoServer for local and SSH paths
     const localType1 = await sandbox.typeOfRepoServer('/Users/jan/repo');
     const localType2 = await sandbox.typeOfRepoServer('C:\\Users\\jan\\repo');
-    assert(localType1 === 'Local' && localType2 === 'Local', 'typeOfRepoServer identifies local filesystem paths as "Local"');
+    const sshLinuxType = await sandbox.typeOfRepoServer('ssh://jan@server/home/jan/repo');
+    const sshMacType = await sandbox.typeOfRepoServer('ssh://jan@macserver/Users/jan/repo');
+    assert(
+        localType1 === 'Local' && localType2 === 'Local' && sshLinuxType === 'Linux' && sshMacType === 'Mac',
+        'typeOfRepoServer identifies local filesystem paths as "Local" and infers "Linux"/"Mac" from SSH path prefixes without extra SSH calls'
+    );
 
     // Test 6: draftMessage per-repo isolation and JSON serialization roundtrip
     const repoA = sandbox.fixRepoSettingWithDefault({ localFolder: '/repoA', draftMessage: 'Note for repo A' });
