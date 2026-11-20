@@ -498,13 +498,16 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     chmod -R a+x "$DIR"
     
     
-    # Dependencies are added from problems I had with CentOS7
+    # Dependencies:
+    # Use SONAME capability 'libatomic.so.1()(64bit)' rather than package name.
+    # On RHEL/Fedora/CentOS/Rocky the package is named 'libatomic', while on openSUSE it is 'libatomic1'.
+    # Specifying the SONAME capability is universally satisfied across all RPM distributions.
     fpm \
     --log info \
     --input-type dir \
     --output-type rpm \
     --name 'pragma-git' \
-    --architecture 'amd64' \
+    --architecture 'x86_64' \
     --maintainer 'Jan Axelsson <axelsson.jan@gmail.com>' \
     --version "$VERSION" \
     --description "Pragma-git -- the pragmatic revision control"  \
@@ -512,7 +515,7 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     --url "https://pragma-git.github.io"  \
     --chdir "$DIR" \
     --package "linux64/$DIR.rpm" \
-    --depends libatomic1 \
+    --depends 'libatomic.so.1()(64bit)' \
     --depends git \
     --rpm-os linux \
     --after-install '/Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/assets-linux/postinst' \

@@ -32,6 +32,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix RPM Dependency Resolution Across Linux Distributions (`make_binaries/build`) (Implemented)**:
+  - In [make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build):
+    - Replaced concrete `--depends libatomic1` with universal SONAME capability `--depends 'libatomic.so.1()(64bit)'` for the RPM packaging step.
+    - Resolves package installation failures on RHEL/Fedora/CentOS/Rocky (where the package is named `libatomic`) while remaining 100% compatible with openSUSE (where it is named `libatomic1`).
+    - Standardized RPM architecture to `x86_64`.
+    - Added explanatory comments detailing the cross-distro capability resolution.
 * **Multi-Instance Notes Window Support with Repo Names in Title (`app.js`) (Implemented & Verified)**:
   - Enabled multiple Notes windows to be open simultaneously (one per repository) completely within [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) with zero changes to `notes.html` or `notes.js`:
     - Tracked open instances with `notesOpenWindows = new Map()` mapping `filePath -> win`.
