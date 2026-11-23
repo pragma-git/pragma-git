@@ -32,6 +32,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Automatic Log Maintenance & Truncation in Dedicated Timer (`app.js`) (Implemented & Verified)**:
+  - Added dedicated `log-maintenance-loop` timer running every 5 minutes (300 seconds) in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) via `_loopTimer`:
+    - Checks file sizes of `pragma-git-log.txt`, `mergelog.txt`, and `askpasslog.txt`.
+    - If any log exceeds **5 MB**, automatically rotates and truncates it, retaining the latest **1 MB** aligned to the first clean newline, with a rotation header timestamp.
+    - Gracefully closes and reopens `mainLogFileStream` so live streaming logging continues without interruptions.
+    - Also clears `mergelog.txt` at application startup alongside `MAINLOGFILE` and `askpass.txt`.
+  - Verified full test suite (`./_run_tests`): 8/8 test categories passed (68s duration).
 * **Fix RPM Dependency Resolution Across Linux Distributions (`make_binaries/build`) (Implemented)**:
   - In [make_binaries/build](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/make_binaries/build):
     - Replaced concrete `--depends libatomic1` with universal SONAME capability `--depends 'libatomic.so.1()(64bit)'` for the RPM packaging step.

@@ -314,6 +314,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const MAINSIGNALFILE = SIGNALDIR + pathsep + 'pragma-git-running';  
         const MAINLOGFILE = SIGNALDIR + pathsep + 'pragma-git-log.txt'; 
         fs.writeFileSync(MAINLOGFILE,'', 'utf8'); // Clear log file
+        try { fs.writeFileSync(SIGNALDIR + pathsep + 'mergelog.txt', '', 'utf8'); } catch (e) {} // Clear merge log at startup
         var mainLogFileStream;  // Global logfile stream
         
         pragmaLog('Initiating app.js');
@@ -394,6 +395,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         var timer = _loopTimer('update-loop', 1 * seconds);     // GUI update loop
         var fetchtimer = _loopTimer('fetch-loop', 60 * seconds); // git-fetch loop
         var  cacheFolderStatusTimer = _loopTimer('cache-folder-status-loop', 120 * seconds); // loop to cache folder, ssh-folder, remoteURL status
+        var logMaintenanceTimer = _loopTimer('log-maintenance-loop', 300 * seconds); // loop to check and truncate oversized log files
         
         try {
             gitEnsureUpstream();
@@ -3355,6 +3357,10 @@ async function _loopTimer( timerName, delayInMs){
     
         case 'cache-folder-status-loop':    
             return window.setInterval( cacheFolderStatus, delayInMs );
+            break;
+
+        case 'log-maintenance-loop':
+            return window.setInterval( checkAndTruncateLogs, delayInMs );
             break;
 
     }
@@ -8530,6 +8536,51 @@ listUnstarredGithub = async function( state, owner, repo) {
 }
 
 // Logging to file
+
+const MAX_LOG_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB threshold
+const KEEP_LOG_SIZE_BYTES = 1 * 1024 * 1024; // Keep latest 1 MB when rotating
+
+function checkAndTruncateLogs() {
+    truncateFileIfTooBig(MAINLOGFILE, MAX_LOG_SIZE_BYTES, KEEP_LOG_SIZE_BYTES, () => {
+        // Reset the write stream so it reopens against the rotated file
+        if (mainLogFileStream) {
+            try { mainLogFileStream.end(); } catch (e) {}
+            mainLogFileStream = undefined;
+        }
+    });
+
+    // Also check mergelog.txt and askpasslog.txt
+    truncateFileIfTooBig(SIGNALDIR + pathsep + 'mergelog.txt', MAX_LOG_SIZE_BYTES, KEEP_LOG_SIZE_BYTES);
+    truncateFileIfTooBig(SIGNALDIR + pathsep + 'askpasslog.txt', MAX_LOG_SIZE_BYTES, KEEP_LOG_SIZE_BYTES);
+}
+
+function truncateFileIfTooBig(filePath, maxBytes, keepBytes, onRotated) {
+    try {
+        if (!fs.existsSync(filePath)) return;
+        const stats = fs.statSync(filePath);
+        if (stats.size > maxBytes) {
+            const fd = fs.openSync(filePath, 'r');
+            const buffer = Buffer.alloc(keepBytes);
+            const startPos = stats.size - keepBytes;
+            fs.readSync(fd, buffer, 0, keepBytes, startPos);
+            fs.closeSync(fd);
+
+            // Find first newline to avoid starting with a partial line
+            let startIdx = buffer.indexOf(10); // '\n'
+            const contentToKeep = (startIdx !== -1 && startIdx < buffer.length - 1)
+                ? buffer.slice(startIdx + 1).toString('utf8')
+                : buffer.toString('utf8');
+
+            const header = `[--- LOG ROTATED: Truncated from ${(stats.size / (1024 * 1024)).toFixed(1)} MB at ${new Date().toISOString()} ---]` + os.EOL;
+            fs.writeFileSync(filePath, header + contentToKeep, 'utf8');
+            if (typeof onRotated === 'function') {
+                onRotated();
+            }
+        }
+    } catch (err) {
+        console.warn('Error during log truncation check for ' + filePath, err);
+    }
+}
 
 function pragmaLog(message){
     
