@@ -32,6 +32,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Filesystem Race Conditions in Pragma-Merge Session Tests (`test_05_difftool_mergetool_sessions.sh`) (Fixed & Verified)**:
+  - Eliminated race condition and false failure on Windows CI runners in [automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh):
+    - Replaced premature polling on intermediate `last_session_id` with polling on actual completion states (`pragma-merge-running` signal and parameter files `first`, `second`).
+    - Increased polling timeouts from 20-30 iterations (2-3s) to 50 iterations (5s) to safely accommodate process creation and I/O caching latency on heavily loaded Windows CI runners.
+    - Applied the robust wait pattern uniformly across all session tests (5.2, 5.4, 5.6, 5.8, 5.10).
+  - Verified with `./automated-tests/non_gui/git_client/_run_tests test_05_difftool_mergetool_sessions.sh`: 5/5 suites (11/11 tests) passed 100%.
 * **Automatic Log Maintenance & Truncation in Dedicated Timer (`app.js`) (Implemented & Verified)**:
   - Added dedicated `log-maintenance-loop` timer running every 5 minutes (300 seconds) in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) via `_loopTimer`:
     - Checks file sizes of `pragma-git-log.txt`, `mergelog.txt`, and `askpasslog.txt`.

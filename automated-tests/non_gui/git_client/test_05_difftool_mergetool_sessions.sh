@@ -47,14 +47,23 @@ fi
 "$REPO_ROOT/pragma-merge" "base_file" "local_file" "remote_file" "merged_file" &
 MERGE_PID=$!
 
-# Wait up to 2 seconds for signal file to appear
+# Wait up to 5 seconds for last_session_id and session files to be fully written
 WAITED=0
-while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/last_session_id" ]; do
+INIT_SESSION_ID=""
+SESSION_RUNNING_FILE=""
+while [ $WAITED -lt 50 ]; do
+    INIT_SESSION_ID=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
+    if [ -n "$INIT_SESSION_ID" ]; then
+        SESSION_RUNNING_FILE="$TEST_TMP/sessions/$INIT_SESSION_ID/pragma-merge-running"
+        if [ -f "$SESSION_RUNNING_FILE" ] && \
+           [ -f "$TEST_TMP/sessions/$INIT_SESSION_ID/first" ] && \
+           [ -f "$TEST_TMP/sessions/$INIT_SESSION_ID/second" ]; then
+            break
+        fi
+    fi
     sleep 0.1
     ((WAITED++))
 done
-INIT_SESSION_ID=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
-SESSION_RUNNING_FILE="$TEST_TMP/sessions/$INIT_SESSION_ID/pragma-merge-running"
 
 if [ -n "$INIT_SESSION_ID" ] && [ -f "$SESSION_RUNNING_FILE" ] && \
    [ "$(cat "$TEST_TMP/sessions/$INIT_SESSION_ID/first" 2>/dev/null)" = "base_file" ] && \
@@ -86,12 +95,19 @@ git -C "$TEST_REPO" difftool --no-prompt sample.txt &
 DIFF_PID=$!
 
 WAITED=0
-while [ $WAITED -lt 30 ] && [ ! -f "$TEST_TMP/last_session_id" ]; do
+DIFF_SESSION_ID=""
+DIFF_SESSION_RUNNING=""
+while [ $WAITED -lt 50 ]; do
+    DIFF_SESSION_ID=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
+    if [ -n "$DIFF_SESSION_ID" ]; then
+        DIFF_SESSION_RUNNING="$TEST_TMP/sessions/$DIFF_SESSION_ID/pragma-merge-running"
+        if [ -f "$DIFF_SESSION_RUNNING" ]; then
+            break
+        fi
+    fi
     sleep 0.1
     ((WAITED++))
 done
-DIFF_SESSION_ID=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
-DIFF_SESSION_RUNNING="$TEST_TMP/sessions/$DIFF_SESSION_ID/pragma-merge-running"
 
 if [ -n "$DIFF_SESSION_ID" ] && [ -f "$DIFF_SESSION_RUNNING" ]; then
     assert_pass "5.4: git difftool successfully invokes pragma-merge with session lockfile"
@@ -120,11 +136,15 @@ rm -f "$TEST_TMP/last_session_id"
 PID_A=$!
 
 WAITED=0
-while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/last_session_id" ]; do
+SESSION_A=""
+while [ $WAITED -lt 50 ]; do
+    SESSION_A=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
+    if [ -n "$SESSION_A" ] && [ -f "$TEST_TMP/sessions/$SESSION_A/first" ] && [ -f "$TEST_TMP/sessions/$SESSION_A/pragma-merge-running" ]; then
+        break
+    fi
     sleep 0.1
     ((WAITED++))
 done
-SESSION_A=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
 
 # Verify Session A directory has its own parameters
 if [ -n "$SESSION_A" ] && [ -d "$TEST_TMP/sessions/$SESSION_A" ] && \
@@ -149,26 +169,35 @@ fi
 # Test 8: Verify two concurrent sessions running simultaneously without interfering
 export PRAGMA_ENABLE_SESSIONS="1"
 rm -f "$TEST_TMP/last_session_id"
+# Start Session 1
 "$REPO_ROOT/pragma-merge" "file_1_base" "file_1_local" "file_1_remote" "file_1_merged" &
 PID_1=$!
 
 WAITED=0
-while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/last_session_id" ]; do
+SESSION_1=""
+while [ $WAITED -lt 50 ]; do
+    SESSION_1=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
+    if [ -n "$SESSION_1" ] && [ -f "$TEST_TMP/sessions/$SESSION_1/first" ] && [ -f "$TEST_TMP/sessions/$SESSION_1/pragma-merge-running" ]; then
+        break
+    fi
     sleep 0.1
     ((WAITED++))
 done
-SESSION_1=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
 
 rm -f "$TEST_TMP/last_session_id"
 "$REPO_ROOT/pragma-merge" "file_2_base" "file_2_local" "file_2_remote" "file_2_merged" &
 PID_2=$!
 
 WAITED=0
-while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/last_session_id" ]; do
+SESSION_2=""
+while [ $WAITED -lt 50 ]; do
+    SESSION_2=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
+    if [ -n "$SESSION_2" ] && [ "$SESSION_2" != "$SESSION_1" ] && [ -f "$TEST_TMP/sessions/$SESSION_2/first" ] && [ -f "$TEST_TMP/sessions/$SESSION_2/pragma-merge-running" ]; then
+        break
+    fi
     sleep 0.1
     ((WAITED++))
 done
-SESSION_2=$(cat "$TEST_TMP/last_session_id" 2>/dev/null)
 
 if [ -n "$SESSION_1" ] && [ -n "$SESSION_2" ] && [ "$SESSION_1" != "$SESSION_2" ] && \
    [ -f "$TEST_TMP/sessions/$SESSION_1/first" ] && \
@@ -203,7 +232,10 @@ rm -rf "$TEST_TMP/sessions"/* "$TEST_TMP/pragma-merge-running-ssh" "/tmp/git_dif
 PID_SSH=$!
 
 WAITED=0
-while [ $WAITED -lt 20 ] && [ ! -f "$TEST_TMP/pragma-merge-running-ssh" ]; do
+while [ $WAITED -lt 50 ]; do
+    if [ -f "$TEST_TMP/pragma-merge-running-ssh" ] && [ -f "/tmp/git_diff_file_list.txt" ]; then
+        break
+    fi
     sleep 0.1
     ((WAITED++))
 done
