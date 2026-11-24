@@ -874,7 +874,7 @@
         <!-- OK / Cancel buttons-->  
         <br style = "line-height: 0.4em;">
         
-        <button id="detachedBranchDialogOK" value="OK" class="ur-small-element"
+        <button id="forcePushOrPullPushDialogOK" value="OK" class="ur-small-element"
             onclick="
                 document.getElementById('forcePushOrPullPushDialog').close();
                 let selectedRadioButton = document.querySelector('input[name=\'behindRemoteRadiobuttonGroup\']:checked').value;
@@ -883,7 +883,7 @@
             OK
         </button>   
          
-        <button id="cancelDetachedDialog" value="Cancel" class="ur-small-element"
+        <button id="cancelForcePushOrPullPushDialog" value="Cancel" class="ur-small-element"
             onclick="
                 document.getElementById('forcePushOrPullPushDialog').close();
                 _callback('clicked-forcePushOrPullPushDialog', 'Cancel');

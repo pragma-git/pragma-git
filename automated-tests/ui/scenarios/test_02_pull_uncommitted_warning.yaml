@@ -191,7 +191,7 @@ steps:
   # 17. Close the diverged dialog via Cancel
   - name: "Cancel Diverged Push Dialog"
     action: click
-    selector: "#forcePushOrPullPushDialog button#cancelDetachedDialog"
+    selector: "#forcePushOrPullPushDialog button#cancelForcePushOrPullPushDialog"
     verify: |-
       - Dialog is dismissed without executing force push or pull.
       - Repositories remain safe and unchanged.
@@ -205,11 +205,18 @@ steps:
   - name: "Verify Both Arrows Remain Visible After Canceling Dialog"
     action: eval
     code: |-
-      (() => {
+      (async () => {
+        const start = Date.now();
+        while (Date.now() - start < 15000) {
+          const pushVis = document.getElementById('top-titlebar-push-icon').style.visibility;
+          const pullVis = document.getElementById('top-titlebar-pull-icon').style.visibility;
+          if (pushVis === 'visible' && pullVis === 'visible') {
+            return true;
+          }
+          await new Promise(r => setTimeout(r, 200));
+        }
         const pushVis = document.getElementById('top-titlebar-push-icon').style.visibility;
         const pullVis = document.getElementById('top-titlebar-pull-icon').style.visibility;
-        if (pushVis !== 'visible' || pullVis !== 'visible') {
-          throw new Error(`Expected both push and pull icons to be visible! (push: ${pushVis}, pull: ${pullVis})`);
-        }
+        throw new Error(`Timed out waiting for both push and pull icons to be visible! (push: ${pushVis}, pull: ${pullVis})`);
       })()
     verify: "Both push and pull arrows remain visible because branch is still both ahead and behind."

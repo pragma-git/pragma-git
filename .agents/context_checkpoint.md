@@ -32,6 +32,17 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Diverged Push Dialog Button IDs & Visibility Polling Flakiness on Windows CI (`app.html`, `test_02_pull_uncommitted_warning.yaml`) (Fixed & Verified)**:
+  - **Root Cause of Intermittent CI Failures**:
+    - In [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), `#forcePushOrPullPushDialog` used duplicated button IDs (`#detachedBranchDialogOK` and `#cancelDetachedDialog`) copied from `#detachedHeadDialog`. When CDP clicked `#cancelDetachedDialog`, depending on DOM query order and dialog state, the click or callback could misroute or close `#detachedHeadDialog`.
+    - In [automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/ui/scenarios/test_02_pull_uncommitted_warning.yaml), step 20 evaluated visibility synchronously after a fixed sleep of 1200ms. On heavily loaded Windows CI runners, `_update2()` involves `gitStatus()` and `git stash list` child process executions that can take >1200ms, causing the assertion to run while pull icon was momentarily hidden during state calculation.
+  - **Resolution**:
+    - Renamed buttons in `#forcePushOrPullPushDialog` to distinct IDs: `#forcePushOrPullPushDialogOK` and `#cancelForcePushOrPullPushDialog`.
+    - Updated step 17 to click `#cancelForcePushOrPullPushDialog`.
+    - Updated step 20 from synchronous check to resilient async polling with a 15-second timeout (checking every 200ms for both `top-titlebar-push-icon` and `top-titlebar-pull-icon` to become `visible`).
+  - **Verification**:
+    - Ran `./automated-tests/ui/_run_02_pull_uncommitted_warning`: passed.
+    - Ran `./automated-tests/ui/_run_tests`: 3/3 passed (21s).
 * **Self-Healing SSH Remote Signaling & Stale Connection Resilience (Implemented & Verified)**:
   - **Zero-overhead self-healing on remote SSH server**:
     - In [pragma-merge](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge): Writes PID `$$` to `$TMP/pragma-merge-running-ssh`. In the wait loop, checks `kill -0 $PPID 2>/dev/null` on each second: if the parent `git` process on the server is killed or aborted, it automatically removes `/tmp/git_diff_file_list.txt` and `$RUNNING` and exits cleanly, preventing zombie processes. If the user closes laptop lid or commutes home, the server `git` process remains alive sleeping in `waitpid()`, seamlessly preserving the active merge session until the lid is reopened.
