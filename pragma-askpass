@@ -137,10 +137,16 @@ else
 fi
 
 
-# Bail out if askpass already running
-if [  -f "$RUNNING" ] ; then
-    echo  "$(date)   *** Bail out, pragma-askpass already open (indicated by existence of file : $RUNNING)" >>  "$PRAGMALOG_FILE"
-    exit
+# Bail out if askpass already running with an active process
+if [ -f "$RUNNING" ] ; then
+    OLD_PID=$(cat "$RUNNING" 2>/dev/null)
+    if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+        echo "$(date)   *** Bail out, pragma-askpass already open (PID $OLD_PID, indicated by file : $RUNNING)" >> "$PRAGMALOG_FILE"
+        exit
+    else
+        echo "$(date)   *** Stale pragma-askpass signal detected (PID $OLD_PID no longer alive) - clearing $RUNNING" >> "$PRAGMALOG_FILE"
+        rm -f "$RUNNING" "$ASKPASS_FIRST_ARGUMENT" 2>/dev/null
+    fi
 fi
 
 
@@ -180,14 +186,19 @@ echo "$1" > "$ASKPASS_FIRST_ARGUMENT"  # Carries argument to "askpass"
 
 
 # Wait for GUI to close ($RUNNING removed by askpass.html when closed)
-echo  "$(date)   Create RUNNING = $RUNNING" >>  "$PRAGMALOG_FILE"
-touch "$RUNNING"  >>  "$PRAGMALOG_FILE"           # Create signal file.  Pragma-git picks this up and starts "askpass.html"
+echo  "$(date)   Create RUNNING = $RUNNING (PID $$)" >>  "$PRAGMALOG_FILE"
+echo "$$" > "$RUNNING"                            # Create signal file with PID. Pragma-git picks this up and starts "askpass.html"
 echo  "$(date)   Wait for GUI or SSH to close" >>  "$PRAGMALOG_FILE"
 
 while [  -f "$RUNNING" ]
 do
   #echo  "$(date)  $(ls -1 $RUNNING)" >>  "$PRAGMALOG_FILE"
   sleep 1 
+  # Self-healing: if parent process died, remove signals and abort
+  if [ -n "$PPID" ] && ! kill -0 $PPID 2>/dev/null; then
+      rm -f "$RUNNING" "$ASKPASS_FIRST_ARGUMENT" 2>/dev/null
+      exit 1
+  fi
 done
 echo ' '  >>  "$PRAGMALOG_FILE"
 

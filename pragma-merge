@@ -104,11 +104,16 @@ if [[ "$5" == "ssh" || "$3" == "ssh" ]] ; then
     echo "\"$1\" \"$2\" \"$3\" \"$4\" $5" >> "$MERGE_LOG" 
     echo "\"$1\" \"$2\" \"$3\" \"$4\"" > "$FILE_LIST_ON_SSH"  # Store all input parameters for Pragma-git to pick up 
 
-    touch "$RUNNING"
+    echo "$$" > "$RUNNING"
 
     while [ -f "$RUNNING" ]
     do
       sleep 1 
+      # Self-healing: if the parent process (git) on this server died, remove signals and abort
+      if [ -n "$PPID" ] && ! kill -0 $PPID 2>/dev/null; then
+          rm -f "$FILE_LIST_ON_SSH" "$RUNNING" 2>/dev/null
+          exit 1
+      fi
     done
 
     rm -f "$FILE_LIST_ON_SSH" "$RUNNING" 2>/dev/null

@@ -7597,6 +7597,11 @@ async function setupSshServer( force = false ){ // Copies config, and executable
         await sshPutSimple( CWD_INIT + pathsep + 'pragma-askpass'  , 
                             `${baseUrl}/.Pragma-git/pragma-askpass-ssh` 
                            );  
+
+        // Clean up any stale signaling or temp files from previous crashed sessions on remote
+        try {
+            await sshExec(baseUrl, `rm -f '/tmp/git_diff_file_list.txt' "$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh" "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh" "$HOME/.Pragma-git/.tmp/askpass_first-ssh"`);
+        } catch (ignoreErr) {}
     }
  
 }

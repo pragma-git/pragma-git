@@ -32,6 +32,18 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Self-Healing SSH Remote Signaling & Stale Connection Resilience (Implemented & Verified)**:
+  - **Zero-overhead self-healing on remote SSH server**:
+    - In [pragma-merge](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-merge): Writes PID `$$` to `$TMP/pragma-merge-running-ssh`. In the wait loop, checks `kill -0 $PPID 2>/dev/null` on each second: if the parent `git` process on the server is killed or aborted, it automatically removes `/tmp/git_diff_file_list.txt` and `$RUNNING` and exits cleanly, preventing zombie processes. If the user closes laptop lid or commutes home, the server `git` process remains alive sleeping in `waitpid()`, seamlessly preserving the active merge session until the lid is reopened.
+    - In [pragma-askpass](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/pragma-askpass): Writes PID `$$` to `$RUNNING`. If `$RUNNING` exists when starting, checks if the recorded PID is still alive with `kill -0 "$OLD_PID"`. If stale/dead, automatically deletes `$RUNNING` and proceeds rather than deadlocking. Also adds parent process check (`kill -0 $PPID`) in its wait loop.
+    - In [ssh_folder/ssh-git-client](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-git-client): Expanded `CLEANUP_OLD_MERGE` to clean both `pragma-merge-running-ssh` and `pragma-askpass-running-ssh` prior to running merge/diff commands.
+    - In [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js): `setupSshServer()` automatically executes a cleanup sweep of abandoned `/tmp/git_diff_file_list.txt` and `.tmp/*-ssh` signaling files from previous crashed sessions.
+  - **Dead ControlMaster Socket Recovery across Network Changes**:
+    - In [ssh_folder/lib/ssh-functions](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/lib/ssh-functions): Added `checkAndCleanStaleControlMaster()` invoked in `getSshUrlParts`. If a multiplexed socket exists on disk (`-S "$sock"`), it probes the socket with `ssh -O check ...` (<1ms local check). If the connection died (e.g. laptop woke up on home Wi-Fi), it unlinks the dead socket immediately, completely preventing SSH commands from hanging on a 60-second TCP timeout.
+  - **Verification**:
+    - Git client test suite (`./automated-tests/non_gui/git_client/_run_tests`): 5/5 passed.
+    - SSH integration test suite (`./automated-tests/non_gui/ssh/_run_tests`): 8/8 passed.
+    - Full test suite (`./_run_tests`): 8/8 test categories passed (65s total).
 * **Fix Filesystem Race Conditions in Pragma-Merge Session Tests (`test_05_difftool_mergetool_sessions.sh`) (Fixed & Verified)**:
   - Eliminated race condition and false failure on Windows CI runners in [automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_05_difftool_mergetool_sessions.sh):
     - Replaced premature polling on intermediate `last_session_id` with polling on actual completion states (`pragma-merge-running` signal and parameter files `first`, `second`).
