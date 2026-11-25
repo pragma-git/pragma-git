@@ -32,6 +32,47 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix Search Icon ID Collision in .gitignore Editor (`edit_ignore.html`) (Fixed & Verified)**:
+  - **Identified Failure**: Hovering over the Help icon in the `.gitignore Editor` caused the search icon to turn into a question mark.
+  - **Root Cause**: Both the search icon and the help icon shared the exact same DOM ID (`id="about-icon"`). When hovering the help icon, `document.getElementById('about-icon')` resolved the search icon and replaced its `src` with `questionmark_hover.png`.
+  - **Resolution**: Renamed the search icon's DOM ID to `id="find-icon"` and updated its `onmouseover`/`onmouseout` handlers accordingly.
+* **Fix .gitignore Editor Direct File Population, Dark Mode & SSH Git Execution (`edit_ignore.html`, `settings.html`) (Fixed & Verified)**:
+  - **Identified Failure**:
+    - The `.gitignore Editor` failed to display content in its textarea when opened from the Settings button for both local and SSH repositories.
+    - The editor window opened in light mode even when the application was in dark mode.
+    - Retracking or previewing git status over SSH failed because `edit_ignore.html` called `simpleGitDefault(repoFolder)` directly instead of routing through `app.js`'s custom `simpleGit` wrapper which proxies SSH repository URLs to `ssh-git-client`.
+  - **Root Causes**:
+    1. `<script src="settings.js"></script>` in `edit_ignore.html` `<head>` executed Settings window logic (`let simpleGit = opener.simpleGit`), caused top-level collisions on `const pathsep`, and halted DOM execution.
+    2. When `settings.js` was removed, `edit_ignore.html`'s inline script at the top of `<body>` and `DOMContentLoaded` were missing the variable declarations previously provided by `settings.js` (`var gui = require('nw.gui');`, `var localState = global.localState;`, `var state = global.state;`, `var win;`).
+    3. As a result:
+       - The inline script in `<body>` threw `ReferenceError: localState is not defined`, preventing `.classList.add('dark')` from executing and leaving the window in light mode.
+       - Inside `DOMContentLoaded`, the first line `win = gui.Window.get()` threw `ReferenceError: gui is not defined`, aborting execution immediately before `fs.readFileSync(localIgnorePath)` was reached, leaving the textarea completely empty.
+    4. For Git operations over SSH (`raw(['rm', ...])`, `add('.')`, `raw(['status', ...])`), standard `simple-git` does not understand `ssh://` URLs natively; `app.js`'s custom `simpleGit` wrapper sets up `ssh-git-client` and injects `SSHURL` and `include.path`. Without routing through this wrapper, Git commands failed on SSH repositories.
+  - **Implemented Solution**:
+    - Initialized `gui = require('nw.gui')`, `state = global.state`, `localState = global.localState`, and `win` at the top of [edit_ignore.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/edit_ignore.html).
+    - Safely applied dark mode classes (`document.body.classList.remove('light'); document.body.classList.add('dark')`).
+    - Fixed window sizing and direct `utf8` file population without uncaught exceptions.
+    - Routed `simpleGit(target)` through `opener.opener.simpleGit` or `opener.simpleGit` (fallback to `simpleGitDefault`), ensuring `ssh-git-client` is properly invoked for SSH repositories.
+    - Decoupled `displayIgnoreList()` from `save()` so rendering a preview never overwrites disk/SSH.
+    - Updated [settings.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.html) to focus `opener.gitignore_win` if already open.
+  - **Verification**:
+    - Git client test suite (`./automated-tests/non_gui/git_client/_run_tests`): 5/5 passed.
+    - SSH integration test suite (`./automated-tests/non_gui/ssh/_run_tests`): 8/8 passed.
+    - UI test suite (`./automated-tests/ui/_run_tests`): 3/3 passed.
+* **SSH Remote Support for .gitignore Editor (`edit_ignore.html`) (Implemented & Verified)**:
+  - **Identified Failure**: `edit_ignore.html` previously attempted to execute synchronous local filesystem calls (`fs.readFileSync`, `fs.writeFileSync`, `fs.copyFileSync`, `fs.unlinkSync`) using `global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore'`, which crashed when pointing to an `ssh://` URL.
+  - **Implemented Solution**:
+    - Modeled after the reliable pattern in [listChanged.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/listChanged.js) and [settings.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/settings.js):
+      - Dynamically detects SSH repositories (`repoFolder.startsWith('ssh:')`).
+      - Downloads remote `.gitignore` to local `SSH_TEMP_FILE_LOCATION` via `sshGet(repoFolder, '.gitignore')` (or creates a local empty placeholder if missing).
+      - Performs editing, local backups, and resets against the resolved local temporary file.
+      - Automatically uploads changes back to the remote server via `await sshPut(repoFolder, '.gitignore')` on save, reset, retrack, or window close/unload.
+      - Standardized git operations using [lib/simpleGitWithRetry.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/lib/simpleGitWithRetry.js).
+      - Updated preview status and live text sync with `settings.html` (`#gitignoreText`).
+  - **Verification**:
+    - Git client test suite (`./automated-tests/non_gui/git_client/_run_tests`): 5/5 passed.
+    - SSH integration test suite (`./automated-tests/non_gui/ssh/_run_tests`): 8/8 passed.
+    - UI test suite (`./automated-tests/ui/_run_tests`): 3/3 passed.
 * **Fix Diverged Push Dialog Button IDs & Visibility Polling Flakiness on Windows CI (`app.html`, `test_02_pull_uncommitted_warning.yaml`) (Fixed & Verified)**:
   - **Root Cause of Intermittent CI Failures**:
     - In [app.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.html), `#forcePushOrPullPushDialog` used duplicated button IDs (`#detachedBranchDialogOK` and `#cancelDetachedDialog`) copied from `#detachedHeadDialog`. When CDP clicked `#cancelDetachedDialog`, depending on DOM query order and dialog state, the click or callback could misroute or close `#detachedHeadDialog`.

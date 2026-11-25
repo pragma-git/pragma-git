@@ -1275,7 +1275,10 @@
                              <button onclick="
                              
                              if (localState.gitignoreWindow == true){
-                                 return
+                                 if (opener && opener.gitignore_win) {
+                                     opener.gitignore_win.focus();
+                                 }
+                                 return;
                              }
                              
                              let gitignoreSize = (opener && opener.getSensibleWindowSize) ? opener.getSensibleWindowSize(1000, 1150) : {width: 1000, height: 1150};

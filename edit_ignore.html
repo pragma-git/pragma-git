@@ -1,7 +1,6 @@
 <html>
     <head>
         <title>Git-ignore Editor</title>  <!-- NOTE : Don't edit title, without updating listChanged.js which uses this title to close this editor --> 
-        <script src="settings.js"></script>
         <script src="ssh_folder/ssh-folder-lib.js"></script>
     
         <link rel="stylesheet" type="text/css" href="color_styles.css" />
@@ -63,10 +62,16 @@
     <body id='body' class='light'>     
         <!-- Dark mode on/off , zoom --> 
         <script>
-            if (localState.dark){
+            var gui = require('nw.gui');
+            var state = global.state;
+            var localState = global.localState;
+            var win;
+
+            if (localState && localState.dark){
+                document.body.classList.remove('light');
                 document.body.classList.add('dark');
             }
-            window.document.body.style.zoom = global.state.zoom;
+            window.document.body.style.zoom = (state && state.zoom) || 1;
         </script>
         
         <!--  Add find  -->    
@@ -83,10 +88,10 @@
             <div id="inner-content">
                 
                 
-                <img id="about-icon" style='vertical-align:middle;float: right' height="17" width="17"  
+                <img id="find-icon" style='vertical-align:middle;float: right' height="17" width="17"  
                     onclick="findInNw.showSearchBox();" 
-                    onmouseover="document.getElementById('about-icon').src='images/find_hover.png' " 
-                    onmouseout="document.getElementById('about-icon').src='images/find_black.png' " 
+                    onmouseover="document.getElementById('find-icon').src='images/find_hover.png' " 
+                    onmouseout="document.getElementById('find-icon').src='images/find_black.png' " 
                     src="images/find_black.png" >
                 
                 
@@ -157,11 +162,33 @@
     </body>
 
     <script>
-    // File paths
-    const ignoreFileName = global.state.repos[global.state.repoNumber].localFolder + pathsep + '.gitignore';      
-    const settingsDir = require('os').homedir() + pathsep + '.Pragma-git';         
+    const fs = require('fs');
+    const path = require('path');
+    const os = require('os');
+    const pathsep = path.sep;  // Os-dependent path separator
+
+    // Determine repository folder and key
+    const repoFolder = global.state.repos[global.state.repoNumber].localFolder;
+    const isSsh = (typeof repoFolder === 'string' && repoFolder.startsWith('ssh:'));
+    const repoKey = (global.state.repos[global.state.repoNumber] && global.state.repos[global.state.repoNumber].sshKey) || '';
+
+    // Local file path where .gitignore content is read/written locally
+    let localIgnorePath = '';
+    const settingsDir = os.homedir() + pathsep + '.Pragma-git';
     const ignoreFileBackup = settingsDir + pathsep + '.gitignore.pragma-backup';
-    
+
+    // SimpleGit instance: use app's central simpleGit wrapper if available (which routes SSH URLs to ssh-git-client)
+    const simpleGitDefault = require('./lib/simpleGitWithRetry.js');
+    function simpleGit(target) {
+        if (opener && opener.opener && typeof opener.opener.simpleGit === 'function') {
+            return opener.opener.simpleGit(target);
+        }
+        if (opener && typeof opener.simpleGit === 'function') {
+            return opener.simpleGit(target);
+        }
+        return simpleGitDefault(target);
+    }
+
     <!--  On Load event-->        
     window.addEventListener( 'DOMContentLoaded',  async (event) => { 
         
@@ -169,69 +196,82 @@
             win = gui.Window.get();
             win.setAlwaysOnTop( state.alwaysOnTop );
             
-            // Import modules  
-            const sgImport = require('simple-git');  // I am not sure why it did not work to use opener.simpleGit
-            simpleGit = typeof sgImport === 'function' ? sgImport : (sgImport.simpleGit || sgImport.default);
-            
-            const os = require('os');
             const util = require('./util_module.js'); // Pragma-git common functions
-            
-            const fs = require('fs');
-            const pathsep = require('path').sep;  // Os-dependent path separator   
-            
-            
-            // Load .ignore file
-            document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileName);
-            
-            
-            // Store backup of .ignore file
-            await fs.copyFileSync(ignoreFileName, ignoreFileBackup, fs.constants.COPYFILE_FICLONE, (err) => {
-                if (err) {
-                    console.log("Error copying to file : " + ignoreFileBackup + '\n', err);
-                }else {
-                    console.log("Success copying to file : " + ignoreFileBackup + '\n', result);
+
+            try {
+                if (isSsh) {
+                    // Over SSH: Ensure helper scripts are installed on remote server
+                    if (opener && opener.opener && typeof opener.opener.setupSshServer === 'function') {
+                        await opener.opener.setupSshServer();
+                    } else if (opener && typeof opener.setupSshServer === 'function') {
+                        await opener.setupSshServer();
+                    }
+
+                    // Check if .gitignore exists on the server
+                    let remoteGitignoreUrl = repoFolder + '/.gitignore';
+                    let remoteExists = await fs_existsSync(remoteGitignoreUrl, repoKey);
+
+                    if (remoteExists) {
+                        localIgnorePath = await sshGet(repoFolder, '.gitignore');
+                    } else {
+                        // Make sure temp directory exists and create empty local file
+                        localIgnorePath = (typeof SSH_TEMP_FILE_LOCATION !== 'undefined' ? SSH_TEMP_FILE_LOCATION : (os.tmpdir() + pathsep + 'pragma-git-ssh-folders')) + pathsep + '.gitignore';
+                        let tempDir = path.dirname(localIgnorePath);
+                        if (!fs.existsSync(tempDir)) {
+                            fs.mkdirSync(tempDir, { recursive: true });
+                        }
+                        fs.writeFileSync(localIgnorePath, '', 'utf8');
+                    }
+                } else {
+                    localIgnorePath = path.join(repoFolder, '.gitignore');
+                    if (!fs.existsSync(localIgnorePath)) {
+                        fs.writeFileSync(localIgnorePath, '', 'utf8');
+                    }
                 }
-            });
-            
-            
-            // Reset staged files (make gitignore handle files that were staged)
-            // Note: 'Changed files window'  selects files that should NOT be commited in the array : localState.unstaged
-            //        That is the mechanism for Main Window Store-operation to add all modified files as default. 
-            //        The files deselected in Changed files window' are thus not staged.
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder).reset( [ ], onStatus);
-            function onStatus(err, result ){  
-                console.log('Reset staged files')
-                console.log(result);
-                console.log(err);
+
+                // Load .gitignore file into textarea directly from file
+                let currentContent = '';
+                try {
+                    currentContent = fs.readFileSync(localIgnorePath, 'utf8');
+                } catch (e) {
+                    console.warn("Could not read .gitignore:", e);
+                    currentContent = '';
+                }
+                document.getElementById('ignoreFile').value = currentContent;
+
+                // Store backup of .gitignore file
+                try {
+                    if (!fs.existsSync(settingsDir)) {
+                        fs.mkdirSync(settingsDir, { recursive: true });
+                    }
+                    fs.copyFileSync(localIgnorePath, ignoreFileBackup);
+                } catch (err) {
+                    console.warn("Error creating backup of .gitignore:", err);
+                }
+
+                // Reset staged files (make gitignore handle files that were staged)
+                await simpleGit(repoFolder).reset([], (err, result) => {
+                    if (err) console.warn('Reset staged files error:', err);
+                });
+
+                // Update preview list (without overwriting file)
+                await displayIgnoreList();
+
+            } catch (err) {
+                console.error('Error loading .gitignore in edit_ignore:', err);
             }
             
-            // NOTE 1:  Question is if I should restore staged files after closing this window?  Now I don't, and rely on above mentioned mechanism
-            
-            // NOTE 2:  The index of tracked files can be updated according to .gitignore, by :
-            // git rm -r --cached .  # Clear index (will show lots of files modified)
-            // git add .             # Update index of tracked files, thus also removing the ones that were previously tracked, but should be untracked by new .gitignore
-            //
-            // TODO : Maybe I should have a button to "Reset tracking" ? Or a dialog when saving, if git status --ignored has changed when leaving this window
-            //        A simple "git reset" (means git reset --mixed) would suffice.  Maybe add that to Reset button ?
-
-
-
-            // update html
-            //await retrackGitIndex()  // This is very slow if bad .gitignore.  For instance forgetting node_modules/ in .gitignore
-            await displayIgnoreList(); 
-            
-            
-            
             // Set window size to match content
-            let padding = Number(document.getElementById('outer-content').style.padding.replace('px','') ) ;
-            let dx = document.getElementById('outer-content').scrollWidth * global.state.zoom;
-            let dy = 0.7 *  document.getElementById('body').scrollHeight * global.state.zoom;
+            let outerEl = document.getElementById('outer-content');
+            let bodyEl = document.getElementById('body');
+            let padding = (outerEl && outerEl.style.padding) ? Number(outerEl.style.padding.replace('px','')) : 20;
+            let dx = (outerEl ? outerEl.scrollWidth : 600) * ((global.state && global.state.zoom) || 1);
+            let dy = 0.7 * (bodyEl ? bodyEl.scrollHeight : 800) * ((global.state && global.state.zoom) || 1);
             
             // Minimum width
             if (dx < 500)
                 dx = 500;
                 
-            
             // Minimum height
             if (dy < 600)
                 dy = 600;
@@ -243,136 +283,149 @@
     );
     
 
-    <!--  On Load event-->     
-    window.addEventListener('unload', (event) => {
+    <!--  On Unload event-->     
+    window.addEventListener('unload', async (event) => {
         console.log('edit_ignore.html :DOM fully unloaded -- maybe window closed ');
-        close();
-        }
-    );
+        await close();
+    });
     
     <!--  Functions-->   
     async function resetGitIgnore(){    // Reset button -- Reset .gitignore to state when started editor
         console.log('RESET gitignore file');
         
-        
-        // Retore  .ignore file from backup
-        await fs.copyFileSync( ignoreFileBackup, ignoreFileName, fs.constants.COPYFILE_FICLONE, (err) => {
-            if (err) {
-                console.log("Error copying from file : " + ignoreFileBackup + '\n', err);
-            }else {
-                console.log("Success copying from file : " + ignoreFileBackup + '\n', result);
+        try {
+            // Restore .gitignore file from backup
+            if (fs.existsSync(ignoreFileBackup)) {
+                fs.copyFileSync(ignoreFileBackup, localIgnorePath);
+                document.getElementById('ignoreFile').value = fs.readFileSync(localIgnorePath, 'utf8');
             }
-        });
-                
-        
-        // Load .ignore backup 
-        document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileBackup);
 
+            // Sync back to SSH server if needed
+            if (isSsh) {
+                await sshPut(repoFolder, '.gitignore');
+            }
 
-        // Reset index 
-        try{
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder)
-                .reset( onReset);
-            function onReset(err, result ){ console.log(result) }        
-        }catch(err){
-            console.log('Error in git reset()');
-            console.log(err);
-        }      
-        
-        
- 
-        await displayIgnoreList();
+            // Update displayed .gitignore in settings window
+            if (opener && opener.document && opener.document.getElementById('gitignoreText')) {
+                opener.document.getElementById('gitignoreText').innerText = document.getElementById('ignoreFile').value;
+            }
 
+            // Reset index 
+            await simpleGit(repoFolder).reset([], (err, result) => {
+                if (err) console.warn('Error in git reset():', err);
+            });
+
+            await displayIgnoreList();
+        } catch (err) {
+            console.error('Error in resetGitIgnore():', err);
+        }
     }
+
     async function close(){              // Save .gitignore and remove backup
-        
         console.log('SAVE gitignore file');
         
-        
-        // Save, and remove backup if succesful
-        try{      
-            await fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value);
-            await fs.unlinkSync(ignoreFileBackup);
-            opener.document.getElementById('gitignoreText').innerText = fs.readFileSync(ignoreFileName);
-            
-        }catch(err){
-            
+        try {      
+            await save();
+            if (fs.existsSync(ignoreFileBackup)) {
+                fs.unlinkSync(ignoreFileBackup);
+            }
+        } catch(err) {
+            console.warn('Error closing/saving gitignore:', err);
         }
         
         // Delete MacOS menu
-        opener.opener.updateWindowMenu('Git-ignore Editor');
-        localState.gitignoreWindow = false;
+        try {
+            if (opener && opener.opener && typeof opener.opener.updateWindowMenu === 'function') {
+                opener.opener.updateWindowMenu('Git-ignore Editor');
+            }
+        } catch (e) {}
 
+        localState.gitignoreWindow = false;
     }
     
-    function save(){
-        // Save .gitignore
-        fs.writeFileSync(ignoreFileName, document.getElementById('ignoreFile').value , (err, result) => {
-            
-            if (err) {
-                console.log("Error writing to file : " + ignoreFileName + '\n', err);
-            }else {
-                console.log("Success writing to file : " + ignoreFileName + '\n', result);
+    async function save(){
+        if (!localIgnorePath) return;
+
+        let content = document.getElementById('ignoreFile').value;
+
+        // Save locally to localIgnorePath
+        try {
+            fs.writeFileSync(localIgnorePath, content, 'utf8');
+        } catch (err) {
+            console.warn("Error writing to file : " + localIgnorePath, err);
+        }
+
+        // If SSH, upload updated temp file to remote repo
+        if (isSsh) {
+            try {
+                await sshPut(repoFolder, '.gitignore');
+            } catch (sshErr) {
+                console.warn('Error uploading .gitignore over SSH:', sshErr);
             }
-        } );
-        
+        }
+
+        // Update settings window display text
+        try {
+            if (opener && opener.document && opener.document.getElementById('gitignoreText')) {
+                opener.document.getElementById('gitignoreText').innerText = content;
+            }
+        } catch (e) {}
     }
+
     async function retrackGitIndex() {  // Apply button -- Retracks indexed files and preview
-                
-        // Save .gitignore
-        save();
-        
+        // Save .gitignore locally and on server
+        await save();
     
         // Display .ignore file 
-        document.getElementById('ignoreFile').value = fs.readFileSync(ignoreFileName);
+        try {
+            document.getElementById('ignoreFile').value = fs.readFileSync(localIgnorePath, 'utf8');
+        } catch (e) {}
         
         // Clean index :  git rm -rf --cached .  
         try{      
-            await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'rm', '-r', '-f','--cached', '.'], onRm);
-            function onRm(err, result ){                      
+            await simpleGit(repoFolder).raw(['rm', '-r', '-f', '--cached', '.'], (err, result) => {
                 if (err) {
                     console.log("Error : git rm -rf --cached . \n" , err);
-                }else {
+                } else {
                     console.log("Success  : git rm -rf --cached . \n", result);
                 }
-            }
-        }catch(err){
-            
-        }
+            });
+        } catch(err){}
         
         document.getElementById('spinner').style.visibility = 'visible';
         
         // Add all files to index :  git add . 
         try{   
-            await simpleGit( state.repos[state.repoNumber].localFolder ).add( '.', onAdd );   
-            function onAdd(err, result) {
+            await simpleGit(repoFolder).add('.', (err, result) => {
+                document.getElementById('spinner').style.visibility = 'collapse';
                 if (err) {
-                    document.getElementById('spinner').style.visibility = 'collapse';
                     console.log("Error : git add . \n" , err);
-                }else {
-                    document.getElementById('spinner').style.visibility = 'collapse';
+                } else {
                     console.log("Success  : git add . \n", result);
                 }
-            }
-        }catch(err){
+            });   
+        } catch(err){
             document.getElementById('spinner').style.visibility = 'collapse';
         }
         
         await displayIgnoreList();
     }     
+
     async function displayIgnoreList(){  // Preview ignored files
-        opener.document.getElementById('gitignoreText').innerText = document.getElementById('ignoreFile').value;
-        // Save .gitignore
-        save();
+        if (opener && opener.document && opener.document.getElementById('gitignoreText')) {
+            opener.document.getElementById('gitignoreText').innerText = document.getElementById('ignoreFile').value;
+        }
 
         let status = "";
-        
-        await simpleGit( global.state.repos[global.state.repoNumber].localFolder).raw( [  'status', '--porcelain=v1', '--ignored'], onStatus);
-        function onStatus(err, result ){  
-            status = result;
+        try {
+            await simpleGit(repoFolder).raw(['status', '--porcelain=v1', '--ignored'], (err, result) => {  
+                status = result || '';
+            });
+        } catch (e) {
+            status = '';
         }
         
-        let splitted = status.split( '\n');
+        let splitted = status.split('\n');
         
         // Find modified files
         let modified = '';
@@ -382,39 +435,34 @@
                 
                 // Differentiate between 'deleted'. and 'deleted from tracking'
                 if ( splitted[row].startsWith('D') ){
-                    // If file does not exist => file is deleted
                     try {
                         let fileName = splitted[row].substring(3); 
-                        let filePath = global.state.repos[global.state.repoNumber].localFolder + pathsep + fileName;
-                        if (fs_existsSync(filePath)) {
-                            //file exists, must be deleted from tracking
+                        let sep = isSsh ? '/' : pathsep;
+                        let filePath = repoFolder + sep + fileName;
+                        let exists = await fs_existsSync(filePath, repoKey);
+                        if (exists) {
+                            // file exists, must be deleted from tracking
                             modified += splitted[row].substring(3) + '(untracked) \n';
-                        }else{
+                        } else {
                             modified += splitted[row].substring(3) + '(deleted) \n';
                         }
                     } catch(err) {
-                        console.error(err)
+                        console.error(err);
                     }
-                    
-                }else{
+                } else {
                     modified += splitted[row].substring(3) + '\n';
                 }
-                
             }
         }
         
-                        
- 
-        
         html += '<h3> Currently modified files : </h3>';
         html += '<pre>' + modified + '</pre>';
-        
         
         // Find ignored
         let ignored = '';
         for(let row = 0; row < splitted.length; row++) {
             if ( splitted[row].startsWith('!!') ){
-                ignored += splitted[row].substring(3) +  '\n';;
+                ignored += splitted[row].substring(3) + '\n';
             }
         }
         
@@ -422,7 +470,6 @@
         html += '<pre>' + ignored + '</pre>';
                     
         document.getElementById('ignoredList').innerHTML = html; 
-
     }
     
     // TODO:
