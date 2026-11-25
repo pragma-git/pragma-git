@@ -96,14 +96,21 @@ for cat in "${CATEGORIES[@]}"; do
 
     ((TOTAL_CATEGORIES++))
     cat_start=$(date +%s)
+    cat_num=$TOTAL_CATEGORIES
 
+    echo ""
+    echo ""
+    echo ""
     if [ -n "$VERBOSE_ARG" ]; then
         echo "${BOLD}######################################################################${NORMAL}"
-        echo "${BOLD}${YELLOW}>>> CATEGORY: $cat${NORMAL}"
+        echo "${BOLD}${YELLOW}>>> CATEGORY $cat_num: $cat${NORMAL}"
         echo "${BOLD}######################################################################${NORMAL}"
-        bash "$cat_runner" -v &
+        CATEGORY_NUM="$cat_num" bash "$cat_runner" -v &
     else
-        bash "$cat_runner" &
+        echo "${BOLD}######################################################################${NORMAL}"
+        echo "${BOLD}${YELLOW}>>> CATEGORY $cat_num: $cat${NORMAL}"
+        echo "${BOLD}######################################################################${NORMAL}"
+        CATEGORY_NUM="$cat_num" bash "$cat_runner" &
     fi
     CURRENT_RUNNER_PID=$!
     wait "$CURRENT_RUNNER_PID"
@@ -119,10 +126,10 @@ for cat in "${CATEGORIES[@]}"; do
 
     if [ $exit_code -eq 0 ]; then
         ((PASSED_CATEGORIES++))
-        CATEGORY_RESULTS+=("  ${GREEN}[OK]${NORMAL}     ${cat} (${cat_duration}s)")
+        CATEGORY_RESULTS+=("  ${GREEN}[OK]${NORMAL}     [$cat_num] ${cat} (${cat_duration}s)")
     else
         ((FAILED_CATEGORIES++))
-        CATEGORY_RESULTS+=("  ${RED}[FAILED]${NORMAL} ${cat} (${cat_duration}s)")
+        CATEGORY_RESULTS+=("  ${RED}[FAILED]${NORMAL} [$cat_num] ${cat} (${cat_duration}s)")
     fi
     echo ""
 done

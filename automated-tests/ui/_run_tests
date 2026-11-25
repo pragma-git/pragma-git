@@ -104,22 +104,33 @@ NUM_TESTS=${#TEST_FILES[@]}
 
 for test_path in "${TEST_FILES[@]}"; do
     test_name=$(basename "$test_path")
-    suite_title="ui/${test_name}"
     ((TOTAL_TESTS++))
+    if [ -n "$CATEGORY_NUM" ]; then
+        suite_num="${CATEGORY_NUM}.${TOTAL_TESTS}"
+        suite_title="[${suite_num}] ui/${test_name}"
+    else
+        suite_num="${TOTAL_TESTS}"
+        suite_title="[${suite_num}] ui/${test_name}"
+    fi
 
     echo "${BOLD}----------------------------------------------------------------------${NORMAL}"
     echo "${BOLD}>> Suite $TOTAL_TESTS/$NUM_TESTS: ${suite_title}${NORMAL}"
     echo ""
 
+    TMP_OUT=$(mktemp)
+    set -o pipefail
     if [[ "$test_path" == *.js ]]; then
-        node "$test_path" "${PASSTHROUGH_ARGS[@]}" &
+        node "$test_path" "${PASSTHROUGH_ARGS[@]}" 2>&1 | tee "$TMP_OUT" &
     else
-        bash "$test_path" "${PASSTHROUGH_ARGS[@]}" &
+        bash "$test_path" "${PASSTHROUGH_ARGS[@]}" 2>&1 | tee "$TMP_OUT" &
     fi
     CURRENT_TEST_PID=$!
     wait "$CURRENT_TEST_PID"
     exit_code=$?
+    set +o pipefail
     CURRENT_TEST_PID=""
+    OUTPUT=$(cat "$TMP_OUT")
+    rm -f "$TMP_OUT"
 
     # 130 means terminated by SIGINT
     if [ $exit_code -eq 130 ]; then
@@ -132,9 +143,7 @@ for test_path in "${TEST_FILES[@]}"; do
     else
         ((FAILED_TESTS++))
         echo "${RED}${BOLD}>> Result: SUITE FAILED [XX]${NORMAL}"
-        if [ -n "$FAILED_TESTS_LOG" ]; then
-            echo "  [FAIL] ${suite_title}" >> "$FAILED_TESTS_LOG"
-        fi
+        record_failed_test "ui/${test_name}" "$OUTPUT" "$exit_code" "$suite_num"
     fi
     echo ""
 done
@@ -154,6 +163,10 @@ else
 fi
 echo "  Total Duration: ${TOTAL_DURATION}s"
 echo "${BOLD}======================================================================${NORMAL}"
+
+if [ $FAILED_TESTS -gt 0 ]; then
+    print_failed_tests_summary "Failed Tests in UI"
+fi
 
 if [ $FAILED_TESTS -eq 0 ] && [ $TOTAL_TESTS -gt 0 ]; then
     echo "${GREEN}${BOLD}ALL UI TESTS PASSED!${NORMAL}"

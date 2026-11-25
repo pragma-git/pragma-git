@@ -32,6 +32,18 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Test Suite Numbering and Category Spacing (`automated-tests/`) (Implemented & Verified)**:
+  - **Identified Requirement**:
+    - Users found it hard to navigate test logs when a suite failed (e.g. `[FAIL] ui/test_02_pull_uncommitted_warning.js`).
+    - Needed clear Category.Suite numbering (e.g. `[3.1] git_client/test_01_simple_git_retry.js` and individual test `[3.1.2]`) so failed tests in summary can be instantly traced in the logs.
+    - Needed 3 blank rows before each category heading to separate test categories visually.
+  - **Implementation**:
+    - Updated master runners ([automated-tests/_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/_run_tests), [automated-tests/non_gui/_run_tests](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/_run_tests)) to print 3 empty lines before each category banner, number categories (`CATEGORY 1`, `CATEGORY 2`, ...), and inject `CATEGORY_NUM` to subcategory runners.
+    - Updated all category runners (`apis`, `app_function_calls`, `credentials`, `git_client`, `git_configs`, `ssh`, `utils`, `ui`) to format suite headers and summary lines as `[<category>.<suite>] <path>` (e.g. `[3.3] git_client/test_03_local_vs_server_parity.js`).
+    - Updated [automated-tests/test_setup.sh](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/test_setup.sh) `record_failed_test` to format failed test lines as `[<category>.<suite>.<test>] <desc> ([<category>.<suite>] <path>)` for both standard unit tests and UI steps.
+  - **Verification**:
+    - Verified standalone category runs (e.g. `CATEGORY_NUM=2 ./automated-tests/non_gui/utils/_run_tests` and `CATEGORY_NUM=8 ./automated-tests/ui/_run_tests`).
+    - Verified full non-GUI suite (`./automated-tests/non_gui/_run_tests`): 7/7 categories passed (42s).
 * **Automated Parity Test for getExecutableFlags over SSH vs Local (`automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js`) (Implemented & Verified)**:
   - **Identified Requirement**: User requested an automated test for `getExecutableFlags()` with and without SSH.
   - **Implementation**:

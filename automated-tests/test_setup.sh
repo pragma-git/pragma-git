@@ -60,13 +60,50 @@ function record_failed_test() {
     local suite_title="$1"
     local output="$2"
     local exit_code="$3"
+    local suite_num="$4"
 
     local fail_lines
-    fail_lines=$(echo "$output" | awk '
+    fail_lines=$(echo "$output" | awk -v suite_label="$suite_title" -v pfx="$suite_num" '
     /\[FAIL\]/ {
         sub(/^[[:space:]]+/, "", $0);
-        print "  " $0;
+        line = $0;
+        sub(/^\[FAIL\][[:space:]]*/, "", line);
+        test_id = "";
+        rest = line;
+        if (line ~ /^[0-9]+(\.[0-9]+)?:?[[:space:]]*/) {
+            split(line, parts, /:?[[:space:]]+/);
+            test_id = parts[1];
+            sub(/:$/, "", test_id);
+            sub(/^[0-9]+(\.[0-9]+)?:?[[:space:]]*/, "", rest);
+
+            if (index(test_id, ".") > 0) {
+                split(test_id, dotparts, ".");
+                sub_id = dotparts[2];
+            } else {
+                sub_id = test_id;
+            }
+
+            if (pfx != "") {
+                clean_pfx = pfx;
+                sub(/^\[/, "", clean_pfx);
+                sub(/\]$/, "", clean_pfx);
+                full_num = "[" clean_pfx "." sub_id "]";
+                print "  [FAIL] " full_num " " rest " ([" clean_pfx "] " suite_label ")";
+            } else {
+                print "  [FAIL] " test_id ": " rest " (" suite_label ")";
+            }
+        } else {
+            if (pfx != "") {
+                clean_pfx = pfx;
+                sub(/^\[/, "", clean_pfx);
+                sub(/\]$/, "", clean_pfx);
+                print "  [FAIL] " rest " ([" clean_pfx "] " suite_label ")";
+            } else {
+                print "  [FAIL] " rest " (" suite_label ")";
+            }
+        }
         in_fail = 1;
+        found = 1;
         next;
     }
     /\[PASS\]/ {
@@ -74,7 +111,8 @@ function record_failed_test() {
         next;
     }
     in_fail && /^[[:space:]]{4,}/ {
-        print "     " $0;
+        sub(/^[[:space:]]+/, "", $0);
+        print "         " $0;
         next;
     }
     {
@@ -83,12 +121,35 @@ function record_failed_test() {
     ')
 
     if [ -z "$fail_lines" ]; then
-        local err_msg
-        err_msg=$(echo "$output" | grep -E 'Error:|AssertionError|fatal:|SyntaxError|ReferenceError|TypeError' | head -n 2)
-        if [ -n "$err_msg" ]; then
-            fail_lines="  ${RED}[FAIL]${NORMAL} ${suite_title}: $err_msg"
+        local last_step err_msg step_num clean_pfx full_num prefix_str suite_tag
+        last_step=$(echo "$output" | grep -E 'STEP \[[0-9]+/[0-9]+\]' | tail -n 1 | sed -e 's/^[[:space:]]*//')
+        err_msg=$(echo "$output" | grep -E 'Assertion failed|Error:|AssertionError|fatal:|SyntaxError|ReferenceError|TypeError' | head -n 2 | sed -e 's/^[[:space:]]*//')
+        step_num=$(echo "$last_step" | sed -E -n 's/.*STEP \[([0-9]+)\/[0-9]+\].*/\1/p')
+        clean_pfx="$suite_num"
+        clean_pfx="${clean_pfx#[}"
+        clean_pfx="${clean_pfx%]}"
+        if [ -n "$step_num" ] && [ -n "$clean_pfx" ]; then
+            full_num="[${clean_pfx}.${step_num}]"
+        elif [ -n "$clean_pfx" ]; then
+            full_num="[${clean_pfx}]"
         else
-            fail_lines="  ${RED}[FAIL]${NORMAL} ${suite_title}: Suite failed with exit code $exit_code"
+            full_num=""
+        fi
+
+        prefix_str=""
+        [ -n "$full_num" ] && prefix_str="${full_num} "
+
+        suite_tag=""
+        [ -n "$clean_pfx" ] && suite_tag="([${clean_pfx}] ${suite_title})" || suite_tag="(${suite_title})"
+
+        if [ -n "$last_step" ] && [ -n "$err_msg" ]; then
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${prefix_str}${last_step}: ${err_msg} ${suite_tag}"
+        elif [ -n "$err_msg" ]; then
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${prefix_str}${err_msg} ${suite_tag}"
+        elif [ -n "$last_step" ]; then
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${prefix_str}${last_step} ${suite_tag}: Suite failed with exit code $exit_code"
+        else
+            fail_lines="  ${RED}[FAIL]${NORMAL} ${prefix_str}${suite_tag}: Suite failed with exit code $exit_code"
         fi
     fi
 
