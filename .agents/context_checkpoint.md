@@ -32,6 +32,14 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Automated Parity Test for getExecutableFlags over SSH vs Local (`automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js`) (Implemented & Verified)**:
+  - **Identified Requirement**: User requested an automated test for `getExecutableFlags()` with and without SSH.
+  - **Implementation**:
+    - Added Test 17 to `test_03_local_vs_server_parity.js` testing `getExecutableFlags()` on an executable script (`0o755`, `uncommitted === true`) and a normal text file (`0o644`, `uncommitted === false`) across both local repository and ephemeral remote OpenSSH test server.
+    - Updated VM harness to extract `getExecutableFlags()` from `merge/pragma-merge.js` and provide required context variables (`BASE`, `ROOT`, `SSH_TEMP_FILE_LOCATION`, `fs`, `global`).
+  - **Verification**:
+    - Ran `test_03_local_vs_server_parity.js`: 17/17 passed.
+    - Full git client test suite (`./automated-tests/non_gui/git_client/_run_tests`): 5/5 passed.
 * **Executable Flag Detection over SSH in Pragma-Merge (`merge/pragma-merge.js`) (Implemented & Verified)**:
   - **Identified Gap**: `getExecutableFlags` previously only checked uncommitted file executable bits via `fs.statSync(BASE).mode & fs.constants.S_IXUSR`, which failed on SSH repositories because `BASE` is a local temp file in `/tmp/pragma-git-ssh-folders/`.
   - **Resolution**:

@@ -36,6 +36,7 @@ const { assertPass, assertFail, printSuiteResult } = require(path.join(REPO_ROOT
 console.log('Running Suite: Git Parity Tests (Local vs Remote SSH Server)');
 
 const appCode = fs.readFileSync(path.join(REPO_ROOT, 'app.js'), 'utf8');
+const mergeCode = fs.readFileSync(path.join(REPO_ROOT, 'merge/pragma-merge.js'), 'utf8');
 
 function extractFunction(name) {
     const regex = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\([^)]*\\)\\s*\\{');
@@ -48,6 +49,19 @@ function extractFunction(name) {
         else if (appCode[i] === '}') { openBraces--; if (started && openBraces === 0) { end = i + 1; break; } }
     }
     return appCode.slice(start, end);
+}
+
+function extractFunctionFromMerge(name) {
+    const regex = new RegExp('(?:async\\s+)?function\\s+' + name + '\\s*\\([^)]*\\)\\s*\\{');
+    const match = mergeCode.match(regex);
+    if (!match) throw new Error('Could not find function ' + name + ' in merge/pragma-merge.js');
+    const start = match.index;
+    let openBraces = 0, started = false, end = start;
+    for (let i = start; i < mergeCode.length; i++) {
+        if (mergeCode[i] === '{') { openBraces++; started = true; }
+        else if (mergeCode[i] === '}') { openBraces--; if (started && openBraces === 0) { end = i + 1; break; } }
+    }
+    return mergeCode.slice(start, end);
 }
 
 
@@ -225,7 +239,12 @@ async function main() {
                     })
                 },
                 URL: global.URL,
-                Promise: global.Promise
+                Promise: global.Promise,
+                global: { localState: { historyHash: '' } },
+                fs: fs,
+                ROOT: repoPath,
+                BASE: '',
+                SSH_TEMP_FILE_LOCATION: '/tmp/pragma-git-ssh-folders'
             };
 
             const fns = [
@@ -243,6 +262,7 @@ async function main() {
 
             let compiled = '';
             fns.forEach(fn => compiled += extractFunction(fn) + '\n');
+            compiled += extractFunctionFromMerge('getExecutableFlags') + '\n';
             vm.runInNewContext(compiled, sandbox);
             return sandbox;
         }
@@ -564,6 +584,54 @@ async function main() {
             assertPass('16: Full raw git diff between local and server trees is 100% empty (byte-for-byte equal)');
         } else {
             assertFail('16: Raw tree diff has differences', treeDiff);
+        }
+
+        // -------------------------------------------------------------
+        // Test 17: getExecutableFlags Parity (Local and Remote SSH)
+        // -------------------------------------------------------------
+        // Create an executable script and a non-executable text file in both repos
+        const testScriptRel = 'scripts/run.sh';
+        const testTextRel = 'docs/notes.txt';
+
+        fs.mkdirSync(path.join(localRepoDir, 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(serverRepoDir, 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(localRepoDir, 'docs'), { recursive: true });
+        fs.mkdirSync(path.join(serverRepoDir, 'docs'), { recursive: true });
+
+        const localScriptPath = path.join(localRepoDir, testScriptRel);
+        const serverScriptPath = path.join(serverRepoDir, testScriptRel);
+        const localTextPath = path.join(localRepoDir, testTextRel);
+        const serverTextPath = path.join(serverRepoDir, testTextRel);
+
+        fs.writeFileSync(localScriptPath, '#!/bin/sh\necho "hello"\n', { mode: 0o755 });
+        fs.writeFileSync(serverScriptPath, '#!/bin/sh\necho "hello"\n', { mode: 0o755 });
+        fs.writeFileSync(localTextPath, 'plain text notes\n', { mode: 0o644 });
+        fs.writeFileSync(serverTextPath, 'plain text notes\n', { mode: 0o644 });
+
+        // Stage files in both git indexes
+        execSync(`git -C "${localRepoDir}" add "${testScriptRel}" "${testTextRel}"`);
+        execSync(`git -C "${serverRepoDir}" add "${testScriptRel}" "${testTextRel}"`);
+
+        // Configure sandbox BASE pointers for local testing
+        localVM.BASE = localScriptPath;
+        const localScriptFlags = await localVM.getExecutableFlags(testScriptRel);
+
+        serverVM.BASE = serverScriptPath;
+        const serverScriptFlags = await serverVM.getExecutableFlags(testScriptRel);
+
+        localVM.BASE = localTextPath;
+        const localTextFlags = await localVM.getExecutableFlags(testTextRel);
+
+        serverVM.BASE = serverTextPath;
+        const serverTextFlags = await serverVM.getExecutableFlags(testTextRel);
+
+        if (localScriptFlags.uncommitted === true && serverScriptFlags.uncommitted === true &&
+            localTextFlags.uncommitted === false && serverTextFlags.uncommitted === false) {
+            assertPass('17: getExecutableFlags() detects executable bit (+x) and non-executable bit (-x) identically for local and SSH');
+        } else {
+            assertFail('17: getExecutableFlags() parity mismatch',
+                `Script uncommitted: local=${localScriptFlags.uncommitted} server=${serverScriptFlags.uncommitted}; ` +
+                `Text uncommitted: local=${localTextFlags.uncommitted} server=${serverTextFlags.uncommitted}`);
         }
 
     } catch (err) {
