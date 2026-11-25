@@ -1000,12 +1000,27 @@ async function getExecutableFlags( file){
     }
     
     
-    let executableResults = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous:  undefined};
+    let executableResults = { uncommitted: undefined, HEAD: undefined, HEAD_1: undefined, selected: undefined, previous: undefined };
 
-    
-     // Uncommitted (check executable flag directly -- Windows does only check if file exists)
-    executableResults.uncommitted = !!(fs.statSync( BASE).mode & fs.constants.S_IXUSR)
-    // NOTE: Does not work on ssh folder
+    // Uncommitted (check executable flag: for SSH repos query git index ls-files -s; for local check filesystem bit)
+    if (ROOT.startsWith('ssh:')) {
+        try {
+            await simpleGit(ROOT).raw(['ls-files', '-s', file], (err, result) => {
+                if (result && typeof result === 'string') {
+                    let mode = result.trim().split(' ')[0];
+                    executableResults.uncommitted = (mode === '100755');
+                }
+            });
+        } catch (err) {
+            console.warn('Error reading uncommitted executable flag over SSH:', err);
+        }
+    } else {
+        try {
+            executableResults.uncommitted = !!(fs.statSync(BASE).mode & fs.constants.S_IXUSR);
+        } catch (err) {
+            executableResults.uncommitted = false;
+        }
+    }
 
     
     // HEAD

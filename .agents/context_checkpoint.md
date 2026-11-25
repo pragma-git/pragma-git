@@ -32,6 +32,13 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Executable Flag Detection over SSH in Pragma-Merge (`merge/pragma-merge.js`) (Implemented & Verified)**:
+  - **Identified Gap**: `getExecutableFlags` previously only checked uncommitted file executable bits via `fs.statSync(BASE).mode & fs.constants.S_IXUSR`, which failed on SSH repositories because `BASE` is a local temp file in `/tmp/pragma-git-ssh-folders/`.
+  - **Resolution**:
+    - For SSH repositories (`ROOT.startsWith('ssh:')`), `getExecutableFlags` now queries `simpleGit(ROOT).raw(['ls-files', '-s', file])` via `ssh-git-client` to accurately check if the file mode is `100755`.
+    - For local repositories, retains fast direct filesystem stat check.
+  - **Verification**:
+    - Git client test suite (`./automated-tests/non_gui/git_client/_run_tests`): 5/5 passed.
 * **Fix Search Icon ID Collision in .gitignore Editor (`edit_ignore.html`) (Fixed & Verified)**:
   - **Identified Failure**: Hovering over the Help icon in the `.gitignore Editor` caused the search icon to turn into a question mark.
   - **Root Cause**: Both the search icon and the help icon shared the exact same DOM ID (`id="about-icon"`). When hovering the help icon, `document.getElementById('about-icon')` resolved the search icon and replaced its `src` with `questionmark_hover.png`.
