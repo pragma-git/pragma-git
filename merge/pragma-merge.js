@@ -1016,7 +1016,17 @@ async function getExecutableFlags( file){
         }
     } else {
         try {
-            executableResults.uncommitted = !!(fs.statSync(BASE).mode & fs.constants.S_IXUSR);
+            if (process.platform === 'win32') {
+                // Windows NTFS does not track POSIX executable bits (+x); query the Git index directly
+                await simpleGit(ROOT).raw(['ls-files', '-s', file], (err, result) => {
+                    if (result && typeof result === 'string') {
+                        let mode = result.trim().split(' ')[0];
+                        executableResults.uncommitted = (mode === '100755');
+                    }
+                });
+            } else {
+                executableResults.uncommitted = !!(fs.statSync(BASE).mode & fs.constants.S_IXUSR);
+            }
         } catch (err) {
             executableResults.uncommitted = false;
         }

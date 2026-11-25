@@ -32,6 +32,18 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix getExecutableFlags for Windows and Cross-Platform Parity (`merge/pragma-merge.js`, `test_03_local_vs_server_parity.js`) (Fixed & Verified)**:
+  - **Identified Failure on Windows CI**:
+    - `[FAIL] 17: getExecutableFlags() parity mismatch: Script uncommitted: local=false server=false; Text uncommitted: local=false server=false`
+    - **Root Cause**:
+      1. Windows NTFS does not support POSIX executable permissions (`S_IXUSR`); `fs.statSync(BASE).mode & fs.constants.S_IXUSR` returns `0` (`false`) on Windows even for files written with `mode: 0o755`.
+      2. In `test_03_local_vs_server_parity.js`, `git add` on Windows creates Git index entries with mode `100644` by default because Windows Git ignores the filesystem mode unless explicitly marked or instructed via `core.filemode=false` / `git update-index --chmod=+x`.
+  - **Resolution**:
+    1. In [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js), added a Windows platform check (`process.platform === 'win32'`) to query Git's index directly (`simpleGit(ROOT).raw(['ls-files', '-s', file])`) to detect `100755` executable state for local files, while preserving the fast direct `fs.statSync(BASE)` check on macOS/Linux.
+    2. In [automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js), added `git update-index --chmod=+x "${testScriptRel}"` after staging to ensure Git's index accurately reflects executable permissions on Windows NTFS.
+  - **Verification**:
+    - Ran `./automated-tests/non_gui/git_client/test_03_local_vs_server_parity.js`: 17/17 passed.
+    - Verified full non-GUI test suite (`./automated-tests/non_gui/_run_tests`): 7/7 categories passed.
 * **Test Suite Numbering and Category Spacing (`automated-tests/`) (Implemented & Verified)**:
   - **Identified Requirement**:
     - Users found it hard to navigate test logs when a suite failed (e.g. `[FAIL] ui/test_02_pull_uncommitted_warning.js`).

@@ -608,9 +608,11 @@ async function main() {
         fs.writeFileSync(localTextPath, 'plain text notes\n', { mode: 0o644 });
         fs.writeFileSync(serverTextPath, 'plain text notes\n', { mode: 0o644 });
 
-        // Stage files in both git indexes
+        // Stage files in both git indexes (explicitly mark executable on index for Windows/cross-platform parity)
         execSync(`git -C "${localRepoDir}" add "${testScriptRel}" "${testTextRel}"`);
         execSync(`git -C "${serverRepoDir}" add "${testScriptRel}" "${testTextRel}"`);
+        execSync(`git -C "${localRepoDir}" update-index --chmod=+x "${testScriptRel}"`);
+        execSync(`git -C "${serverRepoDir}" update-index --chmod=+x "${testScriptRel}"`);
 
         // Configure sandbox BASE pointers for local testing
         localVM.BASE = localScriptPath;
