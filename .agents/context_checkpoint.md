@@ -53,6 +53,10 @@
        - Removed `Vampire/setup-wsl@v7` and `setup_wsl_ssh.sh` from `.github/workflows/tests.yml`.
   - **Verification**:
     - Ran full master test suite (`./_run_tests`): **8/8 categories passed** (SSH 8/8, Utils 2/2, Git Client 5/5 including 17/17 local-vs-SSH parity, Credentials 3/3, Git Configs 1/1, APIs 6/6, App Function Calls 5/5, UI 3/3) in **36s total** (down from ~66s).
+    - **Windows CI Fixes (Run `45773131377` -> Re-run)**:
+      1. Ignored non-fatal `err.level === 'agent'` events in `ssh-connection-pool.js` (`_acquireEntry`, `testLogin`, `deployPublicKey`) so stopped/unreachable `openssh-ssh-agent` pipes on Windows never abort `tryNextAuth()` / password fallback.
+      2. Fixed MSYS `$REPO_ROOT` (`require('/d/...')`) path issue in `test_05_difftool_mergetool_sessions.sh` Test 5.11 by `cd "$REPO_ROOT"` and requiring `./ssh_folder/ssh-connection-pool.js`.
+      3. Moved `windowsToGitBashPath` import to module top-level in `automated-tests/ui/lib/ui_fixtures.js` so both `setup()` and `launchNW()` can access it on Windows.
 * **Fix getExecutableFlags for Windows and Cross-Platform Parity (`merge/pragma-merge.js`, `test_03_local_vs_server_parity.js`) (Fixed & Verified)**:
   - **Identified Failure on Windows CI**:
     - `[FAIL] 17: getExecutableFlags() parity mismatch: Script uncommitted: local=false server=false; Text uncommitted: local=false server=false`

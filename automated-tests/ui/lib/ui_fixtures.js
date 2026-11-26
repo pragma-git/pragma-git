@@ -10,6 +10,7 @@ const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { windowsToGitBashPath } = require(path.resolve(__dirname, '../../../ssh_folder/ssh-folder-lib.js'));
 
 class UIFixtures {
     constructor() {
@@ -44,7 +45,6 @@ class UIFixtures {
         const repoRoot = path.resolve(__dirname, '../../..');
         const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
         const sshJs = path.join(repoRoot, 'automated-tests/ssh_test_server.js');
-        const { windowsToGitBashPath } = require(path.join(repoRoot, 'ssh_folder/ssh-folder-lib.js'));
 
         // Generate client key pair inside this.tmpDir (the key that will be configured and deployed via the UI)
         this.clientKey = path.join(this.tmpDir, 'test_user_key');

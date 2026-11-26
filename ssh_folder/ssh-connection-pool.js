@@ -499,6 +499,8 @@ class SshConnectionPool {
             });
 
             client.on('error', (err) => {
+                // Non-fatal ssh-agent connection errors allow ssh2 to continue to tryNextAuth()
+                if (err && err.level === 'agent') return;
                 clearTimeout(connectTimer);
                 this._evict(poolKey, entry);
                 if (!settled) {
@@ -915,6 +917,7 @@ class SshConnectionPool {
             });
 
             client.on('error', (err) => {
+                if (err && err.level === 'agent') return;
                 const code = String(err.code || '').toUpperCase();
                 const msg = String(err.message || err);
                 const lower = msg.toLowerCase();
@@ -1080,7 +1083,10 @@ class SshConnectionPool {
                 });
             });
 
-            client.on('error', (err) => fail(err));
+            client.on('error', (err) => {
+                if (err && err.level === 'agent') return;
+                fail(err);
+            });
 
             client.connect({
                 host: params.host,

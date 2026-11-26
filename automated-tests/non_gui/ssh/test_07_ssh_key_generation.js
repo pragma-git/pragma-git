@@ -126,8 +126,11 @@ console.log('Running Suite: SSH Key Generation & Isolated Deployment Tests');
         }
 
         // Test 9: Password-authenticated deployPublicKey() when no prior SSH key is authorized on server
+        // (Also simulates an unreachable SSH_AUTH_SOCK to ensure dead/stopped ssh-agent never aborts password fallback)
         const pwdServer = startEphemeralSshServer({ forceNodeServer: true, authorizeDefaultKey: false });
+        const origAuthSock = process.env.SSH_AUTH_SOCK;
         try {
+            process.env.SSH_AUTH_SOCK = path.join(pwdServer.sandboxDir, 'non_existent_agent.sock');
             pwdServer.setPassword('pragmaTestPassword!42');
             const pwdKeyPath = path.join(pwdServer.sandboxDir, 'id_ed25519_pwd_deploy');
             sshLib.generateLocalSshKey(pwdKeyPath);
@@ -140,11 +143,13 @@ console.log('Running Suite: SSH Key Generation & Isolated Deployment Tests');
             });
             const pwdLoginStatus = await sshLib.sshTestLogin(pwdServer.makeSshUrl(pwdServer.sandboxDir), pwdKeyPath);
             if (pwdLoginStatus === 'STATUS:OK') {
-                assertPass('7.9: deployPublicKey falls back to password authentication when no key is authorized yet');
+                assertPass('7.9: deployPublicKey falls back to password authentication cleanly even when ssh-agent is unreachable');
             } else {
                 assertFail('7.9: Expected STATUS:OK after password-authenticated deployPublicKey', pwdLoginStatus);
             }
         } finally {
+            if (origAuthSock !== undefined) process.env.SSH_AUTH_SOCK = origAuthSock;
+            else delete process.env.SSH_AUTH_SOCK;
             delete process.env.PRAGMA_REMOTE_AUTHORIZED_KEYS;
             pwdServer.stop();
         }

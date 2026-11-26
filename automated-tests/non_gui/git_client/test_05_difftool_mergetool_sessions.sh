@@ -255,8 +255,8 @@ rm -f "$TEST_TMP/pragma-merge-running-ssh"
 wait $PID_SSH 2>/dev/null
 
 # Test 11: Verify parseRemoteDiffFileList in ssh-connection-pool.js preserves empty $1 ($BASE) without shifting $2 ($LOCAL) and $3 ($REMOTE), including paths with spaces and '--'
-PARSE_CHECK=$(node -e "
-const { parseRemoteDiffFileList } = require('$REPO_ROOT/ssh_folder/ssh-connection-pool.js');
+PARSE_CHECK=$(cd "$REPO_ROOT" && node -e "
+const { parseRemoteDiffFileList } = require('./ssh_folder/ssh-connection-pool.js');
 const parsed = parseRemoteDiffFileList('\"\" \"/tmp/stored_head_file\" \"/Users/jan/testRepos -- local on ssh/cliHelpLine/.gitignore\" \".gitignore\"');
 if (parsed.length === 4 && parsed[0] === '' && parsed[1] === '/tmp/stored_head_file' && parsed[2] === '/Users/jan/testRepos -- local on ssh/cliHelpLine/.gitignore' && parsed[3] === '.gitignore') {
     console.log('OK');
