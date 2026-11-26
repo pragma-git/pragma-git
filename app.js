@@ -1194,13 +1194,13 @@ async function _callback( name, event){
         // Windows solution
         //   
       
-            // Windows ssh folder (open interactive SSH session inside Git Bash)
+            // Windows ssh folder (open interactive SSH session in Command Prompt)
             if ((process.platform === 'win32') && folder.startsWith('ssh:')) {
-                const { spawn } = require('child_process');
+                const { exec } = require('child_process');
                 const url = new URL(folder);
                 const sshUser = url.username;
                 const sshHost = url.hostname;
-                const remotePath = url.pathname.replace(/\//g, '/');
+                const remotePath = url.pathname.replace(/\\/g, '/');
                 const portCommand = url.port ? ` -p ${url.port}` : '';
                 const decodedPath = decodeURIComponent(remotePath);
                 const escapedRemotePath = decodedPath.replace(/'/g, "'\\''");
@@ -1211,40 +1211,32 @@ async function _callback( name, event){
                     ? state.repos[state.repoNumber].sshKey.trim()
                     : '';
                 if (repoKey) {
-                    const bashKeyPath = (typeof windowsToGitBashPath === 'function')
-                        ? windowsToGitBashPath(repoKey)
-                        : repoKey.replaceAll('\\', '/');
-                    keyArg = ` -i '${bashKeyPath.replace(/'/g, "'\\''")}'`;
+                    const normKey = path.normalize(repoKey).replace(/"/g, '""');
+                    keyArg = ` -i "${normKey}"`;
                 }
+
+                // If user configured a custom terminal in Settings -> Software -> Terminal, respect it if present
+                const customTerm = (state.tools && state.tools.terminal && state.tools.terminal.trim())
+                    ? state.tools.terminal.trim()
+                    : '';
 
                 const sshCommand = `ssh -t${portCommand}${keyArg} ${sshTarget} "cd '${escapedRemotePath}' && exec bash -l"`;
-                const gitBashTerm = (typeof getGitBashTerminalExecutable === 'function')
-                    ? getGitBashTerminalExecutable()
-                    : 'C:\\Program Files\\Git\\git-bash.exe';
+                const windowTitle = `Pragma-git: ${sshTarget} - ${decodedPath}`;
 
-                try {
-                    let termProc;
-                    if (gitBashTerm.toLowerCase().endsWith('git-bash.exe')) {
-                        termProc = spawn(gitBashTerm, ['-c', sshCommand], {
-                            detached: true,
-                            stdio: 'ignore',
-                            windowsHide: false
-                        });
-                    } else {
-                        termProc = spawn('cmd.exe', ['/c', 'start', '""', gitBashTerm, '--login', '-i', '-c', sshCommand], {
-                            detached: true,
-                            stdio: 'ignore',
-                            windowsHide: false
-                        });
-                    }
-                    termProc.on('error', (err) => {
-                        console.error(`Error launching Git Bash SSH terminal: ${err.message}`);
-                    });
-                    termProc.unref();
-                    console.log('Git Bash launched and SSH session started in target directory');
-                } catch (error) {
-                    console.error(`Error launching Git Bash SSH terminal: ${error.message}`);
+                let terminalCommand;
+                if (customTerm) {
+                    terminalCommand = `start "${windowTitle}" "${customTerm}" ${sshCommand}`;
+                } else {
+                    terminalCommand = `start "${windowTitle}" cmd.exe /k ${sshCommand}`;
                 }
+
+                exec(terminalCommand, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`Error launching SSH terminal in CMD: ${error.message}`);
+                        return;
+                    }
+                    console.log('SSH session started in CMD window');
+                });
 
                 break; // Exit switch
             }
