@@ -5348,8 +5348,14 @@ async function gitLocalFolder(){
     let gitFolders = [];
 
     try{
-        gitFolders.folderPath = await simpleGit(state.repos[state.repoNumber].localFolder)._executor.cwd;    
-        gitFolders.folderName = gitFolders.folderPath.replace(/^.*[\\\/]/, '');
+        let repoFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+        if (repoFolder && repoFolder.startsWith('ssh:')) {
+            gitFolders.folderPath = repoFolder;
+            gitFolders.folderName = repoFolder.replace(/[\\\/]+$/, '').replace(/^.*[\\\/]/, '');
+        } else {
+            gitFolders.folderPath = await simpleGit(repoFolder)._executor.cwd;    
+            gitFolders.folderName = gitFolders.folderPath.replace(/^.*[\\\/]/, '');
+        }
      }catch(err){
         gitFolders.folderName = ""; 
         gitFolders.folderPath = ""; 
@@ -5716,7 +5722,7 @@ function hasUpstreamRemote() {
 }
 
 function getUpstreamDefaultBranch(folder, remoteName = 'upstream') {
-    if (!folder) return 'main';
+    if (!folder || folder.startsWith('ssh:') || !hasUpstreamRemote()) return 'main';
     const { execSync } = require('child_process');
     try {
         let symRef = execSync(`git symbolic-ref --short refs/remotes/${remoteName}/HEAD`, { cwd: folder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
@@ -6712,8 +6718,8 @@ async function cacheBranchList(){
                         cachedBranchList.branches[ thisBranchName ].upstreamAhead = false;
                     }
                     
-                    // Only add promise if a new upstream
-                    if ( upstreamName !== last){
+                    // Only add promise if a new non-origin upstream
+                    if ( upstreamName !== last && upstreamName !== 'origin' ){
                         promises.push( gitListUpstreamsNeedingFetch( upstreamName ) );  // Add promise
                     }
                     last = upstreamName;
@@ -6734,24 +6740,26 @@ async function cacheBranchList(){
             const { execSync } = require('child_process');
             let current = (typeof status_data !== 'undefined' && status_data && status_data.current) ? status_data.current : 'HEAD';
             let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
-            let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
-            for (let b of cachedBranchList.all) {
-                if (b.startsWith('remotes/') && !b.startsWith('remotes/origin/')) {
-                    if (!isRelevantUpstreamBranch(b, current, upstreamDefault)) {
-                        continue;
-                    }
-                    try {
-                        let countStr = execSync(`git rev-list --count ${current}..${b}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-                        let count = parseInt(countStr, 10) || 0;
-                        if (count > 0) {
-                            if (!cachedBranchList.branches[b]) {
-                                cachedBranchList.branches[b] = {current: false, name: b, commit: undefined, label: undefined, show: true};
-                            }
-                            cachedBranchList.branches[b].upstreamAhead = true;
-                            cachedBranchList.branches[b].behindCount = count;
+            if (localFolder && !localFolder.startsWith('ssh:') && hasUpstreamRemote()) {
+                let upstreamDefault = getUpstreamDefaultBranch(localFolder, 'upstream');
+                for (let b of cachedBranchList.all) {
+                    if (b.startsWith('remotes/') && !b.startsWith('remotes/origin/')) {
+                        if (!isRelevantUpstreamBranch(b, current, upstreamDefault)) {
+                            continue;
                         }
-                    } catch (e) {
-                        // branch or ref may not exist
+                        try {
+                            let countStr = execSync(`git rev-list --count ${current}..${b}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+                            let count = parseInt(countStr, 10) || 0;
+                            if (count > 0) {
+                                if (!cachedBranchList.branches[b]) {
+                                    cachedBranchList.branches[b] = {current: false, name: b, commit: undefined, label: undefined, show: true};
+                                }
+                                cachedBranchList.branches[b].upstreamAhead = true;
+                                cachedBranchList.branches[b].behindCount = count;
+                            }
+                        } catch (e) {
+                            // branch or ref may not exist
+                        }
                     }
                 }
             }
@@ -6770,13 +6778,17 @@ async function cacheBranchList(){
     }
         async function gitListUpstreamsNeedingFetch(branchName){
             // Sets upstreamAhead flag and computes behind count
+            let localFolder = (state.repos && state.repos[state.repoNumber]) ? state.repos[state.repoNumber].localFolder : '';
+            if (!localFolder || localFolder.startsWith('ssh:')) {
+                return;
+            }
             
             return new Promise((resolve) => {
                 let INCLUDE_PATH = typeof configFile !== 'undefined' ? `include.path = ${configFile}` : '';
-                let configFlag = INCLUDE_PATH ? `-c '${INCLUDE_PATH}' ` : '';
-                let RUN = `cd '${state.repos[state.repoNumber].localFolder}' && export GIT_TERMINAL_PROMPT=0; export GIT_ASKPASS=true; git ${configFlag}-c core.askpass= fetch --dry-run ${branchName}`;
+                let configFlag = INCLUDE_PATH ? `-c "${INCLUDE_PATH}" ` : '';
+                let RUN = `git ${configFlag}-c core.askpass= fetch --dry-run ${branchName}`;
             
-                exec( RUN , 
+                exec( RUN , { cwd: localFolder, env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_ASKPASS: 'true', GCM_INTERACTIVE: 'never' } },
                     async (error, stdout, stderr) => { 
             
                         // Typical response (or totally empty if fetch is not needed) :
@@ -6802,7 +6814,7 @@ async function cacheBranchList(){
                                         let range = diffParts[0];
                                         try {
                                             const { execSync } = require('child_process');
-                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count ${range}`, { encoding: 'utf8' }).trim();
+                                            let res = execSync(`git rev-list --count ${range}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
                                             count = parseInt(res, 10) || 1;
                                         } catch (e) {
                                             count = 1;
@@ -6811,7 +6823,7 @@ async function cacheBranchList(){
                                         // Brand new upstream branch or ref not locally present
                                         try {
                                             const { execSync } = require('child_process');
-                                            let res = execSync(`cd '${state.repos[state.repoNumber].localFolder}' && git rev-list --count HEAD..${branchName}/${remoteBranchShortName.replace(branchName + '/', '')}`, { encoding: 'utf8' }).trim();
+                                            let res = execSync(`git rev-list --count HEAD..${branchName}/${remoteBranchShortName.replace(branchName + '/', '')}`, { cwd: localFolder, encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
                                             count = parseInt(res, 10) || 1;
                                         } catch (e) {
                                             count = 1;
@@ -6950,7 +6962,14 @@ async function cacheRemoteOriginStatus( start = 0 ){
         newCachedRemoteOrigins.remoteURL[repoNumber]  =  state.repos[repoNumber].remoteURL;
         
         // Get remote repo, and process (set state.repos[i].remoteURL , and test)
-        await simpleGit( folder ).remote( [ '-v'], onRemote);
+        let result;
+        let remoteErr;
+        try {
+            result = await simpleGit( folder ).remote( [ '-v'] );
+        } catch (err) {
+            remoteErr = err;
+        }
+        await onRemote(remoteErr, result);
         
         // Processing function 
         async function onRemote(err, result) {
@@ -6971,7 +6990,7 @@ async function cacheRemoteOriginStatus( start = 0 ){
                 console.error( 'configFilePath = ' + configFilePath( folder ) );
                 console.error( 'folder = ' + folder );
                 
-                console.error( `await simpleGit( ${folder} ).remote( [ '-v'], onRemote);`);
+                console.error( `await simpleGit( ${folder} ).remote( [ '-v'] );`);
                 console.error(err);
                 return
             }
@@ -6991,6 +7010,10 @@ async function cacheRemoteOriginStatus( start = 0 ){
                 // CORE functionalisty -- update and test if remote origin
                 if ( upstreamName == 'origin'){       
                     state.repos[repoNumber].remoteURL = upstreamURL;  // New URL from repo (otherwise untouched)
+                    newCachedRemoteOrigins.remoteURL[repoNumber] = upstreamURL;
+                    if (cachedRemoteOrigins.remoteURL) {
+                        cachedRemoteOrigins.remoteURL[repoNumber] = upstreamURL;
+                    }
                     
                     // Test if remote is active
                     newCachedRemoteOrigins.isActiveRemote[repoNumber]  =  await testRemoteOrigin( repoNumber);
@@ -7555,27 +7578,26 @@ async function setupSshServer( force = false ){ // Copies config, and executable
     
     // Internal function
     async function putFiles(baseUrl){
-               
-        // Copy config to ssh server -- 'pragma-git-config-ssh' (SSH_CONFIG_FILE_LOCATION)
-        await sshPutSimple( CWD_INIT + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_linux_ssh_server' , 
-                            `${baseUrl}/.Pragma-git/pragma-git-config-ssh` 
-                           ); 
-                           
-        // Copy pragma-merge executable
-        await sshPutSimple( CWD_INIT + pathsep + 'pragma-merge'  , 
-                            `${baseUrl}/.Pragma-git/pragma-merge` 
-                           );  
-        
-        
-        // Copy pragma-askpass and rename it to pragma-askpass-ssh
-        await sshPutSimple( CWD_INIT + pathsep + 'pragma-askpass'  , 
-                            `${baseUrl}/.Pragma-git/pragma-askpass-ssh` 
-                           );  
-
-        // Clean up any stale signaling or temp files from previous crashed sessions on remote
+        // Ensure .Pragma-git exists and clean up any stale signaling or temp files from previous crashed sessions in a single SSH call
         try {
-            await sshExec(baseUrl, `rm -f '/tmp/git_diff_file_list.txt' "$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh" "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh" "$HOME/.Pragma-git/.tmp/askpass_first-ssh"`);
+            await sshExec(baseUrl, `mkdir -p "$HOME/.Pragma-git" && rm -f '/tmp/git_diff_file_list.txt' "$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh" "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh" "$HOME/.Pragma-git/.tmp/askpass_first-ssh"`);
         } catch (ignoreErr) {}
+
+        // Upload config, pragma-merge, and pragma-askpass-ssh concurrently over SFTP
+        await Promise.all([
+            sshPutSimple(
+                CWD_INIT + pathsep + 'gitconfigs' + pathsep + 'pragma-git-config_linux_ssh_server',
+                `${baseUrl}/.Pragma-git/pragma-git-config-ssh`
+            ),
+            sshPutSimple(
+                CWD_INIT + pathsep + 'pragma-merge',
+                `${baseUrl}/.Pragma-git/pragma-merge`
+            ),
+            sshPutSimple(
+                CWD_INIT + pathsep + 'pragma-askpass',
+                `${baseUrl}/.Pragma-git/pragma-askpass-ssh`
+            )
+        ]);
     }
  
 }

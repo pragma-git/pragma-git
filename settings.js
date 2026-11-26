@@ -399,17 +399,21 @@ async function _callback( name, event){
             }
             
             // Update latest
-            await opener.cacheRemoteOriginStatus(id);  // Needs to be updated
+            let clonedIdx = state.repoNumber;
+            await opener.cacheRemoteOriginStatus(clonedIdx);  // Needs to be updated
             if (opener.cacheFolderStatus) {
-                await opener.cacheFolderStatus(id);
+                await opener.cacheFolderStatus(clonedIdx);
             } else if (opener.cacheLocalFolderExistStatus) {
-                await opener.cacheLocalFolderExistStatus(id);
+                await opener.cacheLocalFolderExistStatus(clonedIdx);
             }
 
-            // Replace table 
-            document.getElementById("settingsTableBody").innerHTML = ""; 
-            await createHtmlTable(document);
-            drawBranchTab(document);
+            // Replace table only if cacheLocalFolderExistStatus -> updateSettingsRepoTable did not already rebuild it
+            let settingsTbody = document.getElementById("settingsTableBody");
+            if (!settingsTbody || settingsTbody.rows.length !== state.repos.length) {
+                if (settingsTbody) settingsTbody.innerHTML = "";
+                await createHtmlTable(document);
+                await drawBranchTab(document);
+            }
                
             // Figure out URL of fork-parent (undefined if not a forked repo)
             let forkParentUrl;
@@ -1697,13 +1701,13 @@ async function gitClone( folderName, repoURL){
         var index = state.repos.length;
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
+        state.repos[index].remoteURL = document.getElementById('urlToClone').value;
         if (isSsh && selectedKey) {
             state.repos[index].sshKey = selectedKey;
         }
         
-        // Fill in state array
+        // Fill in state array (cacheRemoteOriginStatus runs once in cloneButtonPressed after repo state is finalized)
         state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
-        await opener.cacheRemoteOriginStatus();  // Updates for all repos, but that is fine since this one will be updated as well
         
         // Clean duplicates from state based on name "localFolder"
         state.repos = util.cleanDuplicates( state.repos, 'localFolder' );  // TODO : if cleaned, then I want to set state.repoNumber to the same repo-index that exists
@@ -2213,8 +2217,12 @@ async function drawSoftwareTab(document){
     try{
         //configList = await gitConfigList( state.repos[state.repoNumber].localFolder ); 
         //console.log(configList);
-        document.getElementById('authorName').value  = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
-        document.getElementById('authorEmail').value = await gitReadConfigKey( state.repoNumber, 'user.email','global');
+        const [globalName, globalEmail] = await Promise.all([
+            gitReadConfigKey( state.repoNumber, 'user.name', 'global'),
+            gitReadConfigKey( state.repoNumber, 'user.email', 'global')
+        ]);
+        document.getElementById('authorName').value  = globalName;
+        document.getElementById('authorEmail').value = globalEmail;
         
         // Show for local repo
         await displayLocalAuthorInfo();
@@ -2264,7 +2272,9 @@ async function createHtmlTable(document){
 
 		console.log( opener.cachedRemoteOrigins.isActiveRemote);
         for (let i in state.repos) {
-            state.repos[i].remoteURL = opener.cachedRemoteOrigins.remoteURL[i];
+            if (opener.cachedRemoteOrigins && opener.cachedRemoteOrigins.remoteURL && opener.cachedRemoteOrigins.remoteURL[i]) {
+                state.repos[i].remoteURL = opener.cachedRemoteOrigins.remoteURL[i];
+            }
         }
         
         await generateRepoTable( document, table, state.repos); // generate the table first
@@ -3068,10 +3078,12 @@ async function displayLocalAuthorInfo(){ // Display based on git-config author i
     console.log(' ');
     console.log('displayLocalAuthorInfo :');
 
-    let localAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'local');
-    let localAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'local');    
-    let globalAuthorName = await gitReadConfigKey( state.repoNumber, 'user.name', 'global');
-    let globalAuthorEmail = await gitReadConfigKey( state.repoNumber, 'user.email', 'global');  
+    const [localAuthorName, localAuthorEmail, globalAuthorName, globalAuthorEmail] = await Promise.all([
+        gitReadConfigKey( state.repoNumber, 'user.name', 'local'),
+        gitReadConfigKey( state.repoNumber, 'user.email', 'local'),
+        gitReadConfigKey( state.repoNumber, 'user.name', 'global'),
+        gitReadConfigKey( state.repoNumber, 'user.email', 'global')
+    ]);  
     
     console.log(`  localAuthorName = ${localAuthorName} `);   
     console.log(`  localAuthorEmail = ${localAuthorEmail} `);   

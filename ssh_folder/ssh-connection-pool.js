@@ -721,6 +721,21 @@ class SshConnectionPool {
      */
     async mkdirP(sshUrl, sshKey = '') {
         const params = resolveConnectionParams(sshUrl, sshKey);
+        const alreadyDir = await this._withConnection(params, 4000, async (entry) => {
+            try {
+                const sftp = await this._getSftp(entry);
+                return await new Promise((resolve) => {
+                    sftp.stat(params.remotePath, (err, st) => {
+                        resolve(!err && Boolean(st && typeof st.isDirectory === 'function' && st.isDirectory()));
+                    });
+                });
+            } catch (_) {
+                return false;
+            }
+        });
+        if (alreadyDir) {
+            return true;
+        }
         const res = await this.execCommand(sshUrl, `mkdir -p ${shellQuoteSingle(params.remotePath)}`, { sshKey, timeoutMs: 15000 });
         if (res.exitCode !== 0) {
             throw new Error(`Failed to create remote directory "${params.remotePath}": ${res.stderr || res.stdout}`);
@@ -789,13 +804,19 @@ class SshConnectionPool {
         const isExecutableHelper = baseName.startsWith('pragma-merge') || baseName.startsWith('pragma-askpass');
         const fileData = fs.readFileSync(localFilePath);
 
-        if (remoteDir && remoteDir !== '/' && remoteDir !== '.') {
-            await this.execCommand(destSshUrl, `mkdir -p ${shellQuoteSingle(remoteDir)}`, { sshKey, timeoutMs: 10000 });
-        }
-
         await this._withConnection(params, 10000, async (entry) => {
             try {
                 const sftp = await this._getSftp(entry);
+                if (remoteDir && remoteDir !== '/' && remoteDir !== '.') {
+                    const dirExists = await new Promise((resolve) => {
+                        sftp.stat(remoteDir, (err, st) => {
+                            resolve(!err && Boolean(st && typeof st.isDirectory === 'function' && st.isDirectory()));
+                        });
+                    });
+                    if (!dirExists) {
+                        await this.execCommand(destSshUrl, `mkdir -p ${shellQuoteSingle(remoteDir)}`, { sshKey, timeoutMs: 10000 });
+                    }
+                }
                 await new Promise((resolve, reject) => {
                     const writeOpts = isExecutableHelper ? { mode: 0o755 } : undefined;
                     sftp.writeFile(remoteFull, fileData, writeOpts, (err) => err ? reject(err) : resolve());
