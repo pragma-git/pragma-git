@@ -4307,6 +4307,46 @@ async function _setMode( inputModeName){
 }
 
 var pragmaMergeOpenWindows = new Map(); // Map filePath -> nw.Window for direct editor instances
+var pragmaMergeOpenMeta = new Map();    // Map filePath -> { filePath, root, mode }
+var pragmaMergeCloseCallbacks = new Map(); // Map filePath -> Set<Function>
+
+function registerPragmaMergeCloseCallback(filePath, callback) {
+    if (!filePath || typeof callback !== 'function') return;
+    if (!pragmaMergeCloseCallbacks.has(filePath)) {
+        pragmaMergeCloseCallbacks.set(filePath, new Set());
+    }
+    pragmaMergeCloseCallbacks.get(filePath).add(callback);
+}
+
+function getOpenPragmaMergeFilesForRepo(repoRoot) {
+    let cleanTarget = (repoRoot || '').replace(/\/+$/, '');
+    let results = [];
+    for (let [filePath, meta] of pragmaMergeOpenMeta.entries()) {
+        let w = pragmaMergeOpenWindows.get(filePath);
+        if (!w) {
+            pragmaMergeOpenMeta.delete(filePath);
+            continue;
+        }
+        try {
+            if (w.window && w.window.closed) {
+                pragmaMergeOpenWindows.delete(filePath);
+                pragmaMergeOpenMeta.delete(filePath);
+                continue;
+            }
+        } catch (e) {
+            pragmaMergeOpenWindows.delete(filePath);
+            pragmaMergeOpenMeta.delete(filePath);
+            continue;
+        }
+        let cleanMetaRoot = (meta && meta.root ? meta.root : '').replace(/\/+$/, '');
+        if (cleanTarget && cleanMetaRoot === cleanTarget) {
+            results.push({ ...meta });
+        }
+    }
+    return results;
+}
+global.registerPragmaMergeCloseCallback = registerPragmaMergeCloseCallback;
+global.getOpenPragmaMergeFilesForRepo = getOpenPragmaMergeFilesForRepo;
 
 function getSensibleMergeWindowSize(defaultWidth, defaultHeight, panes = 2) {
     let idealWidth = defaultWidth;
@@ -4369,14 +4409,23 @@ function updatePragmaMergeWindowSize(win, panes = 2) {
 global.updatePragmaMergeWindowSize = updatePragmaMergeWindowSize;
 
 function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
+    if (options && typeof options.onClosed === 'function') {
+        registerPragmaMergeCloseCallback(filePath, options.onClosed);
+    }
+
     // Check if window already open for this exact filePath
     if (pragmaMergeOpenWindows.has(filePath)) {
         let existingWin = pragmaMergeOpenWindows.get(filePath);
         try {
-            existingWin.focus();
-            return existingWin;
+            if (!existingWin.window || !existingWin.window.closed) {
+                existingWin.focus();
+                return existingWin;
+            }
+            pragmaMergeOpenWindows.delete(filePath);
+            pragmaMergeOpenMeta.delete(filePath);
         } catch (e) {
             pragmaMergeOpenWindows.delete(filePath);
+            pragmaMergeOpenMeta.delete(filePath);
         }
     }
 
@@ -4408,8 +4457,12 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
     }
 
     gui.Window.open(url, windowOptions, (win) => {
+        pragmaMergeOpenWindows.set(filePath, win);
+        pragmaMergeOpenMeta.set(filePath, { filePath, root: rootFolder, mode });
+
         win.on('loaded', () => {
             pragmaMergeOpenWindows.set(filePath, win);
+            pragmaMergeOpenMeta.set(filePath, { filePath, root: rootFolder, mode });
             if (!merge_win) {
                 merge_win = win;
             }
@@ -4423,6 +4476,14 @@ function openPragmaMergeDirect(filePath, mode = '--rw', options = {}) {
             win.on('close', function() {
                 updatePragmaMergeWindowSize(win, 1);
                 pragmaMergeOpenWindows.delete(filePath);
+                pragmaMergeOpenMeta.delete(filePath);
+                let closeSet = pragmaMergeCloseCallbacks.get(filePath);
+                pragmaMergeCloseCallbacks.delete(filePath);
+                if (closeSet) {
+                    for (let cb of closeSet) {
+                        try { cb(filePath); } catch (e) {}
+                    }
+                }
                 if (merge_win === win) {
                     let remaining = Array.from(pragmaMergeOpenWindows.values());
                     merge_win = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;

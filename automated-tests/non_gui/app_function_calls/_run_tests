@@ -67,6 +67,10 @@ function print_suite_description() {
             echo "   Tests pragma-merge window size persistence in state and settings.json."
             echo "   Verifies getSensibleMergeWindowSize and updatePragmaMergeWindowSize."
             ;;
+        test_06_ssh_file_browser_editor_awareness.js)
+            echo "   Tests SSH File Browser awareness of Pragma-git's built-in pragma-merge editor."
+            echo "   Verifies close-warning suppression, auto-removal on editor close, and Windows SSH path stripping."
+            ;;
     esac
 }
 

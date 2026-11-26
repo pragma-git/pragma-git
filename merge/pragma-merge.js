@@ -991,12 +991,27 @@ function getMode( ){
 }
 
 // Get info
+function stripSshTempPrefix(filePath) {
+    if (!filePath || typeof filePath !== 'string' || typeof SSH_TEMP_FILE_LOCATION !== 'string') {
+        return filePath;
+    }
+    let normFile = filePath.replaceAll('\\', '/');
+    let normBase = SSH_TEMP_FILE_LOCATION.replaceAll('\\', '/').replace(/\/+$/, '') + '/';
+    if (normFile.startsWith(normBase)) {
+        return normFile.slice(normBase.length);
+    }
+    if (process.platform === 'win32' && normFile.toLowerCase().startsWith(normBase.toLowerCase())) {
+        return normFile.slice(normBase.length);
+    }
+    return normFile;
+}
+
 async function getExecutableFlags( file){
     
     // TODO: ROOT does not work for SSH -- will use pragma-git folder as repo_path 
     
     if (ROOT.startsWith('ssh:') ){
-        file = file.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
+        file = stripSshTempPrefix(file);  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
     }
     
     
@@ -1110,7 +1125,14 @@ async function finish( wayToFinish){
             break;
         }
     }
-    parent.opener.updateChangedListWindow();
+    if (parent && parent.opener) {
+        if (SAVED && typeof parent.opener._update === 'function') {
+            parent.opener._update();
+        }
+        if (typeof parent.opener.updateChangedListWindow === 'function') {
+            parent.opener.updateChangedListWindow();
+        }
+    }
     win.close();
 
 }
@@ -1130,17 +1152,7 @@ async function save(){
         
         // Copy to server if ssh-folder
         if ( ROOT.startsWith('ssh:') ){
-            
-            // Make relative
-            // WAS :  MERGED_REL_PATH = MERGED.replace( `${SSH_TEMP_FILE_LOCATION}/`, '');  // Work on remote file paths (Remove SSH_TEMP_FILE_LOCATION from file)
-            
-            // SSH_TEMP_FILE_LOCATION 'C:\\Users\\axels\\AppData\\Local\\Temp\\pragma-git-ssh-folders'
-            // =>  NEW_SSH_TEMP_FILE_LOCATION = 'C:/Users/axels/AppData/Local/Temp/pragma-git-ssh-folders/'
-            // (No harm if separator is / already)
-            let NEW_SSH_TEMP_FILE_LOCATION = SSH_TEMP_FILE_LOCATION.replaceAll('\\','/') + '/';  // Replace separator \ with /.  Add extra / at end
-            MERGED_REL_PATH = MERGED.replace( NEW_SSH_TEMP_FILE_LOCATION , '');
-    
-            
+            let MERGED_REL_PATH = stripSshTempPrefix(MERGED);
             pragmaLog('Pragma-merge  -- save() called -- ssh:');
             await sshPut( ROOT, MERGED_REL_PATH);  // Copies local tempFile to remote server's sshUrl
         }

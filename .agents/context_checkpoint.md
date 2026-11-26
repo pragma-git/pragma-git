@@ -33,6 +33,15 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **SSH File Browser Awareness of Built-In `pragma-merge` Editor & Windows SSH Save Path Fix (`app.js`, `sshFileBrowser.js`, `merge/pragma-merge.js`, `merge/pragma-merge.html`, `test_06_ssh_file_browser_editor_awareness.js`) (Implemented & Verified)**:
+  - **Identified Issues**:
+    1. When editing remote SSH files from the SSH File Browser using Pragma-git's own built-in editor (`pragma-merge`), closing the SSH File Browser still showed `"Warning — Open files are being synced"`, and closed `pragma-merge` windows remained listed in `Open Files`.
+    2. In [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js), `save()` and `getExecutableFlags()` stripped `SSH_TEMP_FILE_LOCATION` with forward slashes without normalizing backslashes in `MERGED` / `file` on Windows, causing direct `sshPut()` inside `pragma-merge` to fail on Windows backslash paths.
+  - **Resolution**:
+    1. Added `pragmaMergeOpenMeta`, `registerPragmaMergeCloseCallback()`, and `getOpenPragmaMergeFilesForRepo()` to `openPragmaMergeDirect()` in [app.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/app.js) so editor window close events notify subscribers and re-opened SSH File Browser windows detect still-open built-in editors.
+    2. Updated [sshFileBrowser.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/sshFileBrowser.js) (`isBuiltInPragmaEditor`, `syncExistingBuiltInEditorWindows`, `startWatchingFile`, `launchEditorForFile`, `getExternalWatchedEntries`, `hasOpenWatchedFiles`) to skip redundant `chokidar` watchers for built-in editor files, automatically remove files from `openFilesMap` when their `pragma-merge` window closes, and only trigger `closeWarningDialog` for external editors whose syncing depends on the SSH File Browser.
+    3. Added `stripSshTempPrefix()` in [merge/pragma-merge.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.js) (normalizing Windows backslashes and drive-letter casing in both `save()` and `getExecutableFlags()`), refreshed `parent.opener._update()` after saving, and fixed outer-frame `Ctrl+S`/`Cmd+S` forwarding in [merge/pragma-merge.html](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/merge/pragma-merge.html).
+    4. Added [test_06_ssh_file_browser_editor_awareness.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/automated-tests/non_gui/app_function_calls/test_06_ssh_file_browser_editor_awareness.js) covering built-in vs external editor close-warning behavior, automatic `openFilesMap` cleanup on `pragma-merge` close, re-open synchronization, and Windows/Unix `stripSshTempPrefix()`.
 * **Replace WSL & Legacy SSH Bash Wrappers with Unified Node.js `ssh2` Multiplexed Connection Pool + Git Bash on Windows (Implemented & Verified)**:
   - **Architecture & Core Implementation**:
     1. **Persistent `ssh2` Connection Pool ([ssh_folder/ssh-connection-pool.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/ssh_folder/ssh-connection-pool.js))**:

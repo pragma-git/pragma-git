@@ -22,7 +22,7 @@ var repoName = '';
 var currentSubPath = '';
 var currentEntries = [];
 
-// Map of relativePath -> { relativePath, localTempPath, watcher, status, statusClass, lastSyncedBuffer, syncing, pendingSync }
+// Map of relativePath -> { relativePath, localTempPath, watcher, isBuiltInEditor, status, statusClass, lastSyncedBuffer, syncing, pendingSync }
 var openFilesMap = new Map();
 var pendingAfterCloseCallback = null;
 var forceClosing = false;
@@ -34,10 +34,53 @@ function formatTime(date) {
     return `${hh}:${mm}:${ss}`;
 }
 
+function isBuiltInPragmaEditor() {
+    let ed = (global.state && global.state.tools && global.state.tools.editor) ? global.state.tools.editor.trim().toLowerCase() : '';
+    return (ed === '' || ed === 'pragma-merge' || ed === 'pragma-git');
+}
+
 function getConfiguredEditorLabel() {
     let ed = (global.state && global.state.tools && global.state.tools.editor) ? global.state.tools.editor.trim() : '';
     if (!ed) return 'pragma-merge';
     return ed;
+}
+
+function deriveRelativePathFromTempPath(localTempPath) {
+    if (!localTempPath || typeof localTempPath !== 'string' || typeof SSH_TEMP_FILE_LOCATION !== 'string') {
+        return '';
+    }
+    let normFile = localTempPath.replaceAll('\\', '/');
+    let normBase = SSH_TEMP_FILE_LOCATION.replaceAll('\\', '/').replace(/\/+$/, '') + '/';
+    if (normFile.startsWith(normBase)) {
+        return normFile.slice(normBase.length);
+    }
+    if (process.platform === 'win32' && normFile.toLowerCase().startsWith(normBase.toLowerCase())) {
+        return normFile.slice(normBase.length);
+    }
+    return '';
+}
+
+function syncExistingBuiltInEditorWindows() {
+    let getOpenFn = (MAIN && typeof MAIN.getOpenPragmaMergeFilesForRepo === 'function')
+        ? MAIN.getOpenPragmaMergeFilesForRepo.bind(MAIN)
+        : (typeof global.getOpenPragmaMergeFilesForRepo === 'function' ? global.getOpenPragmaMergeFilesForRepo : null);
+    let registerCloseFn = (MAIN && typeof MAIN.registerPragmaMergeCloseCallback === 'function')
+        ? MAIN.registerPragmaMergeCloseCallback.bind(MAIN)
+        : (typeof global.registerPragmaMergeCloseCallback === 'function' ? global.registerPragmaMergeCloseCallback : null);
+
+    if (!getOpenFn || !repoSshUrl) return;
+    let openEntries = getOpenFn(repoSshUrl) || [];
+    for (let entry of openEntries) {
+        if (!entry || !entry.filePath || (entry.mode && !String(entry.mode).startsWith('--rw'))) continue;
+        let relPath = deriveRelativePathFromTempPath(entry.filePath);
+        if (!relPath) continue;
+        startWatchingFile(relPath, entry.filePath, { isBuiltInEditor: true });
+        if (registerCloseFn) {
+            registerCloseFn(entry.filePath, () => {
+                stopWatchingFile(relPath);
+            });
+        }
+    }
 }
 
 function updateEditorHeaderInfo() {
@@ -113,6 +156,7 @@ async function initSshFileBrowser() {
         }
     });
 
+    syncExistingBuiltInEditorWindows();
     renderOpenFilesList();
     await loadDirectory('');
 }
@@ -326,7 +370,7 @@ async function openRemoteFile(relativePath) {
 
     try {
         let localTempPath = await sshGet(repoSshUrl, relativePath);
-        startWatchingFile(relativePath, localTempPath);
+        startWatchingFile(relativePath, localTempPath, { isBuiltInEditor: isBuiltInPragmaEditor() });
         renderDirectoryTable();
         renderOpenFilesList();
         await launchEditorForFile(localTempPath, relativePath);
@@ -336,7 +380,9 @@ async function openRemoteFile(relativePath) {
     }
 }
 
-function startWatchingFile(relativePath, localTempPath) {
+function startWatchingFile(relativePath, localTempPath, options = {}) {
+    let builtIn = Boolean(options && options.isBuiltInEditor);
+
     // Clean up any existing watcher for this path
     if (openFilesMap.has(relativePath)) {
         let prev = openFilesMap.get(relativePath);
@@ -352,25 +398,31 @@ function startWatchingFile(relativePath, localTempPath) {
         }
     } catch (e) {}
 
-    let watcher = chokidar.watch(localTempPath, {
-        persistent: true,
-        ignoreInitial: true,
-        usePolling: true,
-        interval: 250,
-        awaitWriteFinish: {
-            stabilityThreshold: 200,
-            pollInterval: 100
-        }
-    });
+    // Built-in Pragma-merge editor uploads directly to SSH on Save and notifies on window close,
+    // so it does not require a background chokidar watcher or close-sync warning.
+    let watcher = null;
+    if (!builtIn) {
+        watcher = chokidar.watch(localTempPath, {
+            persistent: true,
+            ignoreInitial: true,
+            usePolling: true,
+            interval: 250,
+            awaitWriteFinish: {
+                stabilityThreshold: 200,
+                pollInterval: 100
+            }
+        });
 
-    watcher.on('change', () => onWatchedFileModified(relativePath));
-    watcher.on('add', () => onWatchedFileModified(relativePath));
+        watcher.on('change', () => onWatchedFileModified(relativePath));
+        watcher.on('add', () => onWatchedFileModified(relativePath));
+    }
 
     openFilesMap.set(relativePath, {
         relativePath: relativePath,
         localTempPath: localTempPath,
         watcher: watcher,
-        status: `Opened ${formatTime(new Date())}`,
+        isBuiltInEditor: builtIn,
+        status: builtIn ? `Open in Pragma-merge (${formatTime(new Date())})` : `Opened ${formatTime(new Date())}`,
         statusClass: '',
         lastSyncedBuffer: initialBuffer,
         syncing: false,
@@ -468,9 +520,18 @@ async function launchEditorForFile(localTempPath, relativePath) {
     let lowerEditor = editorSetting.toLowerCase();
 
     // 1. Built-in Pragma-merge editor (when empty, "pragma-merge", or "pragma-git")
-    if (lowerEditor === '' || lowerEditor === 'pragma-merge' || lowerEditor === 'pragma-git') {
-        if (MAIN && typeof MAIN.openPragmaMergeDirect === 'function') {
-            MAIN.openPragmaMergeDirect(localTempPath, '--rw', { root: repoSshUrl });
+    if (isBuiltInPragmaEditor()) {
+        let directLauncher = (MAIN && typeof MAIN.openPragmaMergeDirect === 'function')
+            ? MAIN.openPragmaMergeDirect.bind(MAIN)
+            : (typeof global.openPragmaMergeDirect === 'function' ? global.openPragmaMergeDirect : null);
+
+        if (directLauncher) {
+            directLauncher(localTempPath, '--rw', {
+                root: repoSshUrl,
+                onClosed: () => {
+                    stopWatchingFile(relativePath);
+                }
+            });
             return;
         }
 
@@ -485,6 +546,7 @@ async function launchEditorForFile(localTempPath, relativePath) {
         }
 
         exec(command, (error) => {
+            stopWatchingFile(relativePath);
             if (error && MAIN && typeof MAIN.pragmaLog === 'function') {
                 MAIN.pragmaLog(`Error starting pragma-merge from SSH File Browser: ${error}`);
             }
@@ -658,7 +720,7 @@ async function confirmCreateNewFile() {
         }
 
         if (shouldOpen) {
-            startWatchingFile(relPath, localTempPath);
+            startWatchingFile(relPath, localTempPath, { isBuiltInEditor: isBuiltInPragmaEditor() });
             renderDirectoryTable();
             renderOpenFilesList();
             await launchEditorForFile(localTempPath, relPath);
@@ -740,15 +802,25 @@ async function confirmCreateNewFolder() {
 // CLOSE WARNING & LIFECYCLE MANAGEMENT
 // =============================================
 
+function getExternalWatchedEntries() {
+    let entries = [];
+    for (let [relPath, item] of openFilesMap.entries()) {
+        if (item && !item.isBuiltInEditor) {
+            entries.push([relPath, item]);
+        }
+    }
+    return entries;
+}
+
 function hasOpenWatchedFiles() {
-    return openFilesMap.size > 0;
+    return getExternalWatchedEntries().length > 0;
 }
 
 function updateCloseWarningDialogList() {
     let listEl = document.getElementById('closeWarningFileList');
     if (!listEl) return;
     listEl.innerHTML = '';
-    for (let [relPath, item] of openFilesMap.entries()) {
+    for (let [relPath, item] of getExternalWatchedEntries()) {
         let li = document.createElement('li');
         li.style.marginBottom = '4px';
         li.textContent = `${relPath} (${item.status || 'open'})`;
@@ -757,7 +829,7 @@ function updateCloseWarningDialogList() {
 }
 
 function requestCloseWithWarning(afterCloseCallback) {
-    if (forceClosing || openFilesMap.size === 0) {
+    if (forceClosing || !hasOpenWatchedFiles()) {
         stopAllWatchers();
         forceClosing = true;
         if (MAIN && typeof MAIN.onSshFileBrowserClosed === 'function') {

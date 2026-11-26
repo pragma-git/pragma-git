@@ -235,6 +235,7 @@ async function main() {
 
             let compiled = '';
             fns.forEach(fn => compiled += extractFunction(fn) + '\n');
+            compiled += extractFunctionFromMerge('stripSshTempPrefix') + '\n';
             compiled += extractFunctionFromMerge('getExecutableFlags') + '\n';
             vm.runInNewContext(compiled, sandbox);
             return sandbox;
