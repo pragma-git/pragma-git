@@ -159,7 +159,11 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
         const WAIT_TIME = 3000; // Time to wait for brief messages being shown (for instance in message field)
         const pathsep = require('path').sep;  // Os-dependent path separator
         const tmpdir = os.tmpdir();
-        var CWD_INIT = process.cwd();  // Store folder that pragma-git is opened in
+        var CWD_INIT = fs.existsSync(path.join(process.cwd(), 'gitconfigs'))
+            ? process.cwd()
+            : ((typeof nw !== 'undefined' && nw.__dirname && fs.existsSync(path.join(nw.__dirname, 'gitconfigs')))
+                ? nw.__dirname
+                : path.dirname(require.resolve('./package.json')));  // Store Pragma-git application root folder
         global.CWD_INIT = CWD_INIT;    // Can be found from all open windows
 
     // Modify simpleGit function
@@ -278,7 +282,7 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
 
       
     // Files & folders
-        const STARTDIR = process.cwd(); // Folder where this file was started
+        const STARTDIR = CWD_INIT; // Pragma-git application root folder
         const GIT_CONFIG_FOLDER = STARTDIR + pathsep + 'gitconfigs';  // Internally stored include scripts including mergetool definition.  See gitDefineBuiltInTools()
     
         let settingsDir = process.env.PRAGMA_SETTINGS_DIR || (os.homedir() + pathsep + '.Pragma-git'); 
@@ -4722,36 +4726,9 @@ function configFilePath( folder = ''){
     //
     
     if ( folder.startsWith('ssh:') ){  // Function definition sets empty folder to '' -- this avoids crash from "undefined.startsWith" 
-                
-        // SSH folder (work on a server over ssh)
-        // const SSH_TEMP_FILE_LOCATION='/tmp/pragma-git-ssh-folders';             // Called TEMP_FILE_LOCATION.  NOTE decalared in ssh_folder/ssh-functions bash script
-        const SSH_CONFIG_FILE_LOCATION_TEMPLATE='$HOME/.Pragma-git/pragma-git-config-ssh'   // git config file location for when running against a ssh folder. See setupSshServer()
-            
-        const urlParts = new URL( folder);  // ssh://jan@home-jan-ubuntu:22/home/jan/Desktop/ssh_local_test'
-        let sshHome;
-        
-        // Get remote platform from URL path or session cache (avoids guessing Linux when Mac is already known)
-        try{
-            const serverHost = urlParts.host || urlParts.hostname;
-            const serverKey = `${urlParts.username}@${serverHost}`;
-            let platform = (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[repoNumber]) || (typeof typeOfRepoServer !== 'undefined' && typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]);
-            if (platform == 'Mac' || urlParts.pathname.startsWith('/Users/')){
-                sshHome = `/Users/${urlParts.username}`
-            } else {
-                sshHome = `/home/${urlParts.username}`
-            }
-        }catch (err){
-            // Fallback -- guess linux system unless URL path starts with /Users/
-            sshHome = urlParts.pathname.startsWith('/Users/') ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
-        }
-        
-        // Use sshHome in config file path     
-        try{
-            configfile = SSH_CONFIG_FILE_LOCATION_TEMPLATE.replace('$HOME', sshHome);
-        }catch (err){
-            console.error(`Error in configFilePath( ${folder}) -- ${err}`);
-        }
-        return configfile;  // Bail out if ssh
+        // ssh-connection-pool.js expands leading $HOME/ on the remote shell, working uniformly across
+        // Linux (/home/<user>), macOS (/Users/<user>), custom home paths, and ~/.ssh/config host aliases.
+        return '$HOME/.Pragma-git/pragma-git-config-ssh';
     }
     
     
@@ -4785,10 +4762,10 @@ function configFilePath( folder = ''){
         // Note : called win32 also for 64-bit  
         configfile = GIT_CONFIG_FOLDER + pathsep + 'pragma-git-config_win';
                    
-        // Special DEV
-        if ( STARTDIR.startsWith('C:\\Users') && !STARTDIR.includes('AppData\\Local\\Programs\\Pragma-git')  ){
-			// DEV is located somewhere on C:\Users, but so is also a local single-user install
-			// Therefore, exclude the single-user install location at user's "AppData\Local\Programs\Pragma-git"
+        // Special DEV (detect launching via nw.exe or running from a user directory outside installed AppData\Local\Programs\Pragma-git)
+        const execBase = path.basename(process.execPath || '').toLowerCase();
+        const isNwLauncher = execBase === 'nw.exe' || execBase === 'nw';
+        if ( isNwLauncher || (/^[a-zA-Z]:\\Users/i.test(STARTDIR) && !STARTDIR.toLowerCase().includes('appdata\\local\\programs\\pragma-git')) ){
             isDev = true;
         }
         break;
@@ -4852,7 +4829,8 @@ function configFilePath( folder = ''){
     // console.log('Config file = ' + configfile);
     // pragmaLog('Config file = ' + configfile);
       
-    return configfile;
+    // Normalize backslashes to forward slashes for Git include.path compatibility on Windows
+    return configfile.replaceAll('\\', '/');
 }
 async function gitStatus(){
     // Determine if changed files (from git status)
@@ -7556,19 +7534,27 @@ async function setupSshServer( force = false ){ // Copies config, and executable
         return;
     }
 
-    // Try known platform home directory first so macOS servers do not waste 3 failed Linux scp attempts
+    // Query exact remote $HOME first (supports Linux, macOS, domain/LDAP home paths, and ~/.ssh/config aliases without username@)
+    const userPrefix = urlParts.username ? `${urlParts.username}@` : '';
     const cachedPlat = (typeOfRepoServer._cache && typeOfRepoServer._cache[serverKey]) || (cachedLocalStatus && cachedLocalStatus.platform && cachedLocalStatus.platform[state.repoNumber]);
     const isMac = (urlParts.pathname.startsWith('/Users/') || cachedPlat === 'Mac');
     const primaryHome = isMac ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
     const fallbackHome = isMac ? `/home/${urlParts.username}` : `/Users/${urlParts.username}`;
-    
+    let remoteHome = '';
+    try {
+        const probed = await sshExec(sshUrl, 'printf "%s" "$HOME"', { timeoutMs: 5000 });
+        if (probed && probed.trim().startsWith('/')) {
+            remoteHome = probed.trim();
+        }
+    } catch (probeErr) {}
+
     try{
-        const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${primaryHome}`;
+        const baseUrl = `${urlParts.protocol}//${userPrefix}${serverHost}${remoteHome || primaryHome}`;
         await putFiles(baseUrl);
         setupSshServer._initialized.add(serverKey);
     }catch (err){
         try {
-            const baseUrl = `${urlParts.protocol}//${urlParts.username}@${serverHost}${fallbackHome}`;
+            const baseUrl = `${urlParts.protocol}//${userPrefix}${serverHost}${fallbackHome}`;
             await putFiles(baseUrl);
             setupSshServer._initialized.add(serverKey);
         } catch (err2) {

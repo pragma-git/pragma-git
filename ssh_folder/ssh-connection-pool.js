@@ -1342,6 +1342,7 @@ class SshConnectionPool {
         if (isMergeOrDiff) {
             const repoRoot = path.resolve(__dirname, '..');
             const localPragmaMerge = path.join(repoRoot, 'pragma-merge');
+            const localSshConfig = path.join(repoRoot, 'gitconfigs', 'pragma-git-config_linux_ssh_server');
             if (fs.existsSync(localPragmaMerge)) {
                 try {
                     const pragmaMergeData = fs.readFileSync(localPragmaMerge);
@@ -1350,6 +1351,14 @@ class SshConnectionPool {
                         `mkdir -p "$HOME/.Pragma-git" && cat > "$HOME/.Pragma-git/pragma-merge" && chmod +x "$HOME/.Pragma-git/pragma-merge" && rm -f '/tmp/git_diff_file_list.txt' "$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh" "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh"`,
                         { sshKey: resolvedKey, input: pragmaMergeData, timeoutMs: 10000 }
                     );
+                    if (fs.existsSync(localSshConfig)) {
+                        const sshConfigData = fs.readFileSync(localSshConfig);
+                        await this.execCommand(
+                            resolvedUrl,
+                            `test -f "$HOME/.Pragma-git/pragma-git-config-ssh" || cat > "$HOME/.Pragma-git/pragma-git-config-ssh"`,
+                            { sshKey: resolvedKey, input: sshConfigData, timeoutMs: 10000 }
+                        );
+                    }
                 } catch (e) {}
             }
         }
