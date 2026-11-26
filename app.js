@@ -4189,6 +4189,14 @@ async function _setMode( inputModeName){
             }
             setButtonText();// Set button
             document.getElementById('store-button').disabled = true;
+            let currentMsg = readMessage();
+            if (currentMsg && currentMsg.trim().length > 0) {
+                textOutput.value = currentMsg;
+                textOutput.readOnly = false;
+                writeTextOutput(textOutput);
+                await _setMode('CHANGED_FILES_TEXT_ENTERED');
+                return;
+            }
             let draft = getRepoDraftMessage();
             if (draft && draft.length > 0) {
                 textOutput.value = draft;
