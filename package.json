@@ -19,6 +19,7 @@
     "icon": "./images/icon.png"
   },
   "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'); for(const p of ['node_modules/cpu-features/build','node_modules/ssh2/lib/protocol/crypto/build']) try{fs.rmSync(p,{recursive:true,force:true})}catch{}\"",
     "start": "/Applications/nwjs.app/Contents/MacOS/nwjs  --remote-debugging-port=9222 .",
     "test": "./_run_tests"
   },

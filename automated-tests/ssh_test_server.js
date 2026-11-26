@@ -341,17 +341,23 @@ function loadAuthorizedKeys(authKeysPath) {
 function buildBashEnv() {
     const env = Object.assign({}, process.env, {
         HOME: os.homedir(),
-        USER: getCleanUsername()
+        USER: getCleanUsername(),
+        GCM_INTERACTIVE: 'never'
     });
     if (process.platform === 'win32') {
         const bashExe = getGitBashExecutable();
         const gitRoot = path.resolve(path.dirname(bashExe), bashExe.toLowerCase().includes('\\usr\\bin\\') ? '../..' : '..');
         const extra = [
-            path.join(gitRoot, 'cmd'),
+            path.join(gitRoot, 'usr', 'bin'),
             path.join(gitRoot, 'mingw64', 'bin'),
-            path.join(gitRoot, 'usr', 'bin')
+            path.join(gitRoot, 'cmd')
         ];
-        const existing = env.PATH || env.Path || '';
+        const existing = env.PATH || env.Path || env.path || '';
+        for (const k of Object.keys(env)) {
+            if (k.toUpperCase() === 'PATH' && k !== 'PATH') {
+                delete env[k];
+            }
+        }
         env.PATH = extra.concat(existing ? [existing] : []).join(';');
     }
     return env;

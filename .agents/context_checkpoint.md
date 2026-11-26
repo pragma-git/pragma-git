@@ -53,10 +53,15 @@
        - Removed `Vampire/setup-wsl@v7` and `setup_wsl_ssh.sh` from `.github/workflows/tests.yml`.
   - **Verification**:
     - Ran full master test suite (`./_run_tests`): **8/8 categories passed** (SSH 8/8, Utils 2/2, Git Client 5/5 including 17/17 local-vs-SSH parity, Credentials 3/3, Git Configs 1/1, APIs 6/6, App Function Calls 5/5, UI 3/3) in **36s total** (down from ~66s).
-    - **Windows CI Fixes (Run `45773131377` -> Re-run)**:
+    - **Windows CI Fixes (Runs `45773131377` & `45774404239`)**:
       1. Ignored non-fatal `err.level === 'agent'` events in `ssh-connection-pool.js` (`_acquireEntry`, `testLogin`, `deployPublicKey`) so stopped/unreachable `openssh-ssh-agent` pipes on Windows never abort `tryNextAuth()` / password fallback.
       2. Fixed MSYS `$REPO_ROOT` (`require('/d/...')`) path issue in `test_05_difftool_mergetool_sessions.sh` Test 5.11 by `cd "$REPO_ROOT"` and requiring `./ssh_folder/ssh-connection-pool.js`.
       3. Moved `windowsToGitBashPath` import to module top-level in `automated-tests/ui/lib/ui_fixtures.js` so both `setup()` and `launchNW()` can access it on Windows.
+      4. Fixed `[8.1.19]` post-clone hang in `test_01_ssh_clone_repo` on Windows:
+         - Rejected local filesystem and Windows drive-letter paths (`C:/...`, `C:\...`) in `lib/pragma-credentials-lib.js` (`getCredential`, `setCredential`, `clearCredential`) and `apis_github_and_others/general_git_rest_api.js` (`#parseUrl`) so `new URL("C:/...")` (`protocol: "c:"`) never triggers an unbounded `git credential fill` / Windows GCM prompt over SSH during `updateStarredButton()` / `updateRemoteInfo()`.
+         - Added non-interactive `GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true GCM_INTERACTIVE=never` and `timeoutMs` forwarding for `-PIPED` credential commands in `ssh-connection-pool.js` (`execGit`), cleared stale remote `pragma-askpass-running-ssh` signals before non-piped commands, and aborted `promptViaAskpass` immediately if the remote git command finishes.
+         - Assigned `state.repos[index].sshKey` before `cacheRemoteOriginStatus()` in `settings.js` (`gitClone`) and checked `remoteURL.includes('github.com')` before calling `getCredential` in `updateStarredButton()`.
+         - Deduplicated case-insensitive `Path`/`PATH` environment keys on Windows in `ssh_test_server.js` and `app.js`, and added a `postinstall` cleanup in `package.json` removing optional native `cpu-features`/`ssh2` `.node` builds so NW.js never encounters ABI-mismatched native addons.
 * **Fix getExecutableFlags for Windows and Cross-Platform Parity (`merge/pragma-merge.js`, `test_03_local_vs_server_parity.js`) (Fixed & Verified)**:
   - **Identified Failure on Windows CI**:
     - `[FAIL] 17: getExecutableFlags() parity mismatch: Script uncommitted: local=false server=false; Text uncommitted: local=false server=false`

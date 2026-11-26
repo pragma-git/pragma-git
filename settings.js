@@ -1697,6 +1697,9 @@ async function gitClone( folderName, repoURL){
         var index = state.repos.length;
         state.repos[index] = {}; 
         state.repos[index].localFolder = topFolder;
+        if (isSsh && selectedKey) {
+            state.repos[index].sshKey = selectedKey;
+        }
         
         // Fill in state array
         state.repos[index] = opener.fixRepoSettingWithDefault( state.repos[index]);  // Sets missing values to default values
@@ -1738,7 +1741,8 @@ async function gitClone( folderName, repoURL){
         }
 
         // Change to Software tab (In repo tab, where we already are)
-        Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)').click();
+        const swBtn = Array.from(document.querySelectorAll('button')).find(el => el.textContent === 'Software (this repo)');
+        if (swBtn) swBtn.click();
         return true;
     }catch(err){
         console.log(err);
@@ -2987,17 +2991,19 @@ async function updateStarredButton(){ // Github starring of pragma-git
     const repo = 'pragma-git';
 
     try{
-        // TOKEN for current repo
-        let creds = await opener.getCredential( state.repos[ state.repoNumber ].remoteUrl);
-        let token = creds.password;
+        let currentRemoteUrl = (state.repos && state.repos[ state.repoNumber ] && state.repos[ state.repoNumber ].remoteURL) ? state.repos[ state.repoNumber ].remoteURL : '';
 
-        // Hide button area for all except github.com
-        if ( state.repos[ state.repoNumber ].remoteURL.includes('github.com') ){
+        // Hide button area for all except github.com (check before querying git credentials)
+        if ( currentRemoteUrl.includes('github.com') ){
             document.getElementById("givePragmaGitStarDiv").style.display="block";
         }else{
             document.getElementById("givePragmaGitStarDiv").style.display="none";
-            return // No need to update buttom image
+            return // No need to update button image or query credentials
         }
+
+        // TOKEN for current repo
+        let creds = await opener.getCredential( currentRemoteUrl);
+        let token = creds.password;
         
         // Show correct star-icon, and text
         let isStarred = await githubStar.isRepositoryStarred(owner, repo, token);

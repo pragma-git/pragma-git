@@ -48,6 +48,10 @@ class git_rest_api {
         static #parseUrl(giturl) {
             if (!giturl || typeof giturl !== 'string') return null;
             let clean = giturl.trim();
+            // Reject local filesystem paths (including Windows drive-letter paths like C:/... or C:\...)
+            if (!clean || clean.startsWith('/') || clean.startsWith('\\') || /^[a-zA-Z]:[\\/]/.test(clean) || clean.startsWith('file:')) {
+                return null;
+            }
             // Support scp-style SSH URLs (e.g. git@gitlab.example.com:group/repo.git)
             let stripped = clean.replace(/^ssh:\/\//, '');
             if (stripped.startsWith('git@')) {
@@ -63,7 +67,9 @@ class git_rest_api {
                 }
             }
             try {
-                return new URL(clean);
+                const parsed = new URL(clean);
+                if (!parsed.hostname) return null;
+                return parsed;
             } catch (e) {
                 return null;
             }

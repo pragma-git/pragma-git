@@ -200,6 +200,32 @@ async function runTests() {
             assertFail('2.7: clearCredential did not remove stored credentials file');
         }
 
+        // Test 8: getCredential rejects Windows drive-letter and local filesystem paths immediately without spawning git credential fill
+        let execCalledForLocal = false;
+        const origExec = sandbox.multiPlatformExecSync;
+        sandbox.multiPlatformExecSync = async (...args) => {
+            execCalledForLocal = true;
+            return origExec(...args);
+        };
+        let rejectedCount = 0;
+        for (const localCandidate of [
+            'C:/Users/runneradmin/AppData/Local/Temp/remote_clone_source.git',
+            'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\remote_clone_source.git',
+            '/tmp/remote_clone_source.git'
+        ]) {
+            try {
+                await sandbox.getCredential(localCandidate);
+            } catch (e) {
+                rejectedCount++;
+            }
+        }
+        sandbox.multiPlatformExecSync = origExec;
+        if (rejectedCount === 3 && !execCalledForLocal) {
+            assertPass('2.8: getCredential immediately rejects Windows drive-letter and local filesystem paths without invoking credential helper');
+        } else {
+            assertFail('2.8: getCredential did not reject local paths cleanly', JSON.stringify({ rejectedCount, execCalledForLocal }));
+        }
+
     } catch (err) {
         assertFail('Unexpected error during credentials test', err.stack);
     } finally {

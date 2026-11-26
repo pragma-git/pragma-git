@@ -11,4 +11,7 @@
 const path = require('path');
 const { runUiScenario } = require(path.join(__dirname, '../lib/run_ui_tests.js'));
 
-runUiScenario('test_01_ssh_clone_repo.yaml');
+runUiScenario('test_01_ssh_clone_repo.yaml').catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

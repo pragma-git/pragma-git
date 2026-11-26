@@ -292,7 +292,7 @@ function parseRemoteDiffFileList(line) {
 /**
  * Prompts the user via Pragma-git's local askpass.html GUI window using signal files.
  */
-async function promptViaAskpass(promptText, timeoutMs = 120000) {
+async function promptViaAskpass(promptText, timeoutMs = 120000, shouldAbort = null) {
     const signalDir = getSignalDir();
     fs.mkdirSync(signalDir, { recursive: true });
 
@@ -309,6 +309,13 @@ async function promptViaAskpass(promptText, timeoutMs = 120000) {
 
     const start = Date.now();
     while (fs.existsSync(runningFile)) {
+        if (typeof shouldAbort === 'function' && shouldAbort()) {
+            try { fs.unlinkSync(runningFile); } catch (e) {}
+            try { fs.unlinkSync(promptFile); } catch (e) {}
+            const abortErr = new Error('Password prompt aborted because command finished');
+            abortErr.canceled = true;
+            throw abortErr;
+        }
         if (Date.now() - start > timeoutMs) {
             try { fs.unlinkSync(runningFile); } catch (e) {}
             throw new Error('Password prompt timed out');
@@ -1242,7 +1249,7 @@ class SshConnectionPool {
     /**
      * Relays a remote GIT_ASKPASS prompt (e.g. HTTPS push/fetch on the SSH server) to local askpass.html.
      */
-    async _handleRemoteAskpassTrigger(sshUrl, sshKey = '') {
+    async _handleRemoteAskpassTrigger(sshUrl, sshKey = '', shouldAbort = null) {
         const promptRes = await this.execCommand(
             sshUrl,
             `cat "$HOME/.Pragma-git/.tmp/askpass_first-ssh" 2>/dev/null`,
@@ -1253,10 +1260,14 @@ class SshConnectionPool {
         let exitCode = 0;
         let secret = '';
         try {
-            secret = await promptViaAskpass(promptText, 120000);
+            secret = await promptViaAskpass(promptText, 120000, shouldAbort);
         } catch (err) {
             exitCode = 1;
             secret = '';
+        }
+
+        if (typeof shouldAbort === 'function' && shouldAbort()) {
+            return;
         }
 
         await this.execCommand(
@@ -1323,8 +1334,8 @@ class SshConnectionPool {
         }
 
         const remoteFullCmd = isPiped
-            ? gitCmd
-            : `export GIT_ASKPASS="$HOME/.Pragma-git/pragma-askpass-ssh"; ${gitCmd}`;
+            ? `export GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true GCM_INTERACTIVE=never; ${gitCmd}`
+            : `rm -f "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh"; export GIT_ASKPASS="$HOME/.Pragma-git/pragma-askpass-ssh"; ${gitCmd}`;
 
         let finished = false;
         let mergeHandled = false;
@@ -1342,19 +1353,21 @@ class SshConnectionPool {
                                 `test -f "$HOME/.Pragma-git/.tmp/pragma-merge-running-ssh" -a -f '/tmp/git_diff_file_list.txt'`,
                                 { sshKey: resolvedKey, timeoutMs: 4000 }
                             );
-                            if (mCheck.exitCode === 0) {
+                            if (!finished && mCheck.exitCode === 0) {
                                 mergeHandled = true;
                                 await this._handleRemoteMergeTrigger(resolvedUrl, params, resolvedKey);
                             }
                         }
 
-                        const aCheck = await this.execCommand(
-                            resolvedUrl,
-                            `test -f "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh"`,
-                            { sshKey: resolvedKey, timeoutMs: 4000 }
-                        );
-                        if (aCheck.exitCode === 0) {
-                            await this._handleRemoteAskpassTrigger(resolvedUrl, resolvedKey);
+                        if (!finished) {
+                            const aCheck = await this.execCommand(
+                                resolvedUrl,
+                                `test -f "$HOME/.Pragma-git/.tmp/pragma-askpass-running-ssh"`,
+                                { sshKey: resolvedKey, timeoutMs: 4000 }
+                            );
+                            if (!finished && aCheck.exitCode === 0) {
+                                await this._handleRemoteAskpassTrigger(resolvedUrl, resolvedKey, () => finished);
+                            }
                         }
                     } catch (e) {}
 
@@ -1370,6 +1383,7 @@ class SshConnectionPool {
             const res = await this.execCommand(resolvedUrl, remoteFullCmd, {
                 sshKey: resolvedKey,
                 input: options.input,
+                timeoutMs: options.timeoutMs,
                 onStdout: options.onStdout,
                 onStderr: options.onStderr
             });

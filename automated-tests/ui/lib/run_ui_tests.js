@@ -367,6 +367,17 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
         console.error('       TEST SCENARIO FAILED!');
         console.error('======================================================================\x1b[0m');
         console.error(err);
+        try {
+            if (fixtures && fixtures.testSettingsDir) {
+                const logPath = path.join(fixtures.testSettingsDir, '.tmp', 'pragma-git-log.txt');
+                if (fs.existsSync(logPath)) {
+                    const logLines = fs.readFileSync(logPath, 'utf8').trim().split(/\r?\n/).slice(-40);
+                    console.error('\n--- Last lines of pragma-git-log.txt ---');
+                    console.error(logLines.join('\n'));
+                    console.error('----------------------------------------');
+                }
+            }
+        } catch (e) {}
         cleanup();
         process.exit(1);
     }

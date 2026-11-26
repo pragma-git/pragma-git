@@ -52,8 +52,10 @@ class UIFixtures {
         execSync(`ssh-keygen -q -t ed25519 -N "" -f "${this.clientKey}"`);
 
         // Start ephemeral sshd
+        const useNodeSshd = process.platform === 'win32' || process.env.PRAGMA_FORCE_NODE_SSHD === '1';
+        this.useNodeSshd = useNodeSshd;
         let startOut = '';
-        if (process.platform === 'win32') {
+        if (useNodeSshd) {
             startOut = execSync(`"${process.execPath}" "${sshJs}" start`, { encoding: 'utf8' });
         } else {
             startOut = execSync(`bash "${sshScript}" start`, { encoding: 'utf8' });
@@ -215,7 +217,7 @@ class UIFixtures {
         }
 
         if (this.sshdPid) {
-            if (process.platform === 'win32') {
+            if (this.useNodeSshd) {
                 try {
                     const repoRoot = path.resolve(__dirname, '../../..');
                     const sshJs = path.join(repoRoot, 'automated-tests/ssh_test_server.js');

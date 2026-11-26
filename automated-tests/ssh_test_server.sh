@@ -70,6 +70,7 @@ function start_test_sshd() {
     local attempt port
     for attempt in 1 2 3 4 5; do
         port=$((20000 + RANDOM % 30000))
+        if _test_sshd_port_open "$port"; then continue; fi
         cat > "$TEST_SSHD_DIR/sshd_config" <<EOF
 Port $port
 ListenAddress 127.0.0.1

@@ -8001,7 +8001,12 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
 			path.join(gitRoot, 'usr', 'bin')
 		];
 		const baseEnv = Object.assign({}, process.env, options.env || {});
-		const existingPath = baseEnv.PATH || baseEnv.Path || '';
+		const existingPath = baseEnv.PATH || baseEnv.Path || baseEnv.path || '';
+		for (const k of Object.keys(baseEnv)) {
+			if (k.toUpperCase() === 'PATH' && k !== 'PATH') {
+				delete baseEnv[k];
+			}
+		}
 		baseEnv.PATH = extraPaths.concat(existingPath ? [existingPath] : []).join(';');
 
 		try {

@@ -11,4 +11,7 @@
 const path = require('path');
 const { runUiScenario } = require(path.join(__dirname, '../lib/run_ui_tests.js'));
 
-runUiScenario('test_02_pull_uncommitted_warning.yaml');
+runUiScenario('test_02_pull_uncommitted_warning.yaml').catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

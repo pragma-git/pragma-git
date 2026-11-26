@@ -11,4 +11,7 @@
 const path = require('path');
 const { runUiScenario } = require(path.join(__dirname, '../lib/run_ui_tests.js'));
 
-runUiScenario('test_03_merge_upstream.yaml');
+runUiScenario('test_03_merge_upstream.yaml').catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

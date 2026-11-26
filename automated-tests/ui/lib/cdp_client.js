@@ -58,9 +58,26 @@ class CDPClient {
 
     async connect() {
         return new Promise((resolve, reject) => {
+            let opened = false;
             this.ws = new WebSocket(this.wsUrl);
-            this.ws.on('open', () => resolve());
-            this.ws.on('error', reject);
+            this.ws.on('open', () => {
+                opened = true;
+                resolve();
+            });
+            this.ws.on('error', (err) => {
+                for (const [, pending] of this.pendingRequests) {
+                    pending.reject(err);
+                }
+                this.pendingRequests.clear();
+                if (!opened) reject(err);
+            });
+            this.ws.on('close', () => {
+                const closeErr = new Error('CDP WebSocket closed unexpectedly (target window closed or crashed)');
+                for (const [, pending] of this.pendingRequests) {
+                    pending.reject(closeErr);
+                }
+                this.pendingRequests.clear();
+            });
             this.ws.on('message', (raw) => {
                 try {
                     const msg = JSON.parse(raw);
@@ -163,7 +180,23 @@ class CDPClient {
             if (found) return true;
             await new Promise(r => setTimeout(r, 100));
         }
-        throw new Error(`Timeout waiting for selector: ${selector}`);
+        let diag = '';
+        try {
+            const snap = await this.eval(`(() => {
+                const q = (s) => { const el = document.querySelector(s); return el ? (el.innerText || el.textContent || el.value || '').trim() : ''; };
+                const alertDlg = document.getElementById('alertDialog');
+                return JSON.stringify({
+                    alertOpen: !!(alertDlg && alertDlg.open),
+                    alertTitle: q('#alertTitle'),
+                    alertMessage: q('#alertMessage').slice(0, 200),
+                    cloneStatusServer: q('#cloneStatus_server'),
+                    cloneStatus: q('#cloneStatus'),
+                    reposLen: (typeof state !== 'undefined' && state && Array.isArray(state.repos)) ? state.repos.length : null
+                });
+            })()`);
+            if (snap) diag = ` | DOM state: ${snap}`;
+        } catch (e) {}
+        throw new Error(`Timeout waiting for selector: ${selector}${diag}`);
     }
 
     async waitForText(selector, expectedText, timeoutMs = 15000) {
