@@ -343,15 +343,7 @@ async function _callback( name, event){
 
             // If SSH server folder
             if ( folder.startsWith('ssh:') ){
-                // Windows check: verify WSL is available before proceeding with remote SSH repo
-                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
-                    let wslOk = await isWslAvailable();
-                    if (!wslOk) {
-                        setCloneStatus('');
-                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
-                        return;
-                    }
-                }
+                let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
 
                 // Setup password-less login
                 let setupKeyCheckbox = document.getElementById('setupRemoteKeyLogin_clone');
@@ -360,16 +352,13 @@ async function _callback( name, event){
                         let username = (document.querySelector('input[name="username_clone"]')?.value || '').trim();
                         let server = (document.querySelector('input[name="server_clone"]')?.value || '').trim();
                         if (username && server) {
-                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
-                                await syncSshKeysToWsl();
-                            }
-                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('clone') : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
-                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
+                            await _getPragmaSshPool().deployPublicKey({ username, server, keyPath: selectedKey });
                         }
                     }catch (err){
                         console.error('Error in password-less login');
-                        opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
+                        if (!err?.canceled) {
+                            opener.displayLongAlert('Error when setting up password-less login', err, 'error');
+                        }
                         console.error(err);
                         
                         // Close Credential windows 
@@ -387,7 +376,7 @@ async function _callback( name, event){
 
                 // Create folder on server if missing
                 try {
-                    await opener.mkdir(folder);
+                    await opener.mkdir(folder, selectedKey);
                 } catch (err) {
                     console.error('Error creating folder on server:', err);
                     opener.displayLongAlert('Clone Repository Error', `Could not create folder on server: ${err}`, 'error');
@@ -464,39 +453,24 @@ async function _callback( name, event){
 			// Make folder for ssh-folder or local repo (if folder missing)
 			// 
             if ( folder.startsWith('ssh:') ){
-                // Windows check: verify WSL is available before proceeding with remote SSH repo
-                if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
-                    let wslOk = await isWslAvailable();
-                    if (!wslOk) {
-                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running:\n  wsl --install\nin PowerShell, then restart Pragma-git.');
-                        return;
-                    }
-                }
-
-                // mkdir 
                 let selectedKeyForAdd = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
-				await opener.mkdir(folder, selectedKeyForAdd);  // Create local folder if it does not exist
-                
+
                 try{
-                    // Setup password-less login
+                    // Setup password-less login before creating/probing folder on remote server
                     if ( document.getElementById('setupRemoteKeyLogin').checked ){
                         try{
                             let username = document.querySelector('input[name="username"]').value.trim();
                             let server = document.querySelector('input[name="server"]').value.trim();
-                            if (process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
-                                await syncSshKeysToWsl();
-                            }
-                            let selectedKey = (typeof getSelectedSshKey === 'function') ? getSelectedSshKey('add') : '';
-                            let command = `${opener.CWD_INIT}/ssh_folder/ssh-generate-key-login ${username} ${server}`;
-                            await opener.multiPlatformExecSync( folder, command, false, 'timeout', 60000, { sshKey: selectedKey });  // Timeout 60 s
+                            await _getPragmaSshPool().deployPublicKey({ username, server, keyPath: selectedKeyForAdd });
                         }catch (err){
                             console.error('Error in password-less login');
-                            opener.displayLongAlert('Error when setting up password-less login', err, 'error'); 
+                            if (!err?.canceled) {
+                                opener.displayLongAlert('Error when setting up password-less login', err, 'error');
+                            }
                             console.error(err);
                             
                             // Close Credential windows 
                             opener.closeWindowsByTitle( 'Credentials');
-                            
                             
                             // Remove signal file
                             const SIGNALDIR = os.homedir() + pathsep + '.Pragma-git'+ pathsep + '.tmp';
@@ -505,8 +479,10 @@ async function _callback( name, event){
 
                             return
                         }
-                        
                     }
+
+                    // mkdir on remote server if missing
+                    await opener.mkdir(folder, selectedKeyForAdd);
                     
                                               
                     // Check if repo
@@ -635,18 +611,6 @@ async function _callback( name, event){
             console.log(event);
                 
             try{                    
-                let targetFolder = global.state.repos[ Number(id)]?.localFolder || '';
-                // On Windows, warn user if WSL is missing when selecting an SSH server repo
-                if (process.platform === 'win32' && targetFolder.startsWith('ssh:') && typeof isWslAvailable === 'function') {
-                    let wslOk = await isWslAvailable();
-                    if (!wslOk) {
-                        displayAlert('WSL Required', 'WSL (Windows Subsystem for Linux) is required on Windows to use remote repositories over SSH.\n\nPlease install WSL by running "wsl --install" in PowerShell, then restart Pragma-git.');
-                        id = origRepoNumber;
-                        document.getElementById(state.repoNumber).click();
-                        return;
-                    }
-                }
-
                 // Check that repo (both normal and ssh-folder)
                 let repoKey = (global.state.repos[ Number(id)] && global.state.repos[ Number(id)].sshKey) ? global.state.repos[ Number(id)].sshKey : '';
                 isRepo = await fs_existsSync( `${global.state.repos[ Number(id)].localFolder}/.git/HEAD`, repoKey ); 
@@ -1692,7 +1656,7 @@ async function gitClone( folderName, repoURL){
         // 1) mkdir parent folder if missing
         let options = [];
         opener.pragmaLog(`Create folder : ${cleanFolderName}`);
-        await opener.mkdir(cleanFolderName);  // Create base folder if it does not exist
+        await opener.mkdir(cleanFolderName, selectedKey);  // Create base folder if it does not exist
         
         // 2) Clone
         // For SSH repositories, simpleGit runs via ssh-git-client which is already placed in cleanFolderName (-C SERVER_BASE_PATH).
@@ -2436,8 +2400,6 @@ async function generateRepoTable(document, table, data) {
                             displayReason = 'SSH: host offline / timeout';
                         } else if (reason === 'key rejected') {
                             displayReason = 'SSH: key rejected';
-                        } else if (reason === 'wsl missing') {
-                            displayReason = 'SSH: WSL required';
                         } else if (reason === 'not a folder') {
                             displayReason = 'SSH: folder missing';
                         } else if (reason === 'not a repo') {

@@ -318,11 +318,13 @@ async function runUiScenario(scenarioNameOrFile, customArgs) {
                     console.log(`      Source: ${source}`);
                     console.log(`      Target: ${target}`);
 
-                    // On Windows, if paths were converted to WSL /mnt/... paths, convert back for Node.js fs/git execution
+                    // On Windows, if paths were converted to Git Bash /c/... paths, convert back for Node.js fs/git execution
                     if (process.platform === 'win32') {
-                        const fromWsl = (p) => p.replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:/`);
-                        source = fromWsl(source);
-                        target = fromWsl(target);
+                        const fromGitBash = (p) => p
+                            .replace(/^\/mnt\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:/`)
+                            .replace(/^\/([a-zA-Z])\//, (m, d) => `${d.toUpperCase()}:/`);
+                        source = fromGitBash(source);
+                        target = fromGitBash(target);
                     }
 
                     if (!fs.existsSync(source)) {

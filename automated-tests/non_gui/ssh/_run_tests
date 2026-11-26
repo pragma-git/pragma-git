@@ -46,37 +46,37 @@ echo "Running on: $(uname -s) ($(uname -m)) as user '$USER'"
 function print_suite_description() {
     local file="$1"
     case "$file" in
-        test_01_ssh_login.sh)
-            echo "   Verifies passwordless SSH login to localhost using standard and custom keys."
+        test_01_ssh_login.js)
+            echo "   Verifies passwordless SSH login using standard and explicit keys via ssh2 pool."
             echo "   Tests error handling for rejected keys (KEY_NEEDED), invalid hosts, and ports."
             ;;
-        test_02_ssh_folder_validation.sh)
-            echo "   Validates ssh-test-if-file-exists detection of existing/missing remote folders."
-            echo "   Tests detection of Git repositories by checking for remote .git directories."
+        test_02_ssh_folder_validation.js)
+            echo "   Validates fs_existsSync detection of existing/missing remote folders and reason codes."
+            echo "   Tests detection of Git repositories (.git/HEAD), key rejection, and network errors."
             ;;
-        test_03_ssh_mkdir.sh)
-            echo "   Tests remote folder creation via ssh-mkdir, including nested dirs (mkdir -p)."
-            echo "   Verifies idempotent creation and handles paths containing spaces properly."
+        test_03_ssh_mkdir.js)
+            echo "   Tests remote folder creation via fs_mkdir, including nested dirs (mkdir -p)."
+            echo "   Verifies idempotent creation and handles paths containing spaces and '--'."
             ;;
-        test_04_ssh_git_client.sh)
-            echo "   Tests ssh-git-client tunneling for git init, status, add, commit, and log."
-            echo "   Verifies branch creation and switching over SSH without local Git mounting."
+        test_04_ssh_git_client.js)
+            echo "   Tests in-process simpleGit('ssh://...') tunneling for git init, status, add, commit, and log."
+            echo "   Verifies branch creation and switching over SSH without spawning child processes."
             ;;
-        test_05_ssh_put_get.sh)
-            echo "   Tests ssh-put file uploads and ssh-get file downloads to/from SSH server."
-            echo "   Validates data payload integrity, remote content modifications, and round-trips."
+        test_05_ssh_put_get.js)
+            echo "   Tests sshPut uploads, sshGet downloads, sshPutSimple (+x), and sshLs directory listings."
+            echo "   Validates payload integrity, space/'--' path safety, and round-trips."
             ;;
         test_06_ssh_lib_node.js)
             echo "   Tests Node.js helper methods in ssh-folder-lib.js for resolving SSH identities."
-            echo "   Verifies ~/.ssh key scanning, fallback selection, and WSL path conversions."
+            echo "   Verifies ~/.ssh key scanning, fallback selection, and Git Bash path conversions."
             ;;
         test_07_ssh_key_generation.js)
-            echo "   Tests isolated ED25519 key generation, permissions, derivation, and overwrite protection."
-            echo "   Verifies local sandbox isolation (safeguarding ~/.ssh) and CI-guarded deployment."
+            echo "   Tests pure-JS ED25519 key generation, permissions, derivation, and overwrite protection."
+            echo "   Verifies isolated sandbox deployment via deployPublicKey() against ephemeral sshd."
             ;;
-        test_08_ssh_sync_keys.sh)
-            echo "   Tests ssh-sync-keys one-way mirroring from Windows .ssh to clean WSL ~/.ssh."
-            echo "   Verifies file exclusions (config, authorized_keys), strict 700/600/644 permissions, and central key options."
+        test_08_ssh_multiplexing_and_config.js)
+            echo "   Tests persistent ssh2 connection multiplexing, stale-socket auto-reconnect, and 0777 NTFS keys."
+            echo "   Verifies ~/.ssh/config Host alias resolution (HostName, User, Port, IdentityFile)."
             ;;
     esac
 }
@@ -90,11 +90,6 @@ START_TIME=$(date +%s)
 TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
-
-# On Windows, ensure WSL ssh daemon is active for tests
-if [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
-    wsl -u root service ssh restart >/dev/null 2>&1 || true
-fi
 
 TEST_FILES=($(find "$SCRIPT_DIR" -maxdepth 1 -type f \( -name "test_*.sh" -o -name "test_*.js" \) | sort))
 NUM_TESTS=${#TEST_FILES[@]}
@@ -119,12 +114,9 @@ for test_path in "${TEST_FILES[@]}"; do
         echo ""
 
         TMP_OUT=$(mktemp)
-        set -o pipefail   # exit code of the test, not of tee (also inside the ( ... ) subshells used on Windows)
+        set -o pipefail
         if [[ "$test_path" == *.js ]]; then
             (cd "$SCRIPT_DIR" && node "$test_name" 2>&1 | tee "$TMP_OUT")
-        elif [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
-            wsl_path=$(echo "$test_path" | sed -E 's|^/([a-zA-Z])/|/mnt/\1/|')
-            (MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path" 2>&1 | tee "$TMP_OUT")
         else
             bash "$test_path" 2>&1 | tee "$TMP_OUT"
         fi
@@ -149,9 +141,6 @@ for test_path in "${TEST_FILES[@]}"; do
 
         if [[ "$test_path" == *.js ]]; then
             OUTPUT=$(cd "$SCRIPT_DIR" && node "$test_name" 2>&1)
-        elif [[ "$(uname -s)" == MINGW* || "$(uname -s)" == MSYS* ]] && command -v wsl >/dev/null 2>&1; then
-            wsl_path=$(echo "$test_path" | sed -E 's|^/([a-zA-Z])/|/mnt/\1/|')
-            OUTPUT=$(MSYS_NO_PATHCONV=1 wsl -u "${CURRENT_USER:-runneradmin}" bash "$wsl_path" 2>&1)
         else
             OUTPUT=$(bash "$test_path" 2>&1)
         fi

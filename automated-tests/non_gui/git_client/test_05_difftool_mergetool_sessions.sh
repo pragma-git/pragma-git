@@ -254,11 +254,20 @@ echo "0" > "$TEST_TMP/exit-pragma-merge"
 rm -f "$TEST_TMP/pragma-merge-running-ssh"
 wait $PID_SSH 2>/dev/null
 
-# Test 11: Verify ssh-get-merge-files preserves empty $1 ($BASE) without shifting $2 ($LOCAL / stored) and $3 ($REMOTE / new)
-if grep -q 'ABSOLUTE_FILE_LOCATIONS="\${ABSOLUTE_FILE_LOCATIONS} \\"\\""' "$REPO_ROOT/ssh_folder/ssh-get-merge-files"; then
-    assert_pass "5.11: ssh-get-merge-files preserves empty \$BASE positional slot without shifting \$LOCAL and \$REMOTE"
+# Test 11: Verify parseRemoteDiffFileList in ssh-connection-pool.js preserves empty $1 ($BASE) without shifting $2 ($LOCAL) and $3 ($REMOTE), including paths with spaces and '--'
+PARSE_CHECK=$(node -e "
+const { parseRemoteDiffFileList } = require('$REPO_ROOT/ssh_folder/ssh-connection-pool.js');
+const parsed = parseRemoteDiffFileList('\"\" \"/tmp/stored_head_file\" \"/Users/jan/testRepos -- local on ssh/cliHelpLine/.gitignore\" \".gitignore\"');
+if (parsed.length === 4 && parsed[0] === '' && parsed[1] === '/tmp/stored_head_file' && parsed[2] === '/Users/jan/testRepos -- local on ssh/cliHelpLine/.gitignore' && parsed[3] === '.gitignore') {
+    console.log('OK');
+} else {
+    console.log('MISMATCH:' + JSON.stringify(parsed));
+}
+" 2>&1 | tr -d '\r')
+if [ "$PARSE_CHECK" = "OK" ]; then
+    assert_pass "5.11: parseRemoteDiffFileList preserves empty \$BASE positional slot and paths with spaces/'--' without shifting \$LOCAL and \$REMOTE"
 else
-    assert_fail "5.11: ssh-get-merge-files empty argument preservation" "Missing empty slot preservation in getFiles"
+    assert_fail "5.11: parseRemoteDiffFileList empty argument preservation" "$PARSE_CHECK"
 fi
 
 print_suite_result

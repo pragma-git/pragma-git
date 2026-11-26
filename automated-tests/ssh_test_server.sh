@@ -22,6 +22,7 @@ TEST_SSHD_DIR=""
 TEST_SSHD_PID=""
 TEST_SSHD_PORT=""
 TEST_SSHD_ERROR=""
+TEST_SSHD_IS_NODE=false
 
 function _test_sshd_port_open() {
     (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null
@@ -29,14 +30,30 @@ function _test_sshd_port_open() {
 
 function start_test_sshd() {
     TEST_SSHD_ERROR=""
-    local sshd_bin
-    sshd_bin="$(command -v sshd 2>/dev/null)"
-    for candidate in /usr/sbin/sshd /usr/local/sbin/sshd /usr/bin/sshd; do
-        [ -z "$sshd_bin" ] && [ -x "$candidate" ] && sshd_bin="$candidate"
-    done
+    TEST_SSHD_IS_NODE=false
+
+    # On Windows (Git Bash / MSYS / MINGW), or when OpenSSH sshd is not installed, use ssh_test_server.js (ssh2.Server)
+    local uname_s
+    uname_s="$(uname -s 2>/dev/null)"
+    local sshd_bin=""
+    if [[ "$uname_s" != MINGW* && "$uname_s" != MSYS* && "$uname_s" != CYGWIN* ]]; then
+        sshd_bin="$(command -v sshd 2>/dev/null)"
+        for candidate in /usr/sbin/sshd /usr/local/sbin/sshd /usr/bin/sshd; do
+            [ -z "$sshd_bin" ] && [ -x "$candidate" ] && sshd_bin="$candidate"
+        done
+    fi
+
     if [ -z "$sshd_bin" ]; then
-        TEST_SSHD_ERROR="sshd binary not found (install openssh-server)"
-        return 1
+        local start_out
+        start_out="$(node "$SSH_TEST_SERVER_DIR/ssh_test_server.js" start 2>&1)" || {
+            TEST_SSHD_ERROR="ssh_test_server.js failed: $start_out"
+            return 1
+        }
+        TEST_SSHD_PORT="$(printf '%s\n' "$start_out" | sed -n 's/^PORT://p' | tr -d '\r')"
+        TEST_SSHD_PID="$(printf '%s\n' "$start_out" | sed -n 's/^PID://p' | tr -d '\r')"
+        TEST_SSHD_DIR="$(printf '%s\n' "$start_out" | sed -n 's/^DIR://p' | tr -d '\r')"
+        TEST_SSHD_IS_NODE=true
+        return 0
     fi
 
     # Debian/Ubuntu sshd refuses to start without its privilege separation directory
@@ -105,13 +122,12 @@ function ssh_login_check() {   # $1 = private key.  Echoes "BEFORE:<STATUS> AFTE
     user="$(id -un)"
     start_test_sshd || { echo "ERROR:$TEST_SSHD_ERROR"; return 1; }
     url="ssh://${user}@127.0.0.1:${TEST_SSHD_PORT}/tmp"
-    # Use a native copy with strict permissions (a key on a Windows mount, /mnt/c, shows as 0777 and OpenSSH refuses it)
     cp "$key" "$TEST_SSHD_DIR/client_key" && cp "$key.pub" "$TEST_SSHD_DIR/client_key.pub"
-    chmod 600 "$TEST_SSHD_DIR/client_key"
+    chmod 600 "$TEST_SSHD_DIR/client_key" 2>/dev/null || true
     key="$TEST_SSHD_DIR/client_key"
-    before=$(PRAGMA_SSH_KEY="$key" bash "$SSH_TEST_REPO_ROOT/ssh_folder/ssh-test-login" "$url" 2>&1)
+    before=$(node -e "require('$SSH_TEST_REPO_ROOT/ssh_folder/ssh-folder-lib.js').sshTestLogin('$url', '$key').then(s => console.log(s))" 2>&1 | tr -d '\r')
     inject_test_sshd_key "$key.pub"
-    after=$(PRAGMA_SSH_KEY="$key" bash "$SSH_TEST_REPO_ROOT/ssh_folder/ssh-test-login" "$url" 2>&1)
+    after=$(node -e "require('$SSH_TEST_REPO_ROOT/ssh_folder/ssh-folder-lib.js').sshTestLogin('$url', '$key').then(s => console.log(s))" 2>&1 | tr -d '\r')
     stop_test_sshd
     echo "BEFORE:${before} AFTER:${after}"
 }

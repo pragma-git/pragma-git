@@ -194,12 +194,16 @@ KEY_CHAIN_PROFILE="jans-notary-profile"
     TEMPDIR="${DIST}/temp_pragma_git"
     CACHEDIR='/Users/jan/Downloads/caches-nwjs'
     
-    # Copy everything to temp folder (except .git)
+    # Copy everything to temp folder (except .git and optional host-compiled ssh2 cpu-features addon)
     echo 'Copy from pragma-git repo, exclude .git'
-    rsync -a  '/Users/jan/Documents/Projects/Pragma-git/pragma-git/' "${TEMPDIR}" --exclude='.git*' 
+    rsync -a  '/Users/jan/Documents/Projects/Pragma-git/pragma-git/' "${TEMPDIR}" --exclude='.git*' --exclude='node_modules/cpu-features' --exclude='node_modules/ssh2/lib/protocol/crypto/build'
     
     # Build for platforms
     node ./scripts/nwbuild_script.mjs # Build for all platforms and architectures
+
+    # Ensure optional cpu-features native addon is removed if managedManifest re-installed it
+    rm -rf ../dist/Pragma-git-*/Pragma-git.app/Contents/Resources/app.nw/node_modules/cpu-features 2>/dev/null || true
+    rm -rf ../dist/Pragma-git-*/Pragma-git.app/Contents/Resources/app.nw/node_modules/ssh2/lib/protocol/crypto/build 2>/dev/null || true
 
 
     # Make pragma-merge and pragma-askpass executables

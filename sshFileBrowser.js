@@ -638,7 +638,7 @@ async function confirmCreateNewFile() {
 
     if (btn) btn.disabled = true;
     try {
-        let localTempPath = wslToWindowsPath(`${SSH_TEMP_FILE_LOCATION}/${relPath}`);
+        let localTempPath = path.join(SSH_TEMP_FILE_LOCATION, ...relPath.split('/'));
         let localDir = path.dirname(localTempPath);
         if (!fs.existsSync(localDir)) {
             fs.mkdirSync(localDir, { recursive: true });

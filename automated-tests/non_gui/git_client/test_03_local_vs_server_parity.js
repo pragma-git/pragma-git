@@ -65,25 +65,7 @@ function extractFunctionFromMerge(name) {
 }
 
 
-function getBashShell() {
-    if (process.platform === 'win32') {
-        const candidates = [
-            'C:\\Program Files\\Git\\bin\\bash.exe',
-            'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
-            process.env.COMSPEC ? undefined : 'bash'
-        ];
-        for (const c of candidates) {
-            if (c && fs.existsSync(c)) return c;
-        }
-        return 'bash';
-    }
-    return '/bin/bash';
-}
-const bashShell = getBashShell();
-
-function toWslPath(p) {
-    return p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
-}
+const { windowsToGitBashPath } = require(path.join(REPO_ROOT, 'ssh_folder/ssh-folder-lib.js'));
 
 function gitCommitWithDate(repoDir, message, dateStr) {
     execSync(`git -C "${repoDir}" commit --date="${dateStr}" -m "${message}"`, {
@@ -104,16 +86,15 @@ function gitMergeWithDate(repoDir, branchName, message, dateStr) {
 }
 
 function runSshHelper(args) {
-    const helperScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
     if (process.platform === 'win32') {
-        const wslHelper = toWslPath(helperScript);
-        const wslArgs = args.map(a => typeof a === 'string' && /^[a-zA-Z]:[\\/]/.test(a) ? toWslPath(a) : a);
-        const res = spawnSync('wsl', ['bash', wslHelper, ...wslArgs], { encoding: 'utf8' });
+        const helperJs = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.js');
+        const res = spawnSync(process.execPath, [helperJs, ...args], { encoding: 'utf8' });
         if (res.status !== 0) {
-            throw new Error(`wsl bash ${wslHelper} ${wslArgs.join(' ')} failed (exit ${res.status}): ${res.stderr || res.stdout}`);
+            throw new Error(`node ${helperJs} ${args.join(' ')} failed (exit ${res.status}): ${res.stderr || res.stdout}`);
         }
         return res.stdout || '';
     } else {
+        const helperScript = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.sh');
         const res = spawnSync('bash', [helperScript, ...args], { encoding: 'utf8' });
         if (res.status !== 0) {
             throw new Error(`bash ${helperScript} ${args.join(' ')} failed (exit ${res.status}): ${res.stderr || res.stdout}`);
@@ -129,6 +110,10 @@ let sshdDir = null;
 let tmpBaseDir = null;
 
 function cleanup() {
+    try {
+        const { getSshConnectionPool } = require(path.join(REPO_ROOT, 'ssh_folder/ssh-connection-pool.js'));
+        getSshConnectionPool().closeAll();
+    } catch (e) {}
     if (sshdPid && sshdPort && sshdDir) {
         try {
             runSshHelper(['stop', String(sshdPort), String(sshdPid), String(sshdDir)]);
@@ -169,16 +154,8 @@ async function main() {
 
         // Inject client key into ephemeral sshd authorized_keys via CLI helper
         runSshHelper(['inject-key', sshdDir, clientKey + '.pub']);
-
-        // On Windows/WSL, copy key into Linux temp dir with strict 0600 permissions
-        // because keys on /mnt/c mounts show 0777 and OpenSSH will refuse them.
-        let activeClientKey = clientKey;
-        if (process.platform === 'win32') {
-            const wslKeyPath = runSshHelper(['copy-client-key', clientKey, `${sshdDir}/client`]).trim();
-            if (wslKeyPath) {
-                activeClientKey = wslKeyPath;
-            }
-        }
+        const activeClientKey = clientKey;
+        process.env.PRAGMA_SSH_KEY = activeClientKey;
 
         const localRepoDir = path.join(tmpBaseDir, 'local_repo');
         const serverRepoDir = path.join(tmpBaseDir, 'server_repo');
@@ -195,8 +172,8 @@ async function main() {
             execSync(`git -C "${dir}" config init.defaultBranch "main"`);
         }
 
-        const serverRepoPath = process.platform === 'win32' ? toWslPath(serverRepoDir) : serverRepoDir;
-        const nonRepoPath = process.platform === 'win32' ? toWslPath(nonRepoDir) : nonRepoDir;
+        const serverRepoPath = process.platform === 'win32' ? windowsToGitBashPath(serverRepoDir) : serverRepoDir;
+        const nonRepoPath = process.platform === 'win32' ? windowsToGitBashPath(nonRepoDir) : nonRepoDir;
         const sshUrl = `ssh://${sshUser}@127.0.0.1:${sshdPort}${serverRepoPath}`;
         const sshNonRepoUrl = `ssh://${sshUser}@127.0.0.1:${sshdPort}${nonRepoPath}`;
 
@@ -212,23 +189,19 @@ async function main() {
                 process: {
                     platform: process.platform,
                     env: Object.assign({}, process.env, isSsh ? {
-                        PRAGMA_SSH_KEY: activeClientKey,
-                        WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
+                        PRAGMA_SSH_KEY: activeClientKey
                     } : {})
                 },
                 localState: { historyHash: 'HEAD', pinnedCommit: '' },
-                state: { repos: [{ localFolder: repoPath }], repoNumber: 0, FirstParent: false, StashPop: true },
+                state: { repos: [{ localFolder: repoPath, sshKey: isSsh ? activeClientKey : '' }], repoNumber: 0, FirstParent: false, StashPop: true },
                 configFilePath: (folder) => {
                     if (folder && folder.startsWith('ssh:')) {
-                        const urlParts = new URL(folder);
-                        const sshHome = urlParts.pathname.startsWith('/Users/') ? `/Users/${urlParts.username}` : `/home/${urlParts.username}`;
-                        return `${sshHome}/.Pragma-git/pragma-git-config-ssh`;
+                        return '$HOME/.Pragma-git/pragma-git-config-ssh';
                     }
                     return path.join(REPO_ROOT, 'gitconfigs', process.platform === 'darwin' ? 'pragma-git-config_mac' : (process.platform === 'win32' ? 'pragma-git-config_win' : 'pragma-git-config_linux'));
                 },
                 sshKeyEnv: () => (isSsh ? {
-                    PRAGMA_SSH_KEY: activeClientKey,
-                    WSLENV: process.env.WSLENV ? `${process.env.WSLENV}:PRAGMA_SSH_KEY` : 'PRAGMA_SSH_KEY'
+                    PRAGMA_SSH_KEY: activeClientKey
                 } : {}),
                 console: { log: () => {}, error: () => {}, warn: () => {} },
                 document: {

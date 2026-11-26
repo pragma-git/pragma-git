@@ -192,15 +192,8 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
   
             //
             // Special if local is a folder on server over ssh
+            // Handled in-process via lib/simpleGitWithRetry.js -> ssh_folder/ssh-connection-pool.js
             //
-            
-            // Git binary linux, MacOS, Windows
-            let binary = [`${STARTDIR}${pathsep}ssh_folder${pathsep}ssh-git-client` ];
-            if (process.platform === 'win32') {  
-                let WSL_STARTDIR = STARTDIR.replaceAll('\\','/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`); // Support any drive letter (e.g. C:\ or D:\ -> /mnt/c or /mnt/d)
-                binary = ['wsl', `${WSL_STARTDIR}/ssh_folder/ssh-git-client` ]; // WSL abs path to ssh-git-client
-            }
-            
             let sshUrl = pwd;
            
             // Forward SSH key for this repo via process environment (PRAGMA_SSH_KEY)
@@ -212,32 +205,23 @@ var isPaused = false; // Stop timer. In console, type :  isPaused = true
                 }
             }
 
-            // The second config-row below is used to sneak the SSHURL into the ssh-git-client
-            //
-            // NOTE: The "configFile" file is already copied from GIT_CONFIG_FOLDER to server with function setupSshServer() 
-            //       The copy is performed when I change repo.  Thus, if config has been removed on ssh-server manually, this will fail until next repo change.
-            
-            
+            // NOTE: The "configFile" file is copied from GIT_CONFIG_FOLDER to server with setupSshServer()
+            // when switching repositories. SSHURL is passed via config and intercepted by simpleGitWithRetry.js.
             let gitInst = simpleGitDefault( 
                 {   
                     baseDir: STARTDIR,
+                    sshUrl: sshUrl,
                     spawnOptions: { env: gitSpawnEnv },
                     config: [   
                                 `include.path=${configFile}`, 
                                 `SSHURL=${sshUrl}` 
-                            ],
-                    unsafe: {  
-                        allowUnsafeCustomBinary: true
-                    } , 
-                    binary: binary  
+                            ]
                 }
             ); 
             if (gitInst && typeof gitInst.env === 'function' && gitSpawnEnv && Object.keys(gitSpawnEnv).length > 0) {
                 gitInst.env(gitSpawnEnv);
             }
             return gitInst;
-			// Note: cannot use a pwd to simpleGit, since it cannot use a path that does not exist locally.
-            // My ssh-git-client handles path by itself (by SSHURL being sneaked in via config parameters).
         }
  
  
@@ -611,18 +595,6 @@ async function _callback( name, event){
         var isRepo;
         let currentFolder = state.repos[state.repoNumber].localFolder;
         if ( currentFolder.startsWith('ssh:') ){  
-            // On Windows, if WSL is missing, silently revert without blocking modal dialog
-            if (process.platform === 'win32' && typeof isWslAvailable === 'function') {
-                let wslOk = await isWslAvailable();
-                if (!wslOk) {
-                    state.repoNumber = origRepoNumber;
-                    return;
-                }
-                // Ensure WSL ~/.ssh mirror is in sync with Windows keys when switching to an ssh repo
-                if (typeof syncSshKeysToWsl === 'function') {
-                    await syncSshKeysToWsl();
-                }
-            }
             try{
                 // Single SSH check on .git/HEAD verifies both folder existence and valid git repo at once
                 let repoKey = state.repos[state.repoNumber].sshKey || '';
@@ -1218,32 +1190,60 @@ async function _callback( name, event){
         // Windows solution
         //   
       
-            // Windows ssh folder
-			if ((process.platform === 'win32') && folder.startsWith('ssh:')) {
-			    const { exec } = require('child_process');
-			    const url = new URL(folder);
-			    const sshUser = url.username;
-			    const sshHost = url.hostname;
-			    const remotePath = url.pathname.replace(/\//g, '/'); // Normalize path
-			    let portCommand = url.port ? ` -p ${url.port}` : '';
-			
-			    // Construct the SSH command for WSL
-				const decodedPath = decodeURIComponent(remotePath); // Fix %20 from url
-				const  sshCommand = `ssh -t ${portCommand} ${sshUser}@${sshHost} \"cd '${decodedPath}' && bash \"`;  // Quote myself instead of JSON.stringify
+            // Windows ssh folder (open interactive SSH session inside Git Bash)
+            if ((process.platform === 'win32') && folder.startsWith('ssh:')) {
+                const { spawn } = require('child_process');
+                const url = new URL(folder);
+                const sshUser = url.username;
+                const sshHost = url.hostname;
+                const remotePath = url.pathname.replace(/\//g, '/');
+                const portCommand = url.port ? ` -p ${url.port}` : '';
+                const decodedPath = decodeURIComponent(remotePath);
+                const escapedRemotePath = decodedPath.replace(/'/g, "'\\''");
+                const sshTarget = sshUser ? `${sshUser}@${sshHost}` : sshHost;
 
-			    // Launch a new WSL terminal window and run the SSH command
-			    const terminalCommand = `start wsl.exe ${sshCommand}`;
-			
-			    exec(terminalCommand, (error, stdout, stderr) => {
-			        if (error) {
-			            console.error(`Error launching WSL: ${error.message}`);
-			            return;
-			        }
-			        console.log('WSL launched and SSH session started in target directory');
-			    });
-			
-			    break; // Exit switch
-			}
+                let keyArg = '';
+                const repoKey = (state.repos && state.repos[state.repoNumber] && state.repos[state.repoNumber].sshKey)
+                    ? state.repos[state.repoNumber].sshKey.trim()
+                    : '';
+                if (repoKey) {
+                    const bashKeyPath = (typeof windowsToGitBashPath === 'function')
+                        ? windowsToGitBashPath(repoKey)
+                        : repoKey.replaceAll('\\', '/');
+                    keyArg = ` -i '${bashKeyPath.replace(/'/g, "'\\''")}'`;
+                }
+
+                const sshCommand = `ssh -t${portCommand}${keyArg} ${sshTarget} "cd '${escapedRemotePath}' && exec bash -l"`;
+                const gitBashTerm = (typeof getGitBashTerminalExecutable === 'function')
+                    ? getGitBashTerminalExecutable()
+                    : 'C:\\Program Files\\Git\\git-bash.exe';
+
+                try {
+                    let termProc;
+                    if (gitBashTerm.toLowerCase().endsWith('git-bash.exe')) {
+                        termProc = spawn(gitBashTerm, ['-c', sshCommand], {
+                            detached: true,
+                            stdio: 'ignore',
+                            windowsHide: false
+                        });
+                    } else {
+                        termProc = spawn('cmd.exe', ['/c', 'start', '""', gitBashTerm, '--login', '-i', '-c', sshCommand], {
+                            detached: true,
+                            stdio: 'ignore',
+                            windowsHide: false
+                        });
+                    }
+                    termProc.on('error', (err) => {
+                        console.error(`Error launching Git Bash SSH terminal: ${err.message}`);
+                    });
+                    termProc.unref();
+                    console.log('Git Bash launched and SSH session started in target directory');
+                } catch (error) {
+                    console.error(`Error launching Git Bash SSH terminal: ${error.message}`);
+                }
+
+                break; // Exit switch
+            }
 		
 
 				
@@ -1255,29 +1255,15 @@ async function _callback( name, event){
                 var isUncPath = require('is-unc-path');
                 if ( isUncPath(folder) ){
                     command = 'pushd "' + folder + '" & ' + 'cls & echo NOTE : OPEN UNC PATH = ' + folder + ' (TEMPORARY MOUNT POINT)';
-                    
-                    // TODO, make a script to find network maopped pahts; run : 
-                    // powershell -Command "& {Get-WmiObject Win32_MappedLogicalDisk |  select Name, ProviderName}"
-                    // 
-                    /*  Get output in the form:
-                      Name ProviderName
-                      ---- ------------
-                      G:   \\vll.se\gemensam
-                      H:   \\vll.se\users\HJ\jaax02
-                      K:   \\vll.se\data
-                      P:   \\vll.se\program
-                     */
-                     // Find the mapped name (G: etc) and replace path with part matching ProviderName
-    
                 }
-                terminalCommand = `start cmd.exe /K ${command}`
-			    exec(terminalCommand, (error, stdout, stderr) => {
-			        if (error) {
-			            console.error(`Error launching WSL: ${error.message}`);
-			            return;
-			        }
-			        console.log('WSL launched and SSH session started in target directory');
-			    });                
+                terminalCommand = `start cmd.exe /K ${command}`;
+                exec(terminalCommand, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error(`Error launching terminal: ${error.message}`);
+                        return;
+                    }
+                    console.log('Terminal launched in target directory');
+                });                
                 
                 
             }
@@ -2327,8 +2313,6 @@ async function _callback( name, event){
                             reason = 'SSH offline';
                         } else if (reason === 'key rejected') {
                             reason = 'SSH key rejected';
-                        } else if (reason === 'wsl missing') {
-                            reason = 'WSL needed';
                         }
                     }
                     let reasonSuffix = reason ? ` (${reason})` : '';
@@ -3721,8 +3705,6 @@ async function _update2(){
                         let sshLabel = 'SSH folder offline';
                         if (localReason === 'key rejected') {
                             sshLabel = 'SSH key rejected';
-                        } else if (localReason === 'wsl missing') {
-                            sshLabel = 'WSL required';
                         } else if (localReason === 'no network') {
                             sshLabel = 'SSH connection timed out';
                         }
@@ -4547,8 +4529,7 @@ function startPragmaMerge(sessionId, sessionDir){
                     
                     let folder = global.state.repos[global.state.repoNumber].localFolder;
                     if ( folder.startsWith('ssh:') ){
-						 console.log( `CMD = ${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
-                         await multiPlatformExecSync( folder , `${CWD_INIT}/ssh_folder/ssh-close-pragma-merge-ssh "${folder}" "${sessionId || ''}"` );
+                        await sshClosePragmaMerge(folder, sessionId || '');
                     }
                     
                 } );
@@ -7127,13 +7108,6 @@ async function cacheLocalFolderExistStatus( start = 0 ){
             promisesLocal.push( testLocalStatus( i, state.repos[ i ].localFolder) ); 
         }
     }
-
-    // On Windows, if any SSH repos exist, ensure keys are synced once before running SSH checks
-    if (promisesSSH.length > 0 && process.platform === 'win32' && typeof syncSshKeysToWsl === 'function') {
-        try {
-            await syncSshKeysToWsl();
-        } catch (e) {}
-    }
     
     //promisesSSH.push( cachedLocalStatus = cachedLocalStatus );
     
@@ -7174,9 +7148,9 @@ async function cacheLocalFolderExistStatus( start = 0 ){
                 cachedLocalStatus.reason[ repoNumber] = '';
                 cachedLocalStatus.platform[ repoNumber] = await typeOfRepoServer(folder, repoKey);
             } else {
-                // Skip secondary folder probe if SSH already failed due to network, rejected key, or missing WSL
+                // Skip secondary folder probe if SSH already failed due to network or rejected key
                 let headReason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : '';
-                if (headReason === 'no network' || headReason === 'key rejected' || headReason === 'wsl missing') {
+                if (headReason === 'no network' || headReason === 'key rejected') {
                     cachedLocalStatus.exists[ repoNumber] = false;
                 } else {
                     cachedLocalStatus.exists[ repoNumber] = await fs_existsSync(folder, repoKey);
@@ -7623,9 +7597,9 @@ function waitTime( delay) {
   })
 }
 
-async function mkdir(dir){        // Make local folder
-    if (! await fs_existsSync(dir)){
-        await fs_mkdir( dir);   // Use this for both ssh-folder and local folder
+async function mkdir(dir, sshKey = ''){        // Make local or ssh folder
+    if (! await fs_existsSync(dir, sshKey)){
+        await fs_mkdir(dir, sshKey);   // Use this for both ssh-folder and local folder
     }
 }
 function rmLocalFile(localFile){
@@ -7962,7 +7936,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
      //    cmd              command to run in terminal
      //
      // Optional inputs:
-     //		forcelocal		Windows typically runs git on ssh-folder over WSL.  Force running local git-bash instead
+     //     forcelocal      Kept for backward compatibility (Windows always uses local Git Bash)
      //     mode            'timeout'
      //     timeoutInMs     
      //     execExtra       optional object, e.g. { sshKey: '...' }
@@ -7986,7 +7960,7 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     }
 
     // Attach SSH key environment if running an ssh operation
-    if (folder.startsWith('ssh:') && typeof sshKeyEnv === 'function') {
+    if (folder && folder.startsWith('ssh:') && typeof sshKeyEnv === 'function') {
         let keyOverride = (execExtra && execExtra.sshKey) ? execExtra.sshKey : '';
         let keyEnvs = sshKeyEnv(folder, keyOverride);
         if (keyEnvs && Object.keys(keyEnvs).length > 0) {
@@ -7995,86 +7969,56 @@ async function multiPlatformExecSync( folder, cmd, forcelocal = false, mode, tim
     }
 
     //
-    
-    //
     // MacOS or Linux
     //
 	if ( (process.platform === 'darwin') || (process.platform === 'linux') ) {
-		// Linux or Mac
-        
-        // If ssh
-        if ( folder.startsWith('ssh:') ) {
-            
-            try{
-                return await runCommandWithTimeout(cmd, options, timeoutInMs);
-            }catch (err){
-                console.error( err);
-                throw err;
+        try {
+            return await runCommandWithTimeout(cmd, options, timeoutInMs);
+        } catch (err) {
+            if (folder && folder.startsWith('ssh:')) {
+                console.error(err);
             }
+            throw err;
         }
-        
-        // Local (not ssh) if here
-        return await runCommandWithTimeout( cmd, options, timeoutInMs );
-
 	}
-	
 
     //
-    // Windows local 
-    //    
-	if ( forcelocal || 
-			( (process.platform === 'win32') &&  !folder.startsWith('ssh:') ) 
-		)
-		{  
-		// forcelocal=true overrides test after ||
-		// So, always run this if forcelocal==true
-			
-		try{
-            let winOptions = {
-                ...options,
-                env: { ...(options.env || {}), PATH: 'PATH:/mingw64/bin/' },
-                shell: 'C:\\Program Files\\git\\usr\\bin\\bash.exe'
-            };
-			out = await runCommandWithTimeout( cmd, winOptions, timeoutInMs );
-            return out;
-
-		} catch (err) {
-			  console.warn('Warning :', err.message);
-			  console.warn('stderr:', err.stderr?.toString());
-			  //process.platform = 'win32';
-			  throw new Error( `multiPlatformExecSync error: = ${err}`);
-		}
-	}	
-
+    // Windows (Git Bash for both local and SSH helper commands)
     //
-    // Windows ssh-folder (run using wsl) 
-    //   
-	if ( !forcelocal && 
-			( (process.platform === 'win32') &&  folder.startsWith('ssh:') ) 
-		)
-		// forcelocal=false is required 
-		// So, run this only if :  1) forcelocal==false, AND 2) win32,  AND 3)  'ssh:'
-		{  
-		cmd = cmd.replaceAll('\\','/').replaceAll(/(^|[\s"'])([a-zA-Z]):\//g, (match, prefix, drive) => `${prefix}/mnt/${drive.toLowerCase()}/`);  // Change Windows drive paths to wsl paths
-
-		try{
-
-			 let out =  await runCommandWithTimeout(`wsl bash -c "${cmd.replace(/"/g, '\\"')}"`, options, timeoutInMs);
-			 
-			 console.log('Output:', out);
-             return out;
-		} catch (err) {
-			  console.warn('Warning:', err.message);
-			  let stderrStr = err.stderr ? err.stderr.toString() : '';
-			  if (stderrStr) console.warn('stderr:', stderrStr);
-			  let errStr = (err?.message || stderrStr || err?.toString() || '');
-			  if (errStr.includes('is not recognized') || errStr.includes('cannot find the file specified') || err?.code === 127) {
-			      throw new Error(`WSL is required on Windows to access SSH repositories. Please install WSL by running 'wsl --install' in PowerShell.`);
-			  }
-			  let detailedMsg = stderrStr ? `${err.message || err} (stderr: ${stderrStr.trim()})` : (err.message || err);
-			  throw new Error( `multiPlatformExecSync error: = ${detailedMsg}`);
+	if (process.platform === 'win32') {
+		if (folder && folder.startsWith('ssh:') && !forcelocal) {
+			// Normalize embedded Windows drive paths (e.g. C:\foo -> /c/foo) for Git Bash
+			cmd = cmd.replaceAll('\\', '/').replaceAll(/(^|[\s"'])([a-zA-Z]):\//g, (match, prefix, drive) => `${prefix}/${drive.toLowerCase()}/`);
 		}
 
+		const gitBashExe = (typeof getGitBashExecutable === 'function')
+			? getGitBashExecutable()
+			: 'C:\\Program Files\\Git\\bin\\bash.exe';
+		const gitRoot = path.resolve(path.dirname(gitBashExe), gitBashExe.toLowerCase().includes('\\usr\\bin\\') ? '../..' : '..');
+		const extraPaths = [
+			path.join(gitRoot, 'cmd'),
+			path.join(gitRoot, 'mingw64', 'bin'),
+			path.join(gitRoot, 'usr', 'bin')
+		];
+		const baseEnv = Object.assign({}, process.env, options.env || {});
+		const existingPath = baseEnv.PATH || baseEnv.Path || '';
+		baseEnv.PATH = extraPaths.concat(existingPath ? [existingPath] : []).join(';');
+
+		try {
+			const winOptions = {
+				...options,
+				env: baseEnv,
+				shell: gitBashExe
+			};
+			out = await runCommandWithTimeout(cmd, winOptions, timeoutInMs);
+			return out;
+		} catch (err) {
+			console.warn('Warning:', err.message);
+			const stderrStr = err.stderr ? err.stderr.toString() : '';
+			if (stderrStr) console.warn('stderr:', stderrStr);
+			const detailedMsg = stderrStr ? `${err.message || err} (stderr: ${stderrStr.trim()})` : (err.message || err);
+			throw new Error(`multiPlatformExecSync error: = ${detailedMsg}`);
+		}
 	}
 
 }

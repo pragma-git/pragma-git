@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-// test_06_ssh_lib_node.js - Node.js unit tests for ssh-folder-lib.js
+/**
+ * test_06_ssh_lib_node.js - Node.js unit tests for ssh-folder-lib.js
+ */
+
+'use strict';
 
 const path = require('path');
 const fs = require('fs');
@@ -26,12 +30,10 @@ try {
 // Test 2: getDefaultSshKey prioritizes existing keys with matching .pub files
 try {
     const defaultKey = sshLib.getDefaultSshKey();
-    // Verify that the returned key or its .pub exists in ~/.ssh
     const hasKey = fs.existsSync(defaultKey) || fs.existsSync(defaultKey + '.pub');
     if (hasKey) {
         assertPass(`6.2: Detected default key exists on filesystem (${defaultKey})`);
     } else {
-        // If neither exists, it must be the fallback ~/.ssh/id_ed25519
         const isFallback = defaultKey.endsWith('.ssh/id_ed25519') || defaultKey.endsWith('.ssh\\id_ed25519');
         if (isFallback) {
             assertPass('6.2: Fallback key path (~/.ssh/id_ed25519) returned when no keys present');
@@ -43,18 +45,26 @@ try {
     assertFail('6.2: Key verification error', err.message);
 }
 
-// Test 3: Path transformation helpers (Windows <-> WSL)
+// Test 3: Git Bash path transformation & executable resolution helpers
 try {
-    // Only test on non-windows or verify function handles input
-    const testPath = '/mnt/c/Users/Test/Repo';
-    const result = sshLib.wslToWindowsPath(testPath);
-    if (typeof result === 'string') {
-        assertPass('6.3: wslToWindowsPath handles path without error');
+    const bashExe = sshLib.getGitBashExecutable();
+    const winConverted = sshLib.windowsToGitBashPath('C:\\Users\\Test\\Repo');
+    const posixConverted = sshLib.gitBashToWindowsPath('/c/Users/Test/Repo');
+    if (typeof bashExe === 'string' && bashExe.length > 0 && typeof winConverted === 'string' && typeof posixConverted === 'string') {
+        if (process.platform === 'win32') {
+            if (winConverted === '/c/Users/Test/Repo' && posixConverted === 'C:\\Users\\Test\\Repo') {
+                assertPass(`6.3: Git Bash path converters & executable resolver work on Windows (${bashExe})`);
+            } else {
+                assertFail('6.3: Git Bash path conversion mismatch', `win->bash: ${winConverted}, bash->win: ${posixConverted}`);
+            }
+        } else {
+            assertPass(`6.3: Git Bash path helpers & shell resolver work cleanly (${bashExe})`);
+        }
     } else {
-        assertFail('6.3: wslToWindowsPath returned non-string', result);
+        assertFail('6.3: Git Bash helpers returned invalid types');
     }
 } catch (err) {
-    assertFail('6.3: wslToWindowsPath error', err.message);
+    assertFail('6.3: Git Bash helper error', err.message);
 }
 
 // Test 4: parseSshUrl decomposes SSH URLs accurately
@@ -98,7 +108,7 @@ try {
     assertFail('6.7: getSuggestedNewKeyPath error', err.message);
 }
 
-// Test 6: generateLocalSshKey creates valid ED25519 key pair and prevents overwrite
+// Test 6: generateLocalSshKey creates valid ED25519 key pair in pure JS and prevents overwrite
 try {
     const tmpKeyDir = path.join(os.tmpdir(), `pragma_test_keygen_${Date.now()}`);
     const tmpKeyPath = path.join(tmpKeyDir, 'test_id_ed25519');
@@ -107,7 +117,7 @@ try {
     if (fs.existsSync(createdPath) && fs.existsSync(createdPath + '.pub')) {
         const pubContent = fs.readFileSync(createdPath + '.pub', 'utf8');
         if (pubContent.startsWith('ssh-ed25519 ')) {
-            assertPass('6.8: generateLocalSshKey creates valid ED25519 key pair');
+            assertPass('6.8: generateLocalSshKey creates valid ED25519 key pair in pure JS');
         } else {
             assertFail('6.8: Public key header format', pubContent);
         }
@@ -115,7 +125,6 @@ try {
         assertFail('6.8: Key files missing after generation', createdPath);
     }
 
-    // Overwrite prevention test
     let overwriteBlocked = false;
     try {
         sshLib.generateLocalSshKey(tmpKeyPath);
@@ -128,50 +137,34 @@ try {
         assertFail('6.9: Key overwrite was unexpectedly permitted');
     }
 
-    // Cleanup temporary test keys
     try {
-        if (fs.existsSync(createdPath)) fs.unlinkSync(createdPath);
-        if (fs.existsSync(createdPath + '.pub')) fs.unlinkSync(createdPath + '.pub');
-        if (fs.existsSync(tmpKeyDir)) fs.rmdirSync(tmpKeyDir);
+        fs.rmSync(tmpKeyDir, { recursive: true, force: true });
     } catch (e) {}
 } catch (err) {
     assertFail('6.8-6.9: generateLocalSshKey execution error', err.message);
 }
 
-// Test 7: isWslAvailable function exists and returns boolean
+// Test 7-9: Error classification, sshKeyEnv, and exported SSH functions
 (async () => {
     try {
-        if (typeof sshLib.isWslAvailable === 'function') {
-            const wslRes = await sshLib.isWslAvailable();
-            if (typeof wslRes === 'boolean') {
-                assertPass(`6.10: isWslAvailable returns boolean (${wslRes}) on platform (${process.platform})`);
-            } else {
-                assertFail('6.10: isWslAvailable return type', typeof wslRes);
-            }
-        } else {
-            assertFail('6.10: isWslAvailable', 'Function is not exported');
-        }
-
-        // Test 8: formatSshErrorDetails classifies errors with actionable suggestions
         if (typeof sshLib.formatSshErrorDetails === 'function') {
             const timeoutDiag = sshLib.formatSshErrorDetails('Connection timed out', 'ssh://jan@linus/repo');
             if (timeoutDiag && timeoutDiag.summary.includes('timed out') && timeoutDiag.server === 'linus') {
-                assertPass('6.11: formatSshErrorDetails accurately classifies connection timeout');
+                assertPass('6.10: formatSshErrorDetails accurately classifies connection timeout');
             } else {
-                assertFail('6.11: formatSshErrorDetails timeout', JSON.stringify(timeoutDiag));
+                assertFail('6.10: formatSshErrorDetails timeout', JSON.stringify(timeoutDiag));
             }
 
             const keyDiag = sshLib.formatSshErrorDetails('Permission denied (publickey)', 'ssh://jan@myserver/repo');
             if (keyDiag && keyDiag.summary.includes('rejected') && keyDiag.suggestion.includes('SSH')) {
-                assertPass('6.12: formatSshErrorDetails accurately classifies key rejection');
+                assertPass('6.11: formatSshErrorDetails accurately classifies key rejection');
             } else {
-                assertFail('6.12: formatSshErrorDetails key rejection', JSON.stringify(keyDiag));
+                assertFail('6.11: formatSshErrorDetails key rejection', JSON.stringify(keyDiag));
             }
         } else {
-            assertFail('6.11-6.12: formatSshErrorDetails', 'Function is not exported');
+            assertFail('6.10-6.11: formatSshErrorDetails', 'Function is not exported');
         }
 
-        // Test 9: sshKeyEnv helper resolves key environment correctly
         if (typeof sshLib.sshKeyEnv === 'function') {
             global.state = {
                 repos: [
@@ -181,33 +174,35 @@ try {
             };
             const envA = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA/.git/HEAD');
             if (envA.PRAGMA_SSH_KEY && envA.PRAGMA_SSH_KEY.includes('id_test_a')) {
-                assertPass('6.13: sshKeyEnv resolves repo sshKey from longest prefix match');
+                assertPass('6.12: sshKeyEnv resolves repo sshKey from longest prefix match');
             } else {
-                assertFail('6.13: sshKeyEnv longest prefix match', JSON.stringify(envA));
+                assertFail('6.12: sshKeyEnv longest prefix match', JSON.stringify(envA));
             }
 
             const envOverride = sshLib.sshKeyEnv('ssh://jan@130.239.99.15/home/jan/repoA', '/custom/path/id_override.pub');
             if (envOverride.PRAGMA_SSH_KEY && envOverride.PRAGMA_SSH_KEY.includes('id_override') && !envOverride.PRAGMA_SSH_KEY.endsWith('.pub')) {
-                assertPass('6.14: sshKeyEnv keyOverride takes precedence and strips .pub');
+                assertPass('6.13: sshKeyEnv keyOverride takes precedence and strips .pub');
             } else {
-                assertFail('6.14: sshKeyEnv keyOverride', JSON.stringify(envOverride));
+                assertFail('6.13: sshKeyEnv keyOverride', JSON.stringify(envOverride));
             }
         } else {
-            assertFail('6.13-6.14: sshKeyEnv', 'Function is not exported');
+            assertFail('6.12-6.13: sshKeyEnv', 'Function is not exported');
         }
 
-        // Test 10: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported
         if (typeof sshLib.sshLs === 'function' &&
             typeof sshLib.sshGet === 'function' &&
             typeof sshLib.sshPut === 'function' &&
+            typeof sshLib.sshPutSimple === 'function' &&
+            typeof sshLib.sshExec === 'function' &&
+            typeof sshLib.sshClosePragmaMerge === 'function' &&
             typeof sshLib.fs_existsSync === 'function' &&
             typeof sshLib.fs_mkdir === 'function') {
-            assertPass('6.15: sshLs, sshGet, sshPut, fs_existsSync, and fs_mkdir are exported by ssh-folder-lib.js');
+            assertPass('6.14: All SSH & File Browser helpers are exported by ssh-folder-lib.js');
         } else {
-            assertFail('6.15: Exported SSH File Browser helpers', 'Missing one or more exported functions');
+            assertFail('6.14: Exported SSH helpers', 'Missing one or more exported functions');
         }
     } catch (err) {
-        assertFail('6.10-6.12: Execution error', err.message);
+        assertFail('6.10-6.14: Execution error', err.message);
     }
 
     printSuiteResult();

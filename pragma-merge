@@ -1,83 +1,41 @@
 #!/bin/bash
 #
-# 1) Normally runs on local PC.  
+# 1) Normally runs on local PC (macOS, Linux, or Windows Git Bash).
 #
 # 2) If connected over ssh to a folder, and working with git there, it will start with $5 == 'ssh'
-#    Pragma-git will in this case get the files from the server, and open a local pragma-merge ( $5 is not set on the local instance)
-#
-# 3) For ssh to a folder on Windows, this runs over WSL.  Hence special WSL if statements
+#    Pragma-git will in this case download the files from the server via ssh2, and open a local pragma-merge.
 
 LOG_INDENT=""
 
 # Home dir
 if [ -n "$PRAGMA_SIGNAL_DIR" ]; then
     TMP="$PRAGMA_SIGNAL_DIR"
+    mkdir -p "$TMP" 2>/dev/null
     MERGE_LOG="$TMP/mergelog.txt"
     date > "$MERGE_LOG" 2>/dev/null || true
+    if [ -z ${SYSTEMDRIVE+x} ]; then
+        echo $(pwd) > "$TMP/repo_path"
+    else
+        echo $(pwd -W) > "$TMP/repo_path"
+    fi
 elif [ -z ${SYSTEMDRIVE+x} ]
 then
-    # Mac or Linux or WSL 
+    # Mac or Linux
     TMP="$HOME/.Pragma-git/.tmp"
+    mkdir -p "$TMP" 2>/dev/null
     MERGE_LOG="$TMP/mergelog.txt"
     date > "$MERGE_LOG"
-    
-    # Modify TMP if run under WSL
-    # Windows (git over ssh is implemented using WSL)
-	if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-		# 1. Fast path: assume WSL username matches Windows username (/home/<user> -> /mnt/c/Users/<user>, 0 ms)
-		WIN_WSL_PROFILE=""
-		if [[ "$HOME" == /home/* ]]; then
-			WIN_WSL_PROFILE="${HOME/\/home/\/mnt\/c\/Users}"
-		fi
-
-		# 2. Fallback for username mismatch or root: read cached Windows profile or query cmd.exe once
-		if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE/.Pragma-git" ]; then
-			PROFILE_CACHE="/tmp/pragma_win_profile"
-			if [ -f "$PROFILE_CACHE" ]; then
-				WIN_WSL_PROFILE=$(<"$PROFILE_CACHE")
-			fi
-			if [ -z "$WIN_WSL_PROFILE" ] || [ ! -d "$WIN_WSL_PROFILE" ]; then
-				WIN_USER_PROFILE=$(cmd.exe /c "echo %USERPROFILE%" 2>/dev/null | tr -d '\r\n')
-				if [ -n "$WIN_USER_PROFILE" ]; then
-					WIN_WSL_PROFILE=$(wslpath -u "$WIN_USER_PROFILE" 2>/dev/null)
-					if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
-						echo "$WIN_WSL_PROFILE" > "$PROFILE_CACHE" 2>/dev/null
-					fi
-				fi
-			fi
-		fi
-
-		if [ -n "$WIN_WSL_PROFILE" ] && [ -d "$WIN_WSL_PROFILE" ]; then
-			TMP="$WIN_WSL_PROFILE/.Pragma-git/.tmp"
-		fi
-
-		if [ ! -d "$(dirname "$TMP")" ]; then
-			TMP="$HOME/.Pragma-git/.tmp"
-		fi
-		
-		MERGE_LOG="${TMP}/mergelog.txt"
-        date > "$MERGE_LOG"
-		LOG_INDENT="   "
-		echo ">> PRAGMA-MERGE  $@" >> "$MERGE_LOG"
-		echo "${LOG_INDENT}Running in WSL" >> "$MERGE_LOG"
-	else
-		 # Must be without git over ssh -- restart log
-		 echo "Mac or Linux or WSL" >> "$MERGE_LOG"
-	fi
-    
-   
-    
-    #env >> "$MERGE_LOG"
+    echo "Mac or Linux" >> "$MERGE_LOG"
     echo $(pwd) > "$TMP/repo_path"
     echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 else
-    # Windows
-    TMP="$USERPROFILE/.Pragma-git/.tmp"  # Must be without git over ssh -- restart log		
+    # Windows (Git Bash)
+    TMP="$USERPROFILE/.Pragma-git/.tmp"
+    mkdir -p "$TMP" 2>/dev/null
     MERGE_LOG="${TMP}/mergelog.txt"
     date > "$MERGE_LOG"
     
     echo "${LOG_INDENT}WINDOWS" >> "$MERGE_LOG"
-    #env >> "$MERGE_LOG"
     echo $(pwd -W) > "$TMP/repo_path"
     echo "${LOG_INDENT}TMP=$TMP" >> "$MERGE_LOG"
 fi
@@ -141,18 +99,6 @@ mkdir -p "$SESSION_DIR" 2>/dev/null
 RUNNING="$TMP/pragma-merge-running"  # Pragma-git looks for this file, and starts Pragma-merge
 SESSION_RUNNING="$SESSION_DIR/pragma-merge-running"
 SESSION_EXIT="$SESSION_DIR/exit-pragma-merge"
-
-# If started in WSL -- need to transform to Window file paths in signalling files
-if grep -qEi "(Microsoft|WSL)" /proc/version &> /dev/null; then
-	# Rewrite positional parameters $1, .. $4
-	set -e -- \
-		"$(echo "$1" | sed 's|/mnt/c|C:|')" \
-		"$(echo "$2" | sed 's|/mnt/c|C:|')" \
-		"$(echo "$3" | sed 's|/mnt/c|C:|')" \
-		"$(echo "$4" | sed 's|/mnt/c|C:|')" 
-
-fi
-
 
 # Store input parameters in both legacy location and dedicated session directory
 echo "$1" > "$TMP/first"

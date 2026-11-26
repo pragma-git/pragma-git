@@ -52,17 +52,6 @@ jobs:
             sudo apt-get install -y --no-install-recommends openssh-server libsecret-1-0 gnome-keyring dbus-x11 xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libasound2
           sudo systemctl start ssh
 
-      - name: Set up WSL (Windows)
-        if: runner.os == 'Windows'
-        uses: Vampire/setup-wsl@v7
-        with:
-          distribution: Ubuntu-22.04
-          use-cache: true
-          additional-packages: |
-            openssh-server
-            git
-            curl
-
       - name: Cache NW.js Binary
         id: cache-nwjs
         uses: actions/cache@v4
@@ -123,18 +112,6 @@ jobs:
             sudo systemsetup -setremotelogin on 2>/dev/null || true
           fi
 
-      - name: Configure WSL OpenSSH Service (Linux SSH Target)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          Stop-Service sshd -ErrorAction SilentlyContinue
-          Set-Service -Name sshd -StartupType Disabled -ErrorAction SilentlyContinue
-          $drive = $PWD.Drive.Name.ToLower()
-          $rest = $PWD.Path.Substring(2).Replace('\', '/')
-          $wslRepo = "/mnt/$drive$rest"
-          wsl bash "$wslRepo/automated-tests/setup_wsl_ssh.sh" $env:USERNAME
-          Start-Process wsl -ArgumentList "sleep","infinity" -WindowStyle Hidden
-
       - name: Configure Git Author
         run: |
           git config --global user.name "Pragma-git CI"
@@ -156,6 +133,4 @@ jobs:
 
       - name: Run Automated Test Suites (Windows)
         if: runner.os == 'Windows'
-        run: |
-          wsl -u root service ssh restart || true
-          bash ./_run_tests -v
+        run: bash ./_run_tests -v

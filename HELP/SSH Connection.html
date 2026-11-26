@@ -77,13 +77,9 @@ The newly generated key is created without a passphrase so that automated Git op
 </ul>
 </p>
 
-<h4>Windows Platform Requirements</h4>
+<h4>Cross-Platform Connection Multiplexing &amp; Windows Terminal</h4>
 <p>
-On Windows, Pragma-git executes SSH remote repository commands and SSH authentication utilities via <b>WSL (Windows Subsystem for Linux)</b> to provide full POSIX SSH socket compatibility and connection reuse.
+Pragma-git includes a built-in persistent SSH connection pool across macOS, Linux, and Windows. Once authenticated, Git operations and remote file transfers reuse the active encrypted SSH session automatically with fast performance and <b>no WSL requirement</b> on Windows.
 <br><br>
-If WSL is not yet installed on your Windows machine, open <b>PowerShell as Administrator</b> and run:
-<br>
-<code>wsl --install</code>
-<br><br>
-Once installed, reboot Windows if prompted, then launch Pragma-git.
+Standard SSH host aliases and settings in <code>~/.ssh/config</code> (such as <code>HostName</code>, <code>User</code>, <code>Port</code>, and <code>IdentityFile</code>) are honored automatically, and clicking the Terminal icon on Windows opens an interactive SSH session directly inside <b>Git Bash</b> (included with Git for Windows).
 </p>

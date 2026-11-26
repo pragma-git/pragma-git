@@ -40,28 +40,23 @@ class UIFixtures {
         };
         fs.writeFileSync(path.join(this.testSettingsDir, 'settings.json'), JSON.stringify(initialSettings, null, 2));
 
-        // 2. Start ephemeral SSH server via automated-tests/ssh_test_server.sh
+        // 2. Start ephemeral SSH server (ssh_test_server.sh on macOS/Linux, ssh_test_server.js on Windows)
         const repoRoot = path.resolve(__dirname, '../../..');
         const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
+        const sshJs = path.join(repoRoot, 'automated-tests/ssh_test_server.js');
+        const { windowsToGitBashPath } = require(path.join(repoRoot, 'ssh_folder/ssh-folder-lib.js'));
 
         // Generate client key pair inside this.tmpDir (the key that will be configured and deployed via the UI)
         this.clientKey = path.join(this.tmpDir, 'test_user_key');
         this.clientKeyPub = `${this.clientKey}.pub`;
         execSync(`ssh-keygen -q -t ed25519 -N "" -f "${this.clientKey}"`);
 
-        // Start sshd using ssh_test_server.sh CLI functions
+        // Start ephemeral sshd
         let startOut = '';
         if (process.platform === 'win32') {
-            const wslScript = sshScript.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
-            const res = spawn('wsl', ['bash', wslScript, 'start'], { stdio: ['ignore', 'pipe', 'pipe'] });
-            startOut = await new Promise((resolve, reject) => {
-                let out = '', err = '';
-                res.stdout.on('data', d => out += d);
-                res.stderr.on('data', d => err += d);
-                res.on('close', code => code === 0 ? resolve(out) : reject(new Error(`wsl start sshd failed: ${err || out}`)));
-            });
+            startOut = execSync(`"${process.execPath}" "${sshJs}" start`, { encoding: 'utf8' });
         } else {
-            startOut = execSync(`bash "${sshScript}" start`).toString();
+            startOut = execSync(`bash "${sshScript}" start`, { encoding: 'utf8' });
         }
         const portMatch = startOut.match(/PORT:(\d+)/);
         const pidMatch = startOut.match(/PID:(\d+)/);
@@ -76,41 +71,20 @@ class UIFixtures {
         this.sshdDir = dirMatch ? dirMatch[1].trim() : '';
         this.sshdUser = userMatch ? userMatch[1].trim() : ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''));
 
-        // Authorize developer/host's pre-existing default SSH key on the test server.
-        // WHY A PRE-EXISTING KEY IS AUTHORIZED HERE:
-        // 1. The ephemeral test OpenSSH server runs without root privileges (as normal user),
-        //    which means password authentication and PAM are disabled (Unix prohibits unprivileged
-        //    processes from verifying passwords or switching UIDs).
-        // 2. In real usage, deploying a new public key via "Deploy public key" (ssh-generate-key-login)
-        //    connects to the remote server either via password or via an existing recognized SSH key.
-        // 3. By placing the developer/runner's default key into the test server's authorized_keys,
-        //    ssh-generate-key-login can establish the initial SSH connection to deploy the newly
-        //    configured client key (test_user_key) when the user clicks the "Deploy public key" button in the UI.
+        // Authorize developer/host's pre-existing default SSH key on the test server so deployPublicKey()
+        // can establish the initial SSH connection to deploy test_user_key when clicking "Deploy public key".
         const defaultPubCandidates = [
             path.join(os.homedir(), '.ssh', 'id_rsa.pub'),
             path.join(os.homedir(), '.ssh', 'id_ed25519.pub'),
             path.join(os.homedir(), '.ssh', 'id_ecdsa.pub')
         ];
         if (this.sshdDir) {
-            if (process.platform === 'win32') {
-                for (const pubCandidate of defaultPubCandidates) {
-                    if (fs.existsSync(pubCandidate)) {
-                        const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
-                        if (pubData) {
-                            try {
-                                execSync(`wsl bash -c "printf '%s\\n' '${pubData.replace(/'/g, "'\\''")}' >> '${this.sshdDir}/authorized_keys'"`, { stdio: 'ignore' });
-                            } catch (e) {}
-                        }
-                    }
-                }
-            } else {
-                const authKeysPath = path.join(this.sshdDir, 'authorized_keys');
-                for (const pubCandidate of defaultPubCandidates) {
-                    if (fs.existsSync(pubCandidate)) {
-                        const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
-                        if (pubData) {
-                            fs.appendFileSync(authKeysPath, `${pubData}\n`);
-                        }
+            const authKeysPath = path.join(this.sshdDir, 'authorized_keys');
+            for (const pubCandidate of defaultPubCandidates) {
+                if (fs.existsSync(pubCandidate)) {
+                    const pubData = fs.readFileSync(pubCandidate, 'utf8').trim();
+                    if (pubData) {
+                        fs.appendFileSync(authKeysPath, `${pubData}\n`);
                     }
                 }
             }
@@ -128,18 +102,17 @@ class UIFixtures {
         execSync(`git -C "${tempInit}" add .`, { stdio: 'ignore' });
         execSync(`git -C "${tempInit}" commit -m "Initial commit on remote origin"`, { stdio: 'ignore' });
         execSync(`git clone --bare "${tempInit}" "${this.originRepoPath}"`, { stdio: 'ignore' });
-        execSync(`rm -rf "${tempInit}"`, { stdio: 'ignore' });
+        fs.rmSync(tempInit, { recursive: true, force: true });
 
         this.targetClonePath = path.join(this.tmpDir, 'cloned_repo_on_ssh_server');
-        const toWslPath = (p) => p.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
         return {
             tmpDir: this.tmpDir,
             sshdPort: this.sshdPort,
             clientKey: this.clientKey,
             clientKeyPub: this.clientKeyPub,
-            originRepoPath: process.platform === 'win32' ? toWslPath(this.originRepoPath) : this.originRepoPath,
+            originRepoPath: process.platform === 'win32' ? windowsToGitBashPath(this.originRepoPath) : this.originRepoPath,
             localOriginRepoPath: this.originRepoPath,
-            targetClonePath: process.platform === 'win32' ? toWslPath(this.targetClonePath) : this.targetClonePath,
+            targetClonePath: process.platform === 'win32' ? windowsToGitBashPath(this.targetClonePath) : this.targetClonePath,
             user: this.sshdUser || ((os.userInfo().username || process.env.USER || process.env.USERNAME || '').replace(/^.*\\/, ''))
         };
     }
@@ -211,7 +184,7 @@ class UIFixtures {
         args.push(repoRoot);
 
         const remoteAuthKeys = process.platform === 'win32'
-            ? `${this.sshdDir}/authorized_keys`
+            ? windowsToGitBashPath(path.join(this.sshdDir, 'authorized_keys'))
             : path.join(this.sshdDir, 'authorized_keys');
 
         this.nwProcess = spawn(nwBinary, args, {
@@ -245,9 +218,8 @@ class UIFixtures {
             if (process.platform === 'win32') {
                 try {
                     const repoRoot = path.resolve(__dirname, '../../..');
-                    const sshScript = path.join(repoRoot, 'automated-tests/ssh_test_server.sh');
-                    const wslScript = sshScript.replace(/\\/g, '/').replace(/^([a-zA-Z]):/, (m, d) => `/mnt/${d.toLowerCase()}`);
-                    execSync(`wsl bash "${wslScript}" stop "${this.sshdPort}" "${this.sshdPid}" "${this.sshdDir}"`, { stdio: 'ignore' });
+                    const sshJs = path.join(repoRoot, 'automated-tests/ssh_test_server.js');
+                    execSync(`"${process.execPath}" "${sshJs}" stop "${this.sshdPort}" "${this.sshdPid}" "${this.sshdDir}"`, { stdio: 'ignore' });
                 } catch (e) {}
             } else {
                 try { process.kill(this.sshdPid, 'SIGTERM'); } catch (e) {}
