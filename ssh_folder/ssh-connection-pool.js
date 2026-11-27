@@ -1045,9 +1045,9 @@ class SshConnectionPool {
             throw new Error('Username and server are required to deploy SSH key');
         }
 
+        const targetKeyPath = normalizePrivateKeyPath(keyPath) || path.join(getHomeDir(), '.ssh', 'id_ed25519');
         const fakeUrl = `ssh://${username}@${server}/`;
         const params = resolveConnectionParams(fakeUrl, '');
-        const targetKeyPath = normalizePrivateKeyPath(keyPath) || path.join(getHomeDir(), '.ssh', 'id_ed25519');
 
         if (!fs.existsSync(targetKeyPath)) {
             this.generateLocalKeyPair(targetKeyPath);
@@ -1067,7 +1067,38 @@ class SshConnectionPool {
             ? passwordProvider
             : (promptStr) => promptViaAskpass(promptStr, 60000);
 
-        const defaultKeyHandlers = this._buildPublicKeyAuthHandlers(params);
+        // For key deployment:
+        // 1. Try targetKeyPath if it exists (in case it is already authorized on the server).
+        // 2. Try default key candidates (e.g. user default key, ssh-agent) so passwordless
+        //    deployment works without asking for password if another key is already authorized.
+        // 3. IMPORTANT: Cap public key auth attempts to at most 3 total handlers.
+        //    Remote SSH servers (sshd MaxAuthTries, typically 6) will disconnect with
+        //    "Too many authentication failures" if too many failed keys are offered before
+        //    falling back to password / keyboard-interactive authentication.
+        const allKeyHandlers = this._buildPublicKeyAuthHandlers(params);
+        let defaultKeyHandlers = [];
+        if (targetKeyPath && fs.existsSync(targetKeyPath)) {
+            try {
+                const targetBuf = fs.readFileSync(targetKeyPath);
+                defaultKeyHandlers.push({
+                    type: 'publickey',
+                    username: params.username,
+                    key: targetBuf
+                });
+            } catch (e) {}
+        }
+        for (const handler of allKeyHandlers) {
+            if (defaultKeyHandlers.length >= 3) break;
+            const alreadyIncluded = defaultKeyHandlers.some(h =>
+                h.type === handler.type && (
+                    (h.key && handler.key && Buffer.compare(h.key, handler.key) === 0) ||
+                    (h.type === 'agent' && handler.type === 'agent')
+                )
+            );
+            if (!alreadyIncluded) {
+                defaultKeyHandlers.push(handler);
+            }
+        }
         let keyIndex = 0;
         let cachedPassword = null;
         let passwordAttempted = false;

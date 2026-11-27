@@ -19,6 +19,10 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Fix "Too many authentication failures" in deployPublicKey**:
+  - Identified that `deployPublicKey` attempted to offer every key in `~/.ssh/` (often 7+ keys) prior to asking for a password, exceeding OpenSSH server's default `MaxAuthTries 6`.
+  - Prioritized `targetKeyPath` and capped publickey attempts to 3 handlers maximum in `deployPublicKey` to preserve room for password and keyboard-interactive authentication fallback.
+  - Verified with `node automated-tests/non_gui/ssh/test_07_ssh_key_generation.js` (9/9 passed) and `automated-tests/non_gui/ssh/_run_tests` (8/8 suites passed).
 * **Flaky CI Fixes & Test Robustification**:
   - Investigated GitHub Actions CI failures across macOS, Linux, and Windows runners.
   - Added request timeout with `AbortController` in `fetchWithApi` (`apis_github_and_others/general_git_rest_api.js`) to prevent indefinite hangs on unresponsive third-party Git providers.
@@ -32,6 +36,7 @@
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Historical: Too many authentication failures in deployPublicKey**: When a user had multiple SSH keys in `~/.ssh`, `deployPublicKey` exhausted the remote server's `MaxAuthTries` before reaching password fallback. Fixed by capping candidate keys to 3 in `deployPublicKey`.
 * **Historical: CI Flakiness on Gitea/HTTPS Network Blips**: Tests 2.4 and 2.5 failed intermittently on Windows runners when public third-party endpoints hung or threw transient network resets. Added timeouts, retries, and skip handling.
 * **Historical: Handshake Timeouts on Loaded CI VMs**: macOS runner triggered `Timed out while waiting for handshake` in `ssh/test_07_ssh_key_generation.js`. Increased handshake and connection timeout to 10000ms.
 * **Historical: Upstream Merge Draft Message Overwrite**: Fixed race condition in `_setMode('CHANGED_FILES')` erasing commit message during automated merge updates.
