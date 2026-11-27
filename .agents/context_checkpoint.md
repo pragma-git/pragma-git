@@ -19,9 +19,10 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Fix "Too many authentication failures" in deployPublicKey**:
-  - Identified that `deployPublicKey` attempted to offer every key in `~/.ssh/` (often 7+ keys) prior to asking for a password, exceeding OpenSSH server's default `MaxAuthTries 6`.
-  - Prioritized `targetKeyPath` and capped publickey attempts to 3 handlers maximum in `deployPublicKey` to preserve room for password and keyboard-interactive authentication fallback.
+* **Safely Minimize deployPublicKey Attempts for fail2ban (maxretry=3)**:
+  - Eliminated broad candidate key iteration in `deployPublicKey`. Only the selected `targetKeyPath` and (if different) the single primary default key (`id_ed25519`) are tried before falling back to password/keyboard-interactive auth.
+  - Guarantees at most 1–2 key attempts, preventing `fail2ban` bans on servers with low fail thresholds.
+  - Added real-time connection attempt counter (`#sshConfigAttemptsText`) inside `#sshConfigDialog`, displaying total connection attempts made during the dialog session with a visual warning when reaching 2+ attempts.
   - Verified with `node automated-tests/non_gui/ssh/test_07_ssh_key_generation.js` (9/9 passed) and `automated-tests/non_gui/ssh/_run_tests` (8/8 suites passed).
 * **Flaky CI Fixes & Test Robustification**:
   - Investigated GitHub Actions CI failures across macOS, Linux, and Windows runners.

@@ -547,8 +547,24 @@ let currentSshConfigState = {
     mode: '',
     username: '',
     server: '',
-    selectedKey: ''
+    selectedKey: '',
+    attemptsCount: 0
 };
+
+function _updateSshAttemptsDisplay() {
+    let attemptsEl = document.getElementById('sshConfigAttemptsText');
+    if (!attemptsEl) return;
+    if (currentSshConfigState.attemptsCount > 0) {
+        attemptsEl.style.display = 'block';
+        let count = currentSshConfigState.attemptsCount;
+        let color = count >= 3 ? 'var(--red-text, #e74c3c)' : (count >= 2 ? 'var(--warn-color, #e67e22)' : 'var(--dim-text, #888)');
+        attemptsEl.innerHTML = `<span style="color: ${color};">Connection attempts this session: <b>${count}</b></span>` +
+            (count >= 2 ? ` <span style="font-size: 10px; color: var(--warn-color, orange);">(caution: servers with fail2ban often block after 3 failed attempts)</span>` : '');
+    } else {
+        attemptsEl.style.display = 'none';
+        attemptsEl.innerHTML = '';
+    }
+}
 
 async function openSshConfigDialog( options = {} ) {
     let dialog = document.getElementById('sshConfigDialog');
@@ -564,6 +580,8 @@ async function openSshConfigDialog( options = {} ) {
     let testBtn = document.getElementById('sshConfigTestBtn');
 
     if (statusEl) statusEl.textContent = '';
+    currentSshConfigState.attemptsCount = 0;
+    _updateSshAttemptsDisplay();
     if (deployBtn) deployBtn.style.display = 'none';
     if (genPromptBtn) genPromptBtn.style.display = 'none';
     if (testBtn) testBtn.disabled = false;
@@ -846,6 +864,9 @@ async function sshConfigTestLogin() {
     let rawKeyInput = (document.getElementById('sshConfigKeyInput')?.value || '').trim();
     let keyToTest = rawKeyInput || currentSshConfigState.selectedKey || getDefaultSshKey();
 
+    currentSshConfigState.attemptsCount++;
+    _updateSshAttemptsDisplay();
+
     if (testBtn) testBtn.disabled = true;
     if (deployBtn) deployBtn.disabled = true;
     if (statusEl) {
@@ -944,6 +965,9 @@ async function sshConfigDeployKey() {
     }
 
     let MAIN = (global.windows && global.windows['main_win']) || (typeof opener !== 'undefined' ? opener : window);
+
+    currentSshConfigState.attemptsCount++;
+    _updateSshAttemptsDisplay();
 
     try {
         await _getPragmaSshPool().deployPublicKey({ username, server, keyPath: keyToDeploy });

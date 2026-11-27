@@ -1068,14 +1068,11 @@ class SshConnectionPool {
             : (promptStr) => promptViaAskpass(promptStr, 60000);
 
         // For key deployment:
-        // 1. Try targetKeyPath if it exists (in case it is already authorized on the server).
-        // 2. Try default key candidates (e.g. user default key, ssh-agent) so passwordless
-        //    deployment works without asking for password if another key is already authorized.
-        // 3. IMPORTANT: Cap public key auth attempts to at most 3 total handlers.
-        //    Remote SSH servers (sshd MaxAuthTries, typically 6) will disconnect with
-        //    "Too many authentication failures" if too many failed keys are offered before
-        //    falling back to password / keyboard-interactive authentication.
-        const allKeyHandlers = this._buildPublicKeyAuthHandlers(params);
+        // 1. Try targetKeyPath first (in case it is already authorized on the server).
+        // 2. Try the user default key (~/.ssh/id_ed25519 or configured default) if targetKeyPath differs,
+        //    allowing passwordless deployment if the default key already has access.
+        // 3. Strictly cap candidate keys to at most 2 attempts so that servers with fail2ban
+        //    (maxretry = 3) are never triggered before password fallback.
         let defaultKeyHandlers = [];
         if (targetKeyPath && fs.existsSync(targetKeyPath)) {
             try {
@@ -1087,17 +1084,16 @@ class SshConnectionPool {
                 });
             } catch (e) {}
         }
-        for (const handler of allKeyHandlers) {
-            if (defaultKeyHandlers.length >= 3) break;
-            const alreadyIncluded = defaultKeyHandlers.some(h =>
-                h.type === handler.type && (
-                    (h.key && handler.key && Buffer.compare(h.key, handler.key) === 0) ||
-                    (h.type === 'agent' && handler.type === 'agent')
-                )
-            );
-            if (!alreadyIncluded) {
-                defaultKeyHandlers.push(handler);
-            }
+        const defaultCandidate = getDefaultCandidateKeys(loadSshHostConfig(params.host))[0];
+        if (defaultCandidate && defaultCandidate !== targetKeyPath && fs.existsSync(defaultCandidate)) {
+            try {
+                const defBuf = fs.readFileSync(defaultCandidate);
+                defaultKeyHandlers.push({
+                    type: 'publickey',
+                    username: params.username,
+                    key: defBuf
+                });
+            } catch (e) {}
         }
         let keyIndex = 0;
         let cachedPassword = null;
