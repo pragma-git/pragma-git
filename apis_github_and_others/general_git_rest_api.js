@@ -378,15 +378,22 @@ class git_rest_api {
                    msg.includes('access denied');
         }
     
-        async fetchWithApi( apiurl, options){
+        async fetchWithApi( apiurl, options, timeoutMs = 12000){
             
             let response = { ok: false, status: '', statusText: '', json: ''}; // Default
 
             // Fetch
             let json;  // Undefined if fetch fails
             let errorMessage = '';
+            const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+            const fetchOpts = Object.assign({}, options);
+            if (controller && !fetchOpts.signal) {
+                fetchOpts.signal = controller.signal;
+            }
+
             try {
-                response = await fetch( apiurl, options);
+                response = await fetch( apiurl, fetchOpts);
                 
                 if (!response.ok) {
                   throw new Error(`Git provider API error: ${response.statusText || response.status}`);
@@ -395,8 +402,12 @@ class git_rest_api {
                 json = await response.json();
                 console.log('Repository Information:', json);
             } catch (error) {
-                errorMessage = error.message;
-                console.error('Error fetching repository info:', error.message);
+                errorMessage = error.name === 'AbortError'
+                    ? `Request timed out after ${timeoutMs}ms`
+                    : error.message;
+                console.error('Error fetching repository info:', errorMessage);
+            } finally {
+                if (timer) clearTimeout(timer);
             }
 
             console.log(response);

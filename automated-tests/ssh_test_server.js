@@ -316,7 +316,12 @@ function attachSftpHandlers(sftpStream) {
 function loadAuthorizedKeys(authKeysPath) {
     const keys = [];
     if (!fs.existsSync(authKeysPath)) return keys;
-    const content = fs.readFileSync(authKeysPath, 'utf8');
+    let content = '';
+    try {
+        content = fs.readFileSync(authKeysPath, 'utf8');
+    } catch (e) {
+        return keys;
+    }
     for (const rawLine of content.split(/\r?\n/)) {
         const line = rawLine.trim();
         if (!line || line.startsWith('#')) continue;

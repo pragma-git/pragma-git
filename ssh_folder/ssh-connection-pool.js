@@ -701,7 +701,7 @@ class SshConnectionPool {
      */
     async exists(sshUrl, sshKey = '') {
         const params = resolveConnectionParams(sshUrl, sshKey);
-        return await this._withConnection(params, 4000, async (entry) => {
+        return await this._withConnection(params, 10000, async (entry) => {
             try {
                 const sftp = await this._getSftp(entry);
                 const ok = await new Promise((resolve) => {
@@ -710,7 +710,7 @@ class SshConnectionPool {
                 return ok;
             } catch (sftpErr) {
                 // Fallback if SFTP subsystem is disabled on remote server
-                const res = await this.execCommand(sshUrl, `test -e ${shellQuoteSingle(params.remotePath)}`, { sshKey, timeoutMs: 4000 });
+                const res = await this.execCommand(sshUrl, `test -e ${shellQuoteSingle(params.remotePath)}`, { sshKey, timeoutMs: 10000 });
                 return res.exitCode === 0;
             }
         });
@@ -721,7 +721,7 @@ class SshConnectionPool {
      */
     async mkdirP(sshUrl, sshKey = '') {
         const params = resolveConnectionParams(sshUrl, sshKey);
-        const alreadyDir = await this._withConnection(params, 4000, async (entry) => {
+        const alreadyDir = await this._withConnection(params, 10000, async (entry) => {
             try {
                 const sftp = await this._getSftp(entry);
                 return await new Promise((resolve) => {
@@ -969,7 +969,7 @@ class SshConnectionPool {
                     host: params.host,
                     port: params.port,
                     username: params.username,
-                    readyTimeout: 4000,
+                    readyTimeout: 10000,
                     authHandler: authHandlers
                 });
             } catch (e) {

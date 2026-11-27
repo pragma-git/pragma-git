@@ -173,7 +173,7 @@ steps:
   - name: "Verify Clone Completed and Switched to Remote Tab"
     action: wait_for_selector
     selector: "#gitHubTab.active"
-    timeout: 45000
+    timeout: 60000
     verify: |-
       - Clone completed successfully over SSH.
       - Settings window switched to the Remote ('gitHubTab') tab.

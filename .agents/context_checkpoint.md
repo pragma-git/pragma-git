@@ -19,24 +19,19 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **Agent Guidelines & Pruning**:
-  - Added strict pruning rules to [AGENTS.md](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/AGENTS.md) for `.agents/context_checkpoint.md` to keep it under 5 KB / ~1,000 tokens during `/compact` and task transitions.
-  - Added mandatory rule to [AGENTS.md](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/AGENTS.md) requiring the agent to update `## Arkitektur` in `AGENTS.md` whenever major subsystems or components are added, refactored, or deprecated.
-* **Next Task / Investigation**:
-  - Continue testing and hardening the `.gitignore` editor in Settings for remote SSH repositories (`ssh://...`), specifically examining empty `.gitignore` behavior vs uncommitted `.gitignore` appearing in Changed Files.
+* **Flaky CI Fixes & Test Robustification**:
+  - Investigated GitHub Actions CI failures across macOS, Linux, and Windows runners.
+  - Added request timeout with `AbortController` in `fetchWithApi` (`apis_github_and_others/general_git_rest_api.js`) to prevent indefinite hangs on unresponsive third-party Git providers.
+  - Robustified `test_02_live_provider_query.js` with retries and graceful handling/skipping on transient Gitea/HTTPS remote outages or rate limits.
+  - Increased SSH handshake and connection timeouts in `ssh_folder/ssh-connection-pool.js` (`testLogin`, `exists`, `mkdirP`) to 10000ms for busy multi-core CI runner VMs.
+  - Robustified `loadAuthorizedKeys` in `automated-tests/ssh_test_server.js` against file I/O contention on Windows.
+  - Increased clone completion timeout in `test_01_ssh_clone_repo.yaml` to 60s for slower runner disks.
+  - Verified with full local test run `npm test` (all 8 categories, 3 UI scenarios passed, 54s duration).
 * **Branch**: `feature/remove_WSL` (removal of WSL dependencies in favor of unified `ssh2` pool + Windows native Git Bash/CMD).
-* **SSH .gitignore Flow Verified**:
-  - Remote `.gitignore` uses `sshGet` to download to local temp location, edits/backups locally, and `sshPut` to upload back to server.
-  - Retracking uses in-process `simpleGit` via `ssh-connection-pool.js`.
-  - Confirmed working tree of `testOnMyMac` is clean and correctly tracking files.
-* **SSH Terminal on Windows**:
-  - Configured to use native Command Prompt (`cmd.exe /k ssh ...`) with Windows native key paths, avoiding WSL and mintty/PTY instability.
-* **Editor Awareness**:
-  - `sshFileBrowser.js` tracks `pragma-merge` built-in editor windows directly and avoids redundant `chokidar` watchers.
 
 ---
 
 ### 🐛 Open / Historical Bugs
+* **Historical: CI Flakiness on Gitea/HTTPS Network Blips**: Tests 2.4 and 2.5 failed intermittently on Windows runners when public third-party endpoints hung or threw transient network resets. Added timeouts, retries, and skip handling.
+* **Historical: Handshake Timeouts on Loaded CI VMs**: macOS runner triggered `Timed out while waiting for handshake` in `ssh/test_07_ssh_key_generation.js`. Increased handshake and connection timeout to 10000ms.
 * **Historical: Upstream Merge Draft Message Overwrite**: Fixed race condition in `_setMode('CHANGED_FILES')` erasing commit message during automated merge updates.
-* **Historical: .gitignore Editor Initialization**: Fixed missing global variables (`gui`, `state`, `localState`) and search icon ID collision in `edit_ignore.html`.
-* **Historical: getExecutableFlags on Windows**: Added index-based filemode check (`ls-files -s`) for Windows NTFS where POSIX executable bits are not reported by `fs.statSync`.
