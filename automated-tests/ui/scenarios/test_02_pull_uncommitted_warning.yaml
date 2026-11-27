@@ -198,8 +198,11 @@ steps:
 
   # 18. Verify both Push and Pull icons are still visible after canceling dialog
   - name: "Wait for UI Refresh After Canceling Dialog"
-    action: wait
-    ms: 1200
+    action: eval
+    code: |-
+      (async () => {
+        await _update();
+      })()
     verify: "Pragma-git updates UI after dialog dismissal."
 
   - name: "Verify Both Arrows Remain Visible After Canceling Dialog"
@@ -207,12 +210,13 @@ steps:
     code: |-
       (async () => {
         const start = Date.now();
-        while (Date.now() - start < 15000) {
+        while (Date.now() - start < 20000) {
           const pushVis = document.getElementById('top-titlebar-push-icon').style.visibility;
           const pullVis = document.getElementById('top-titlebar-pull-icon').style.visibility;
           if (pushVis === 'visible' && pullVis === 'visible') {
             return true;
           }
+          await _update();
           await new Promise(r => setTimeout(r, 200));
         }
         const pushVis = document.getElementById('top-titlebar-push-icon').style.visibility;

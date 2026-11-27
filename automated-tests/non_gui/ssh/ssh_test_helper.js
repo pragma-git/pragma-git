@@ -64,9 +64,11 @@ function startEphemeralSshServer(options = {}) {
     const origHome = process.env.HOME;
     const origUserProfile = process.env.USERPROFILE;
     const origPragmaKey = process.env.PRAGMA_SSH_KEY;
+    const origAuthSock = process.env.SSH_AUTH_SOCK;
     process.env.HOME = homeDir;
     process.env.USERPROFILE = homeDir;
     delete process.env.PRAGMA_SSH_KEY;
+    delete process.env.SSH_AUTH_SOCK;
 
     const injectKey = (pubKeyPath) => {
         const pubData = fs.readFileSync(pubKeyPath, 'utf8').trim();
@@ -88,6 +90,8 @@ function startEphemeralSshServer(options = {}) {
         else delete process.env.USERPROFILE;
         if (origPragmaKey !== undefined) process.env.PRAGMA_SSH_KEY = origPragmaKey;
         else delete process.env.PRAGMA_SSH_KEY;
+        if (origAuthSock !== undefined) process.env.SSH_AUTH_SOCK = origAuthSock;
+        else delete process.env.SSH_AUTH_SOCK;
 
         if (forceNodeServer) {
             const helperJs = path.join(REPO_ROOT, 'automated-tests/ssh_test_server.js');

@@ -96,6 +96,7 @@ async function fs_mkdir( folder_or_sshUrl, sshKey = '') {                    // 
         } else {
             console.warn(`Error in fs_mkdir("${folder_or_sshUrl}"):`, err);
         }
+        throw err;
     }
 }
 

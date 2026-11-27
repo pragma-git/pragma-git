@@ -19,39 +19,10 @@
 ---
 
 ### 📋 Current Status & Tasks
-* **AskPass Password Dialog Centering over Settings Window**:
-  - In `app.js` (`startPragmaAskPass`), when `localState.settings && settings_win` is active, the AskPass popup window coordinates (`win.moveTo(posX, posY)`) are calculated to land centered directly over the Settings window.
-  - In `askpass/askpass.html` (`adjustWindowSize`), recalculates and keeps the dialog centered over `opener.settings_win` if open when adjusting its dimensions to content.
-* **Settings Repo Table Path & Error Display**:
-  - In `settings.html`, changed `td.localFolder label span` to `td.localFolder label span.folderPrefix` so that hiding until hover only affects the directory prefix, keeping `[ssh]`, the folder name, and the error status visible by default.
-  - In `settings.js` (`generateRepoTable`), added `.folderPrefix` class to `prefixSpan` and appended the error text `<br><span class="repoErrorText"><b><i>(${displayReason})</i></b></span>` instead of replacing `label.innerHTML`. This keeps the short folder name and error status visible, displays the `Fix` button, and expands the full path upon hovering.
-* **Differentiated & Shortened SSH Status Messages**:
-  - In `ssh-folder-lib.js` (`fs_existsSync`), mapped `"Too many authentication failures"` explicitly to `lastReason = 'too many tries'`, and standard key rejections to `lastReason = 'key not accepted'`.
-  - In `settings.js` (`generateRepoTable`), placed a clean line break `<br>` between the repository URL and error text, wrapping each in separate selectable `<span>` elements for easy selective clipboard copying.
-  - In `app.js` and `settings.js`, replaced verbose and confusing `"Local SSH: ..."` with unified, short, and plain-English labels:
-    - `SSH: too many tries` (server dropped connection due to too many failed attempts; can try again with specific key)
-    - `SSH: key not accepted` (public key rejected / not in authorized_keys; will never work until uploaded/deployed)
-    - `SSH: host offline` (network timeout or unreachable host)
-    - `SSH: folder missing` (login succeeded, directory not found on server)
-    - `SSH: not a repo` (directory exists, missing `.git/HEAD`)
-  - Verified with `test_02_ssh_folder_validation.js`, `test_06_ssh_lib_node.js`, and full SSH suite (8/8 suites passed).
-* **Multi-Repo Same-Server Instant Refresh & Offline Reason Clear**:
-  - In `settings.js` (`recheckRepoStatus`), added immediate clearing of stale `cachedRemoteOrigins.reason[repoIndex] === 'SSH project folder offline'` and instant trigger of `cacheRemoteOriginStatus(repoIndex)` to clear red footer errors immediately without waiting for the 120s timer.
-  - In `ssh_folder/ssh-folder-lib.js` (`closeSshConfigDialog`), when saving or fixing SSH settings for a repository, all other repositories in `state.repos` hosted on the same SSH server (`username@host`) are automatically updated and re-verified together in one pass, updating the Settings table in real-time.
-* **Safely Minimize deployPublicKey Attempts for fail2ban (maxretry=3)**:
-  - Eliminated broad candidate key iteration in `deployPublicKey`. Only the selected `targetKeyPath` and (if different) the single primary default key (`id_ed25519`) are tried before falling back to password/keyboard-interactive auth.
-  - Guarantees at most 1–2 key attempts, preventing `fail2ban` bans on servers with low fail thresholds.
-  - Added real-time connection attempt counter (`#sshConfigAttemptsText`) inside `#sshConfigDialog`, displaying total connection attempts made during the dialog session with a visual warning when reaching 2+ attempts.
-  - Verified with `node automated-tests/non_gui/ssh/test_07_ssh_key_generation.js` (9/9 passed) and `automated-tests/non_gui/ssh/_run_tests` (8/8 suites passed).
-* **Flaky CI Fixes & Test Robustification**:
-  - Investigated GitHub Actions CI failures across macOS, Linux, and Windows runners.
-  - Added request timeout with `AbortController` in `fetchWithApi` (`apis_github_and_others/general_git_rest_api.js`) to prevent indefinite hangs on unresponsive third-party Git providers.
-  - Robustified `test_02_live_provider_query.js` with retries and graceful handling/skipping on transient Gitea/HTTPS remote outages or rate limits.
-  - Increased SSH handshake and connection timeouts in `ssh_folder/ssh-connection-pool.js` (`testLogin`, `exists`, `mkdirP`) to 10000ms for busy multi-core CI runner VMs.
-  - Robustified `loadAuthorizedKeys` in `automated-tests/ssh_test_server.js` against file I/O contention on Windows.
-  - Increased clone completion timeout in `test_01_ssh_clone_repo.yaml` to 60s for slower runner disks.
-  - Verified with full local test run `npm test` (all 8 categories, 3 UI scenarios passed, 54s duration).
-* **Branch**: `feature/remove_WSL` (removal of WSL dependencies in favor of unified `ssh2` pool + Windows native Git Bash/CMD).
+* **Investigate Cleanup Candidates**:
+  - Investigated TODO/FIXME comments and unused imports/error handling across codebase.
+  - Identified dead imports (`os`, `fs`, `pathsep`), unused constant (`delayInMs`), and obsolete TODO comment in [tagList.js](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/tagList.js).
+  - Saved investigation findings and actionable cleanup plan to [.fix.md](file:///Users/jan/Documents/Projects/Pragma-git/pragma-git/.fix.md).
 
 ---
 

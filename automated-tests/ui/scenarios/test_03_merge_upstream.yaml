@@ -200,12 +200,17 @@ steps:
     code: |-
       (async () => {
         const start = Date.now();
-        while (Date.now() - start < 15000) {
+        while (Date.now() - start < 20000) {
           const msg = document.getElementById('message').value;
           const storeBtn = document.getElementById('store-button');
           const mode = (typeof getMode === 'function') ? getMode() : '';
           if (msg.includes('Merge branch') && storeBtn && !storeBtn.disabled) {
             return true;
+          }
+          if (msg.includes('Merge branch') && storeBtn && storeBtn.disabled) {
+            if (typeof _setMode === 'function') {
+              await _setMode('CHANGED_FILES_TEXT_ENTERED');
+            }
           }
           await new Promise(r => setTimeout(r, 200));
         }

@@ -519,26 +519,31 @@ async function startCommand() {
     fs.writeFileSync(path.join(sshdDir, 'host_key'), keys.private, { mode: 0o600 });
     fs.writeFileSync(path.join(sshdDir, 'authorized_keys'), '', { mode: 0o600 });
 
+    const logFile = path.join(sshdDir, 'sshd.log');
+    const logFd = fs.openSync(logFile, 'a');
+
     const child = spawn(process.execPath, [__filename, '--daemon', sshdDir], {
         detached: true,
-        stdio: 'ignore',
+        stdio: ['ignore', logFd, logFd],
         windowsHide: true
     });
     child.unref();
+    try { fs.closeSync(logFd); } catch (e) {}
 
     const portFile = path.join(sshdDir, 'sshd.port');
     let port = '';
-    for (let i = 0; i < 60; i++) {
+    // Poll up to 12s (120 iterations * 100ms) to ensure busy CI runners bind cleanly
+    for (let i = 0; i < 120; i++) {
         if (fs.existsSync(portFile)) {
             port = fs.readFileSync(portFile, 'utf8').trim();
             if (port) break;
         }
-        await new Promise(r => setTimeout(r, 50));
+        await new Promise(r => setTimeout(r, 100));
     }
 
     if (!port) {
         let logMsg = '';
-        try { logMsg = fs.readFileSync(path.join(sshdDir, 'sshd.log'), 'utf8'); } catch (e) {}
+        try { logMsg = fs.readFileSync(logFile, 'utf8'); } catch (e) {}
         console.error(`FAIL:ssh_test_server.js daemon did not start: ${logMsg}`);
         process.exit(1);
     }

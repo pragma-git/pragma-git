@@ -122,7 +122,7 @@ class UIFixtures {
     injectKeyToServer() {
         if (this.sshdDir && fs.existsSync(this.clientKeyPub)) {
             const authKeys = path.join(this.sshdDir, 'authorized_keys');
-            const pubContent = fs.readFileSync(this.clientKeyPub, 'utf8');
+            const pubContent = fs.readFileSync(this.clientKeyPub, 'utf8').trim();
             fs.appendFileSync(authKeys, `\n${pubContent}\n`);
             return true;
         }
