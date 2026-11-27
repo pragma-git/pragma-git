@@ -57,12 +57,12 @@ console.log('Running Suite: SSH Folder & Repository Validation Tests');
             assertFail('2.4: Valid Git repo check', `exists=${exists4}`);
         }
 
-        // Test 5: Rejected key sets lastReason = 'key rejected'
+        // Test 5: Rejected key sets lastReason = 'key not accepted' (or 'key rejected')
         const badKey = path.join(env.sandboxDir, 'unauth_key');
         sshLib.generateLocalSshKey(badKey);
         const exists5 = await sshLib.fs_existsSync(env.makeSshUrl(existingDir), badKey);
-        if (exists5 === false && sshLib.fs_existsSync.lastReason === 'key rejected') {
-            assertPass('2.5: Unauthorized SSH key sets fs_existsSync.lastReason = "key rejected"');
+        if (exists5 === false && (sshLib.fs_existsSync.lastReason === 'key not accepted' || sshLib.fs_existsSync.lastReason === 'key rejected')) {
+            assertPass('2.5: Unauthorized SSH key sets fs_existsSync.lastReason = "key not accepted"');
         } else {
             assertFail('2.5: Rejected key classification', `exists=${exists5}, reason=${sshLib.fs_existsSync.lastReason}`);
         }

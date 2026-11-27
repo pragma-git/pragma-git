@@ -58,8 +58,10 @@ async function fs_existsSync( folder_or_sshUrl, sshKey = '') {               // 
         fs_existsSync.lastError = err;
         let msg = (err && err.message) ? err.message : String(err);
         let lower = msg.toLowerCase();
-        if (err?.level === 'client-authentication' || err?.code === 'KEY_MISSING' || lower.includes('all configured authentication methods failed') || lower.includes('permission denied') || lower.includes('key rejected') || lower.includes('key file not found')) {
-            fs_existsSync.lastReason = 'key rejected';
+        if (lower.includes('too many authentication failures') || lower.includes('too many auth')) {
+            fs_existsSync.lastReason = 'too many tries';
+        } else if (err?.level === 'client-authentication' || err?.code === 'KEY_MISSING' || lower.includes('all configured authentication methods failed') || lower.includes('permission denied') || lower.includes('key rejected') || lower.includes('key file not found')) {
+            fs_existsSync.lastReason = 'key not accepted';
         } else if (err?.code === 'ETIMEDOUT' || err?.code === 'ECONNREFUSED' || err?.code === 'ENOTFOUND' || err?.code === 'EAI_AGAIN' || lower.includes('timed out') || lower.includes('timeout') || lower.includes('could not resolve') || lower.includes('getaddrinfo') || lower.includes('connection refused') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
             fs_existsSync.lastReason = 'no network';
         } else {
@@ -1122,6 +1124,9 @@ function formatSshErrorDetails(rawError, sshUrl) {
     if (lower.includes('missing host') || !server || server.trim().length === 0) {
         summary = 'Invalid SSH URL: Host/server name is missing.';
         suggestion = 'Check the repository URL in Settings (e.g. ssh://user@server/path).';
+    } else if (lower.includes('too many authentication failures') || lower.includes('too many auth')) {
+        summary = `SSH server "${server}" closed connection: Too many authentication failures.`;
+        suggestion = `Click "Fix" to select the specific SSH key for this repository and prevent trying multiple unaccepted keys.`;
     } else if (lower.includes('could not resolve') || lower.includes('getaddrinfo') || lower.includes('name or service not known') || lower.includes('nodename nor servname provided')) {
         summary = `Could not resolve hostname "${server}".`;
         suggestion = `Verify that server name "${server}" is spelled correctly and DNS or ~/.ssh/config is configured.`;
@@ -1131,9 +1136,9 @@ function formatSshErrorDetails(rawError, sshUrl) {
     } else if (lower.includes('timed out') || lower.includes('timeout') || lower.includes('no route to host') || lower.includes('network is unreachable')) {
         summary = `Connection to "${server}" timed out.`;
         suggestion = `Check your network connection, Wi-Fi, or VPN. Ensure "${server}" is online and reachable.`;
-    } else if (lower.includes('all configured authentication methods failed') || lower.includes('permission denied') || lower.includes('key rejected') || lower.includes('key file not found')) {
-        summary = `SSH login rejected by "${server}" (permission denied / key not accepted).`;
-        suggestion = `Click "Fix" or "Setup SSH" in Settings to verify and deploy your SSH public key.`;
+    } else if (lower.includes('all configured authentication methods failed') || lower.includes('permission denied') || lower.includes('key rejected') || lower.includes('key not accepted') || lower.includes('key file not found')) {
+        summary = `SSH key rejected by "${server}" (not in authorized_keys).`;
+        suggestion = `This key cannot log in until uploaded. Click "Fix" or "Setup SSH" to deploy your public key to the server.`;
     } else if (lower.includes('file missing') || lower.includes('not a folder') || lower.includes('no such file')) {
         summary = `Target directory does not exist on "${server}".`;
         suggestion = `Verify the path on the server in Settings.`;

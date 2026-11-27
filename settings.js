@@ -2411,9 +2411,11 @@ async function generateRepoTable(document, table, data) {
                             : { summary: reason, suggestion: '' };
                         tooltip = `${diag.summary}${diag.suggestion ? ' — ' + diag.suggestion : ''}`;
                         if (reason === 'no network') {
-                            displayReason = 'SSH: host offline / timeout';
-                        } else if (reason === 'key rejected') {
-                            displayReason = 'SSH: key rejected';
+                            displayReason = 'SSH: host offline';
+                        } else if (reason === 'key rejected' || reason === 'key not accepted') {
+                            displayReason = 'SSH: key not accepted';
+                        } else if (reason === 'too many tries' || reason === 'login blocked') {
+                            displayReason = 'SSH: too many tries';
                         } else if (reason === 'not a folder') {
                             displayReason = 'SSH: folder missing';
                         } else if (reason === 'not a repo') {
@@ -2421,8 +2423,9 @@ async function generateRepoTable(document, table, data) {
                         }
                     }
 
-                    label.style.color = (reason === 'key rejected' ? '#e67e22' : 'red');
-                    label.innerHTML = element.localFolder + ' &nbsp;<b><i>(' + displayReason + ')</i></b>';
+                    let errColor = (reason === 'key rejected' || reason === 'key not accepted' || reason === 'too many tries' || reason === 'login blocked') ? '#e67e22' : 'red';
+                    label.style.color = '';
+                    label.innerHTML = `<span style="user-select: text; -webkit-user-select: text;">${element.localFolder}</span><br><span style="color: ${errColor}; font-size: 11px; user-select: text; -webkit-user-select: text;"><b><i>(${displayReason})</i></b></span>`;
                     if (tooltip) {
                         label.title = tooltip;
                     }

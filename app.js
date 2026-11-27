@@ -3698,13 +3698,19 @@ async function _update2(){
                     let localReason = (cachedLocalStatus && cachedLocalStatus.reason && cachedLocalStatus.reason[state.repoNumber]) ? cachedLocalStatus.reason[state.repoNumber] : '';
 
                     if (isLocalDown) {
-                        let sshLabel = 'SSH folder offline';
-                        if (localReason === 'key rejected') {
-                            sshLabel = 'SSH key rejected';
+                        let sshLabel = 'folder offline';
+                        if (localReason === 'key rejected' || localReason === 'key not accepted') {
+                            sshLabel = 'key not accepted';
+                        } else if (localReason === 'too many tries' || localReason === 'login blocked') {
+                            sshLabel = 'too many tries';
                         } else if (localReason === 'no network') {
-                            sshLabel = 'SSH connection timed out';
+                            sshLabel = 'host offline';
+                        } else if (localReason === 'not a folder') {
+                            sshLabel = 'folder missing';
+                        } else if (localReason === 'not a repo') {
+                            sshLabel = 'not a repo';
                         }
-                        let displayText = `Local SSH : ${sshLabel}`;
+                        let displayText = `SSH: ${sshLabel}`;
                         if (remoteTextEl.innerText !== displayText) {
                             remoteTextEl.innerText = displayText;
                         }

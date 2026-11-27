@@ -19,6 +19,16 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Differentiated & Shortened SSH Status Messages**:
+  - In `ssh-folder-lib.js` (`fs_existsSync`), mapped `"Too many authentication failures"` explicitly to `lastReason = 'too many tries'`, and standard key rejections to `lastReason = 'key not accepted'`.
+  - In `settings.js` (`generateRepoTable`), placed a clean line break `<br>` between the repository URL and error text, wrapping each in separate selectable `<span>` elements for easy selective clipboard copying.
+  - In `app.js` and `settings.js`, replaced verbose and confusing `"Local SSH: ..."` with unified, short, and plain-English labels:
+    - `SSH: too many tries` (server dropped connection due to too many failed attempts; can try again with specific key)
+    - `SSH: key not accepted` (public key rejected / not in authorized_keys; will never work until uploaded/deployed)
+    - `SSH: host offline` (network timeout or unreachable host)
+    - `SSH: folder missing` (login succeeded, directory not found on server)
+    - `SSH: not a repo` (directory exists, missing `.git/HEAD`)
+  - Verified with `test_02_ssh_folder_validation.js`, `test_06_ssh_lib_node.js`, and full SSH suite (8/8 suites passed).
 * **Multi-Repo Same-Server Instant Refresh & Offline Reason Clear**:
   - In `settings.js` (`recheckRepoStatus`), added immediate clearing of stale `cachedRemoteOrigins.reason[repoIndex] === 'SSH project folder offline'` and instant trigger of `cacheRemoteOriginStatus(repoIndex)` to clear red footer errors immediately without waiting for the 120s timer.
   - In `ssh_folder/ssh-folder-lib.js` (`closeSshConfigDialog`), when saving or fixing SSH settings for a repository, all other repositories in `state.repos` hosted on the same SSH server (`username@host`) are automatically updated and re-verified together in one pass, updating the Settings table in real-time.
