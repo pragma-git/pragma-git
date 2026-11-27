@@ -4623,7 +4623,21 @@ function startPragmaAskPass(){
             show: false
         },
             win=>win.on('loaded', () => {       
-                          
+                // If Settings window is open, center askpass window directly over it
+                try {
+                    if (localState.settings && settings_win) {
+                        let winW = (win.width && win.width > 0) ? win.width : 300;
+                        let winH = (win.height && win.height > 0) ? win.height : 400;
+                        let posX = Math.round(settings_win.x + (settings_win.width - winW) / 2);
+                        let posY = Math.round(settings_win.y + (settings_win.height - winH) / 2);
+                        if (!isNaN(posX) && !isNaN(posY)) {
+                            win.moveTo(Math.max(0, posX), Math.max(0, posY));
+                        }
+                    }
+                } catch (e) {
+                    console.log('Failed positioning askpass window over Settings window:', e);
+                }
+
                 showWindow(win); // state.onAllWorkspaces=true opens in 1:st workspace. Workaround: creating window hidden (and then show)
                 
                 win.on('close', function() { 

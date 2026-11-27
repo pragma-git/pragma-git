@@ -2349,7 +2349,7 @@ async function generateRepoTable(document, table, data) {
             
             // 1. Skapa ett span-element för folder-path (before the last folder name)
             var prefixSpan = document.createElement('span');
-            
+            prefixSpan.className = 'folderPrefix';
             
             var directoryPath = path.dirname(element.localFolder) + path.sep; 
             prefixSpan.textContent = directoryPath;
@@ -2425,7 +2425,19 @@ async function generateRepoTable(document, table, data) {
 
                     let errColor = (reason === 'key rejected' || reason === 'key not accepted' || reason === 'too many tries' || reason === 'login blocked') ? '#e67e22' : 'red';
                     label.style.color = '';
-                    label.innerHTML = `<span style="user-select: text; -webkit-user-select: text;">${element.localFolder}</span><br><span style="color: ${errColor}; font-size: 11px; user-select: text; -webkit-user-select: text;"><b><i>(${displayReason})</i></b></span>`;
+                    
+                    // Keep the label structure (sshSpan, prefixSpan, folderName) intact so hover reveals full path
+                    let errSpan = document.createElement('span');
+                    errSpan.className = 'repoErrorText';
+                    errSpan.style.color = errColor;
+                    errSpan.style.fontSize = '11px';
+                    errSpan.style.userSelect = 'text';
+                    errSpan.style.webkitUserSelect = 'text';
+                    errSpan.innerHTML = `<b><i>(${displayReason})</i></b>`;
+
+                    label.appendChild(document.createElement('br'));
+                    label.appendChild(errSpan);
+
                     if (tooltip) {
                         label.title = tooltip;
                     }

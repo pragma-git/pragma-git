@@ -19,6 +19,12 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **AskPass Password Dialog Centering over Settings Window**:
+  - In `app.js` (`startPragmaAskPass`), when `localState.settings && settings_win` is active, the AskPass popup window coordinates (`win.moveTo(posX, posY)`) are calculated to land centered directly over the Settings window.
+  - In `askpass/askpass.html` (`adjustWindowSize`), recalculates and keeps the dialog centered over `opener.settings_win` if open when adjusting its dimensions to content.
+* **Settings Repo Table Path & Error Display**:
+  - In `settings.html`, changed `td.localFolder label span` to `td.localFolder label span.folderPrefix` so that hiding until hover only affects the directory prefix, keeping `[ssh]`, the folder name, and the error status visible by default.
+  - In `settings.js` (`generateRepoTable`), added `.folderPrefix` class to `prefixSpan` and appended the error text `<br><span class="repoErrorText"><b><i>(${displayReason})</i></b></span>` instead of replacing `label.innerHTML`. This keeps the short folder name and error status visible, displays the `Fix` button, and expands the full path upon hovering.
 * **Differentiated & Shortened SSH Status Messages**:
   - In `ssh-folder-lib.js` (`fs_existsSync`), mapped `"Too many authentication failures"` explicitly to `lastReason = 'too many tries'`, and standard key rejections to `lastReason = 'key not accepted'`.
   - In `settings.js` (`generateRepoTable`), placed a clean line break `<br>` between the repository URL and error text, wrapping each in separate selectable `<span>` elements for easy selective clipboard copying.

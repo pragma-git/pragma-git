@@ -243,7 +243,21 @@
                 let dy = outer.scrollHeight;
                 let hx = window.outerWidth - window.innerWidth;
                 let hy = window.outerHeight - window.innerHeight;
-                window.resizeTo(dx + hx + 2 * padding, dy + hy + padding + 16);
+                let newW = dx + hx + 2 * padding;
+                let newH = dy + hy + padding + 16;
+                window.resizeTo(newW, newH);
+
+                // Keep askpass centered over Settings window if Settings is currently open
+                try {
+                    let settingsWin = (typeof opener !== 'undefined' && opener && opener.settings_win) ? opener.settings_win : null;
+                    if (settingsWin && typeof settingsWin.x === 'number' && typeof settingsWin.y === 'number') {
+                        let posX = Math.round(settingsWin.x + (settingsWin.width - newW) / 2);
+                        let posY = Math.round(settingsWin.y + (settingsWin.height - newH) / 2);
+                        if (!isNaN(posX) && !isNaN(posY)) {
+                            window.moveTo(Math.max(0, posX), Math.max(0, posY));
+                        }
+                    }
+                } catch (posErr) {}
             } catch (e) {}
         }
 

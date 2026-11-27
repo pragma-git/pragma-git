@@ -159,13 +159,13 @@
                 vertical-align: middle;
             }
                         
-            /* 1. Hide the path span inside the localFolder cell by default */
-            td.localFolder label span { 
+            /* 1. Hide only the prefix path span inside the localFolder cell by default */
+            td.localFolder label span.folderPrefix { 
               display: none !important; 
             }
             
-            /* 2. Reveal the span instantly when hovering over the table cell */
-            td.localFolder:hover label span { 
+            /* 2. Reveal the prefix path span instantly when hovering over the table cell */
+            td.localFolder:hover label span.folderPrefix { 
               display: inline !important; 
             }
             
