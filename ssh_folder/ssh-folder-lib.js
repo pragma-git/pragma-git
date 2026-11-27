@@ -1025,12 +1025,45 @@ async function closeSshConfigDialog( save = false ) {
         let idx = currentSshConfigState.repoIndex;
         if (typeof state !== 'undefined' && state.repos && state.repos[idx]) {
             state.repos[idx].sshKey = chosenKey;
+
+            // Find all other repos pointing to the same server host/username and update their keys as well
+            let currentParsed = parseSshUrl(state.repos[idx].localFolder || '');
+            let currentTargetKey = `${currentParsed.username}@${currentParsed.host}`.toLowerCase();
+            let sameServerIndices = [idx];
+
+            for (let i = 0; i < state.repos.length; i++) {
+                if (i === idx) continue;
+                let folder = state.repos[i].localFolder || '';
+                if (folder.startsWith('ssh:')) {
+                    let parsed = parseSshUrl(folder);
+                    let targetKey = `${parsed.username}@${parsed.host}`.toLowerCase();
+                    if (targetKey === currentTargetKey) {
+                        sameServerIndices.push(i);
+                        // If other repo had no explicit key, or had the same key before, update it to the new chosen key
+                        if (!state.repos[i].sshKey || state.repos[i].sshKey === state.repos[idx].sshKey) {
+                            state.repos[i].sshKey = chosenKey;
+                        }
+                    }
+                }
+            }
+
             if (typeof opener !== 'undefined' && opener.saveSettings) {
                 opener.saveSettings();
             }
+
+            // Recheck status for all repositories on this server without redrawing the table on each one
             if (typeof recheckRepoStatus === 'function') {
-                await recheckRepoStatus(idx);
+                for (let i = 0; i < sameServerIndices.length; i++) {
+                    await recheckRepoStatus(sameServerIndices[i], true);
+                }
+                // Redraw table once after all repos on this server are rechecked
+                let tbody = document.getElementById("settingsTableBody");
+                if (tbody && typeof createHtmlTable === 'function') {
+                    tbody.innerHTML = "";
+                    await createHtmlTable(document);
+                }
             }
+
             if (state.repoNumber === idx && typeof updateProjectFolderInfo === 'function') {
                 updateProjectFolderInfo();
             }

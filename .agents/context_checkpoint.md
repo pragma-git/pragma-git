@@ -19,6 +19,9 @@
 ---
 
 ### 📋 Current Status & Tasks
+* **Multi-Repo Same-Server Instant Refresh & Offline Reason Clear**:
+  - In `settings.js` (`recheckRepoStatus`), added immediate clearing of stale `cachedRemoteOrigins.reason[repoIndex] === 'SSH project folder offline'` and instant trigger of `cacheRemoteOriginStatus(repoIndex)` to clear red footer errors immediately without waiting for the 120s timer.
+  - In `ssh_folder/ssh-folder-lib.js` (`closeSshConfigDialog`), when saving or fixing SSH settings for a repository, all other repositories in `state.repos` hosted on the same SSH server (`username@host`) are automatically updated and re-verified together in one pass, updating the Settings table in real-time.
 * **Safely Minimize deployPublicKey Attempts for fail2ban (maxretry=3)**:
   - Eliminated broad candidate key iteration in `deployPublicKey`. Only the selected `targetKeyPath` and (if different) the single primary default key (`id_ed25519`) are tried before falling back to password/keyboard-interactive auth.
   - Guarantees at most 1–2 key attempts, preventing `fail2ban` bans on servers with low fail thresholds.

@@ -2836,7 +2836,7 @@ function updateRepoGroup(index, newGroup) {
     updateAllGroupDropdowns();
 }
 
-async function recheckRepoStatus(repoIndex) {
+async function recheckRepoStatus(repoIndex, skipTableRedraw = false) {
     if (repoIndex < 0 || !state.repos || !state.repos[repoIndex]) return;
     let repo = state.repos[repoIndex];
     let folder = repo.localFolder;
@@ -2866,6 +2866,19 @@ async function recheckRepoStatus(repoIndex) {
                     opener.cachedLocalStatus.platform[repoIndex] = await opener.typeOfRepoServer(folder);
                 }
             } catch (e) {}
+
+            // Clear any stale offline reason in main window's cachedRemoteOrigins for this repo
+            if (opener.cachedRemoteOrigins) {
+                if (opener.cachedRemoteOrigins.reason && opener.cachedRemoteOrigins.reason[repoIndex] === 'SSH project folder offline') {
+                    opener.cachedRemoteOrigins.reason[repoIndex] = '';
+                }
+                if (opener.cachedRemoteOrigins.isActiveRemote && opener.cachedRemoteOrigins.isActiveRemote[repoIndex] === false) {
+                    opener.cachedRemoteOrigins.isActiveRemote[repoIndex] = true;
+                }
+            }
+            if (typeof opener.cacheRemoteOriginStatus === 'function') {
+                opener.cacheRemoteOriginStatus(repoIndex);
+            }
         } else {
             opener.cachedLocalStatus.isRepo[repoIndex] = false;
             let reason = (typeof fs_existsSync.lastReason !== 'undefined' && fs_existsSync.lastReason) ? fs_existsSync.lastReason : 'not a folder';
@@ -2887,11 +2900,13 @@ async function recheckRepoStatus(repoIndex) {
         }
     }
 
-    // Refresh repo table to update the status text and radio buttons
-    let tbody = document.getElementById("settingsTableBody");
-    if (tbody) {
-        tbody.innerHTML = "";
-        await createHtmlTable(document);
+    if (!skipTableRedraw) {
+        // Refresh repo table to update the status text and radio buttons
+        let tbody = document.getElementById("settingsTableBody");
+        if (tbody) {
+            tbody.innerHTML = "";
+            await createHtmlTable(document);
+        }
     }
 }
 
